@@ -1,0 +1,11 @@
+[template="dashboard-table"] {
+	.n-form {
+		.operation {
+			display: flex;
+			padding: 1rem;
+			.n-form-component {
+				flex-grow: 1;
+			}
+		}
+	}
+}
