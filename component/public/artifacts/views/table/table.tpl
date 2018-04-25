@@ -9,6 +9,16 @@
 					<n-form-text v-model="cell.state.title" label="Title"/>
 					<n-form-text v-model="cell.state.limit" label="Limit" :timeout="600" @input="load()"/>
 				</n-form-section>
+				<n-form-section class="refresh">
+					<h2>Refresh</h2>
+					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh"/>
+					<button @click="cell.state.refreshOn.push(null)">Add Refresh Listener</button>
+					<n-form-section v-for="i in Object.keys(cell.state.refreshOn)" class="listener">
+						<n-form-combo v-model="cell.state.refreshOn[i]"
+							:items="$services.page.instances[page.name].getAvailableEvents()"/>
+						<button @click="cell.state.refreshOn.splice(i, 1)">Remove Refresh Listener</button>
+					</n-form-section>
+				</n-form-section>
 				<n-form-section class="mapping" v-if="parameters.length">
 					<h2>Input</h2>
 					<n-page-mapper :to="parameters" :from="availableParameters" 
@@ -19,7 +29,10 @@
 					<button @click="addAction">Add Event</button>
 					<n-form-section class="action" v-for="action in cell.state.actions">
 						<n-form-text v-model="action.name" label="Name" :required="true"/>
-						<n-form-text v-model="action.icon" label="Icon"/>
+						<n-form-switch v-model="action.global" label="Global" />
+						<n-form-switch v-model="action.useSelection" v-if="action.global" label="Use Selection" />
+						<n-form-text v-model="action.icon" v-if="!action.global" label="Icon"/>
+						<n-form-text v-model="action.label" v-else label="Label"/>
 						<n-form-text v-model="action.condition" label="Condition"/>
 						<n-form-switch v-model="action.refresh" label="Reload"/>
 						<button @click="removeAction(action)"><span class="n-icon n-icon-trash"></span></button>
@@ -64,7 +77,7 @@
 		</n-sidebar>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
 		<div class="cell-actions" v-auto-close.filter="function() { showFilter = false }">
-			<span class="n-icon n-icon-refresh" @click="load(0)"></span>
+			<span v-if="cell.state.showRefresh" class="n-icon n-icon-refresh" @click="load(0)"></span>
 			<span class="n-icon n-icon-search" @click="showFilter = !showFilter" v-if="filterable"></span>
 			<n-form class="layout2 filter" v-if="showFilter">
 				<div v-for="filter in cell.state.filters.filter(function(x) { return x.type != 'fixed' })">
@@ -88,7 +101,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="record in records" @click="trigger(null, record)">
+				<tr v-for="record in records" @click="trigger(null, record)" :class="{'selected': lastTriggered == record}">
 					<td :class="getDynamicClasses(key, record)" v-for="key in keys" v-if="!isHidden(key)" v-html="interpret(key, record[key])"></td>
 					<td class="actions" v-if="actions.length" @mouseover="actionHovering = true" @mouseout="actionHovering = false">
 						<button v-if="!action.condition || isCondition(action.condition, record)" v-for="action in actions" @click="trigger(action, record)"><span class="n-icon" :class="'n-icon-' + action.icon"></span></button>
@@ -97,5 +110,9 @@
 			</tbody>
 		</table>
 		<n-paging :value="paging.current" :total="paging.total" :load="load" :initialize="false"/>
+		<div class="global-actions" v-if="globalActions">
+			<button :disabled="action.useSelection && !lastTriggered" v-for="action in globalActions" 
+				@click="trigger(action, action.useSelection ? lastTriggered : (cell.on ? $services.page.instances[page.name].variables[cell.on] : {}))">{{action.label}}</button>
+		</div>
 	</div>
 </template>

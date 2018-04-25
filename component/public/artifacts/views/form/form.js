@@ -71,6 +71,22 @@ nabu.views.dashboard.Form = Vue.extend({
 				}
 			});
 			return fields;
+		},
+		events: function() {
+			var result = {};
+			if (this.operation && this.cell.state.event) {
+				var parameters = [];
+				var schema = this.operation.responses["200"] ? this.operation.responses["200"].schema : null;
+				if (schema) {
+					var definition = this.$services.swagger.definition(schema["$ref"]);
+					Object.keys(this.definition).map(function(key) {
+						parameters.push(key);
+						// TODO: we have more metadata about the field here, might want to pass it along?
+					});
+				}
+				result[this.cell.state.event] = parameters;
+			}
+			return result;
 		}
 	},
 	created: function() {
@@ -81,6 +97,9 @@ nabu.views.dashboard.Form = Vue.extend({
 			this.configuring = true;	
 		},
 		normalize: function(state) {
+			if (!state.title) {
+				Vue.set(state, "title", null);
+			}
 			if (!state.fields) {
 				Vue.set(state, "fields", []);
 			}
@@ -346,10 +365,11 @@ Vue.component("n-dashboard-form-field", {
 			this.$emit("input", this.field.value);
 		}
 	},
-	// copy paste from form-section
+	// mostly a copy paste from form-section
 	data: function() {
 		return {
-			labels: []
+			labels: [],
+			currentEnumerationValue: null
 		}
 	},
 	computed: {
@@ -361,6 +381,23 @@ Vue.component("n-dashboard-form-field", {
 		}
 	},
 	methods: {
+		filterEnumeration: function(value) {
+			var parameters = {};
+			if (this.field.enumerationOperationQuery) {
+				parameters[this.field.enumerationOperationQuery] = value;
+			}
+			return this.$services.swagger.execute(this.field.enumerationOperation, parameters, function(response) {
+				var result = null;
+				if (response) {
+					Object.keys(response).map(function(key) {
+						if (response[key] instanceof Array) {
+							result = response[key];
+						}
+					});
+				}
+				return result;
+			});
+		},
 		validate: function(soft) {
 			var messages = nabu.utils.vue.form.validateChildren(this, soft);
 			if (this.validator) {
@@ -394,6 +431,11 @@ Vue.component("n-dashboard-form-field", {
 			else {
 				this.labels.push(null);
 			}
+		}
+	},
+	watch: {
+		currentEnumerationValue: function(newValue) {
+			this.$emit('input', this.field.enumerationOperationValue ? newValue[this.field.enumerationOperationValue] : newValue);
 		}
 	}
 });

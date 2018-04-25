@@ -1,5 +1,14 @@
 .nabu-dashboard {
 	background-color: #eaebed;
+	.n-prompt-content {
+		background-color: #fff;
+		padding: 2rem;
+		border-radius: 5px;
+		box-shadow: 4px 4px 4px 4px #666;
+		.dashboard-form {
+			min-width: 40rem;
+		}
+	}
 	.bad {
 		color: #a00606;
 		background-color: #ffcdcd;
@@ -18,16 +27,46 @@
 		&+.page-cell {
 			margin-left: 0;
 		}
-		h2 {
-			text-align: left;
-			font-size: 0.9rem;
-			padding: 0;
-			padding-bottom: 0.5rem;
-			margin-bottom: 1rem;
-			border: solid 1px #bababa;
-			border-style: none none solid none;
-			overflow: visible;
-			font-weight: normal;
+	}
+	h2 {
+		text-align: left;
+		font-size: 0.9rem;
+		padding: 0;
+		padding-bottom: 0.5rem;
+		margin-bottom: 1rem;
+		border: solid 1px #bababa;
+		border-style: none none solid none;
+		overflow: visible;
+		font-weight: normal;
+	}
+	.global-actions {
+		text-align: right;
+		button {
+			background-color: #5295bb;
+			color: #fff;
+			border: none;
+			box-shadow: none;
+			padding: 0.5rem 1rem;
+			border-radius: 5px;
+			cursor: pointer;
+			font-size: 0.8rem;
+			text-transform: uppercase;
+			&+button {
+				margin-left: 0.3rem;
+			}
+			&[disabled] {
+				background-color: #aaa;
+			}
+		}
+		a {
+			text-decoration: none;
+			color: #5295bb;
+			margin: 0 1rem;
+		}
+	}
+	.dashboard-form {
+		.global-actions {
+			margin-top: 1rem;
 		}
 	}
 	.dashboard-cell {
@@ -74,6 +113,9 @@
 				tr {
 					&:nth-child(even) {
 						background-color: rgba(82, 149, 187, 0.1);
+					}
+					&.selected {
+						background-color: #99c2d9;
 					}
 					td {
 						border: ${border/apply()};

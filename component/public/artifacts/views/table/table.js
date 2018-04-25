@@ -31,11 +31,26 @@ nabu.views.dashboard.Table = Vue.extend({
 			last: null,
 			showFilter: false,
 			filters: {},
-			ready: false
+			ready: false,
+			subscriptions: [],
+			lastTriggered: null
 		}	
 	},
 	created: function() {
 		this.normalize(this.cell.state);
+		var pageInstance = this.$services.page.instances[this.page.name];
+		var self = this;
+		this.cell.state.refreshOn.map(function(x) {
+			self.subscriptions.push(pageInstance.subscribe(x, function() {
+				self.load();
+			}));
+		});
+	},
+	beforeDestroy: function() {
+		console.log("destroying " + this.subscriptions.length + " subscriptions");
+		this.subscriptions.map(function(x) {
+			x();
+		});
 	},
 	ready: function() {
 		this.ready = true;
@@ -46,7 +61,12 @@ nabu.views.dashboard.Table = Vue.extend({
 		},
 		actions: function() {
 			return this.cell.state.actions.filter(function(x) {
-				return x.icon;
+				return !x.global && x.icon;
+			});
+		},
+		globalActions: function() {
+			return this.cell.state.actions.filter(function(x) {
+				return x.global && x.label;
 			});
 		},
 		tableClass: function() {
@@ -107,8 +127,11 @@ nabu.views.dashboard.Table = Vue.extend({
 					parameters.push(key);
 					// TODO: we have more metadata about the field here, might want to pass it along?
 				});
+				var self = this;
 				this.cell.state.actions.map(function(action) {
-					result[action.name] = parameters;
+					result[action.name] = action.global && !action.useSelection
+						? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
+						: parameters;
 				});
 			}
 			return result;
@@ -183,6 +206,9 @@ nabu.views.dashboard.Table = Vue.extend({
 			})
 		},
 		trigger: function(action, data) {
+			if (!action) {
+				this.lastTriggered = data;
+			}
 			// if no action is specified, it is the one without the icon
 			if (!action && !this.actionHovering) {
 				action = this.cell.state.actions.filter(function(x) {
@@ -216,11 +242,17 @@ nabu.views.dashboard.Table = Vue.extend({
 			if (!state.filters) {
 				Vue.set(state, "filters", []);
 			}
+			if (!state.refreshOn) {
+				Vue.set(state, "refreshOn", []);
+			}
 			else {
 				var self = this;
 				state.filters.map(function(x) {
 					Vue.set(self.filters, x.field, null);
 				});
+			}
+			if (!state.showRefresh) {
+				Vue.set(state, "showRefresh", false);
 			}
 			// we add a result entry for each field
 			// we can then set formatters for each field
@@ -277,8 +309,11 @@ nabu.views.dashboard.Table = Vue.extend({
 			this.cell.state.actions.push({
 				name: "unnamed",
 				icon: null,
+				label: null,
 				condition: null,
-				refresh: false
+				refresh: false,
+				global: false,
+				useSelection: false
 			});
 		},
 		sort: function(key) {

@@ -1,10 +1,11 @@
 <template id="dashboard-form">
-	<div class="dashboard-form">
+	<div class="dashboard-cell dashboard-form">
 		<n-sidebar @close="configuring = false" v-if="configuring">
 			<n-form-combo slot="header" :value="operation" :filter="getOperations"
 				@input="updateOperation"
 				:formatter="function(x) { return x.id }"/>
 			<n-form class="layout2">
+				<n-form-text v-model="cell.state.title" label="Title"/>
 				<n-form-text v-model="cell.state.class" label="Form Class"/>
 				<n-form-text v-model="cell.state.cancel" label="Cancel Label"/>
 				<n-form-text v-model="cell.state.ok" label="Ok Label"/>
@@ -45,6 +46,7 @@
 				</n-form-section>
 			</n-form>
 		</n-sidebar>
+		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
 		<n-form :class="cell.state.class" ref="form">
 			<n-form-section v-for="field in cell.state.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name)">
 				<n-form-section v-if="isList(field.name)">
@@ -63,7 +65,7 @@
 				<n-dashboard-form-field v-else :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
 					@input="function(newValue) { $window.Vue.set(result, field.name, newValue) }"/>
 			</n-form-section>
-			<footer class="actions">
+			<footer class="global-actions">
 				<a href="javascript:void(0)" @click="$emit('close')" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
 				<button @click="doIt" v-if="cell.state.ok">{{cell.state.ok}}</button>
 			</footer>
@@ -86,9 +88,9 @@
 			@input="function(newValue) { $emit('input', newValue) }"
 			:label="field.label ? field.label : field.name"
 			:value="value"/>
-		<n-form-combo v-if="field.type == 'enumerationOperation'" :items="field.enumeration"
-			@input="function(newValue) { $emit('input', newValue) }"
-			:label="field.label ? field.label : field.name"
-			:value="value"/>
+		<n-form-combo v-if="field.type == 'enumerationOperation'" :filter="filterEnumeration"
+			:formatter="function(x) { return field.enumerationOperationLabel ? x[field.enumerationOperationLabel] : x }"
+			v-model="currentEnumerationValue"
+			:label="field.label ? field.label : field.name"/>
 	</n-form-section>
 </template>
