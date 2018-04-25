@@ -40,6 +40,19 @@ nabu.views.dashboard.Form = Vue.extend({
 		operation: function() {
 			return this.cell.state.operation ? this.$services.swagger.operations[this.cell.state.operation] : null;
 		},
+		body: function() {
+			var operation = this.$services.swagger.operations[this.cell.state.operation];
+			if (operation) {
+				var self = this;
+				for (var i = 0; i < operation.parameters.length; i++) {
+					var parameter = operation.parameters[i];
+					if (parameter.in == "body") {
+						return self.$services.swagger.resolve(parameter);
+					}
+				};
+			}
+			return {};
+		},
 		availableParameters: function() {
 			var parameters = this.$services.page.instances[this.page.name].availableParameters;
 			var result = {};
@@ -93,6 +106,11 @@ nabu.views.dashboard.Form = Vue.extend({
 					&& (!name || operation.id.toLowerCase().indexOf(name.toLowerCase()) >= 0);
 			});
 		},
+		getField: function(name) {
+			return this.cell.state.fields.filter(function(x) {
+				return x.name == name;
+			})[0];
+		},
 		updateOperation: function(operation) {
 			this.cell.state.operation = operation.id;
 			var bindings = {};
@@ -103,9 +121,23 @@ nabu.views.dashboard.Form = Vue.extend({
 						var type = self.$services.swagger.resolve(parameter);
 						if (type.schema.properties) {
 							Object.keys(type.schema.properties).map(function(key) {
-								bindings[key] = self.cell.bindings && self.cell.bindings[key]
-									? self.cell.bindings[key]
-									: null;
+								// 1-level recursion (currently)
+								// always add the element itself if it is a list (need to be able to add/remove it)
+								if (type.schema.properties[key].type != "object") {
+									var newKey = "body." + key;
+									bindings[newKey] = self.cell.bindings && self.cell.bindings[newKey]
+										? self.cell.bindings[newKey]
+										: null;
+								}
+								if (type.schema.properties[key].type == "object" || type.schema.properties[key].type == "array") {
+									var properties = type.schema.properties[key].type == "array" ? type.schema.properties[key].items.properties : type.schema.properties[key].properties;
+									Object.keys(properties).map(function(key2) {
+										var newKey = "body." + key + "." + key2;
+										bindings[newKey] = self.cell.bindings && self.cell.bindings[newKey]
+											? self.cell.bindings[newKey]
+											: null;	
+									});
+								}
 							});
 						}
 					}
@@ -121,31 +153,68 @@ nabu.views.dashboard.Form = Vue.extend({
 			Vue.set(this.cell, "bindings", bindings);
 		},
 		getSchemaFor: function(field) {
+			if (!field) {
+				return null;
+			}
 			var operation = this.$services.swagger.operations[this.cell.state.operation];
 			var result = null;
 			if (operation) {
 				var self = this;
-				for (var i = 0; i < operation.parameters.length; i++) {
-					var parameter = operation.parameters[i];
-					if (parameter.in == "body") {
-						var type = self.$services.swagger.resolve(parameter);
-						if (type.schema.properties) {
-							if (type.schema.properties[field]) {
-								result = type.schema.properties[field];
-								result.required = type.schema.required.indexOf(field) >= 0;
+				// body parameter
+				if (field.indexOf("body.") == 0) {
+					var recursiveGet = function(schema, parts, index) {
+						if (schema.items) {
+							schema = schema.items;
+						}
+						var properties = schema.properties;
+						if (properties && properties[parts[index]]) {
+							if (index < parts.length - 1) {
+								return recursiveGet(properties[parts[index]], parts, index + 1);
+							}
+							else {
+								var result = properties[parts[index]];
+								result.required = schema.required && schema.required.indexOf(parts[index]) >= 0;
+								return result;
 							}
 						}
 					}
-					else if (parameter.name == field) {
-						result = parameter;
-					}
-				};
+					var body = this.body;
+					var parts = field.substring("body.".length).split(".");
+					result = body.schema ? recursiveGet(body.schema, parts, 0) : null;
+				}
+				// non-body parameter
+				else {
+					for (var i = 0; i < operation.parameters.length; i++) {
+						var parameter = operation.parameters[i];
+						if (parameter.in != "body") {
+							result = parameter;
+						}
+					};
+				}
 			}
 			return result;
 		},
 		isList: function(field) {
 			var field = this.getSchemaFor(field);
 			return field && field.type == "array";
+		},
+		isPartOfList: function(field) {
+			// only things in the body can be a list (?)
+			if (!field || field.indexOf("body.") != 0) {
+				return false;
+			}
+			var parts = field.substring("body.".length).split(".");
+			var schema = this.body.schema;
+			for (var i = 0; i < parts.length - 1; i++) {
+				if (schema.items) {
+					schema = schema.items;
+				}
+				schema = schema.properties[parts[i]];
+				if (schema && schema.type == "array") {
+					return true;	
+				}
+			}
+			return false;
 		},
 		// copy/pasted from the table getOperations
 		getEnumerationServices: function() {
@@ -203,6 +272,20 @@ nabu.views.dashboard.Form = Vue.extend({
 				enumerationOperationQuery: null
 			})
 		},
+		addInstanceOfField: function(field) {
+			if (!this.result[field.name]) {
+				Vue.set(this.result, field.name, []);
+			}
+			var schema = this.getSchemaFor(field.name);
+			if (schema.items) {
+				schema = schema.items;
+			}
+			var result = {};
+			Object.keys(schema.properties).map(function(key) {
+				result[key] = null;
+			});
+			this.result[field.name].push(result);
+		},
 		doIt: function() {
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
@@ -211,9 +294,6 @@ nabu.views.dashboard.Form = Vue.extend({
 				// send out event! > can use this to refresh stuff!
 				// globale parameters that we can pass along
 				
-				// the result contains a mixture of body input parameters and other parameters
-				// the swagger client will do the proper transformation to make sure the data is clean
-				this.result.body = this.result;
 				var self = this;
 				this.$services.swagger.execute(this.cell.state.operation, this.result).then(function(result) {
 					if (self.cell.state.event) {
@@ -224,6 +304,22 @@ nabu.views.dashboard.Form = Vue.extend({
 				}, function(error) {
 					self.error = "Form submission failed";
 				});
+			}
+		},
+		up: function(field) {
+			var index = this.cell.state.fields.indexOf(field);
+			if (index > 0) {
+				var replacement = this.cell.state.fields[index - 1];
+				this.cell.state.fields.splice(index - 1, 1, this.cell.state.fields[index]);
+				this.cell.state.fields.splice(index, 1, replacement);
+			}
+		},
+		down: function(field) {
+			var index = this.cell.state.fields.indexOf(field);
+			if (index < this.cell.state.fields.length - 1) {
+				var replacement = this.cell.state.fields[index + 1];
+				this.cell.state.fields.splice(index + 1, 1, this.cell.state.fields[index]);
+				this.cell.state.fields.splice(index, 1, replacement);
 			}
 		}
 	}

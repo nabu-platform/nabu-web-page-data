@@ -18,7 +18,7 @@
 						<n-form-combo v-model="field.name" label="Name" :items="fieldsToAdd"/>
 						<n-form-text v-model="field.label" label="Label" />
 						<n-form-text v-model="field.description" label="Description" />
-						<n-form-combo v-model="field.type" label="Type" :items="['text', 'area', 'enumeration', 'enumerationOperation', 'date', 'number', 'fixed']"/>
+						<n-form-combo v-model="field.type" v-if="!isList(field.name)" label="Type" :items="['text', 'area', 'enumeration', 'enumerationOperation', 'date', 'number', 'fixed']"/>
 						<button v-if="field.type == 'enumeration'" @click="field.enumerations.push('')">Add enumeration</button>
 						<n-form-section class="enumeration" v-if="field.type == 'enumeration'" v-for="i in Object.keys(field.enumerations)" :key="field.name + 'enumeration_' + i">
 							<n-form-text v-model="field.enumerations[i]"/>
@@ -38,17 +38,26 @@
 							<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationQuery" label="Enumeration Query"
 								:filter="function() { return getEnumerationParameters(field.enumerationOperation) }"/>
 						</n-form-section>
+						<button @click="cell.state.fields.splice(cell.state.fields.indexOf(field), 1)">Remove Field</button>
+						<button @click="up(field)"><span class="n-icon n-icon-chevron-circle-up"></span></button>
+						<button @click="down(field)"><span class="n-icon n-icon-chevron-circle-down"></span></button>
 					</n-form-section>
 				</n-form-section>
 			</n-form>
 		</n-sidebar>
 		<n-form :class="cell.state.class" ref="form">
-			<n-form-section v-for="field in cell.state.fields" :key="field.name + '_section'">
+			<n-form-section v-for="field in cell.state.fields" :key="field.name + '_section'" v-if="!isPartOfList(field.name)">
 				<n-form-section v-if="isList(field.name)">
-					<button @click="function() { result[field.name].push(null) }">Add {{field.name}}</button>
-					<n-form-section v-for="i in Object.keys(result[field.name])" :key="field.name + '_wrapper' + i">
-						<n-dashboard-form-field :key="field.name + '_value' + i" :field="field" :schema="getSchemaFor(field.name)" v-model="result[field.name][i]"/>
-						<button @click="result[field.name].splice(i, 1)">Remove</button>	
+					<button @click="addInstanceOfField(field)">Add {{field.label ? field.label : field.name}}</button>
+					<n-form-section v-if="result[field.name]">
+						<n-form-section v-for="i in Object.keys(result[field.name])" :key="field.name + '_wrapper' + i">
+							<n-form-section v-for="key in Object.keys(result[field.name][i])" :key="field.name + '_wrapper' + i + '_wrapper'"
+									v-if="getField(field.name + '.' + key)">
+								<n-dashboard-form-field :key="field.name + '_value' + i + '_' + key" :field="getField(field.name + '.' + key)" 
+									:schema="getSchemaFor(field.name + '.' + key)" v-model="result[field.name][i][key]"/>
+							</n-form-section>
+							<button @click="result[field.name].splice(i, 1)">Remove {{field.label ? field.label : field.name}}</button>	
+						</n-form-section>
 					</n-form-section>
 				</n-form-section>
 				<n-dashboard-form-field v-else :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
