@@ -26,17 +26,45 @@ nabu.views.dashboard.Table = Vue.extend({
 		return {
 			records: [],
 			paging: {},
-			configuring: false
+			configuring: false,
+			actionHovering: false,
+			last: null,
+			showFilter: false,
+			filters: {},
+			ready: false
 		}	
 	},
 	created: function() {
 		this.normalize(this.cell.state);
 	},
+	ready: function() {
+		this.ready = true;
+	},
 	computed: {
+		filterable: function() {
+			return this.cell.state.filters.length;	
+		},
+		actions: function() {
+			return this.cell.state.actions.filter(function(x) {
+				return x.icon;
+			});
+		},
+		tableClass: function() {
+			return this.cell.state.class ? this.cell.state.class : "nabu-dashboard";	
+		},
 		operation: function() {
 			return this.cell.state.operation ? this.$services.swagger.operations[this.cell.state.operation] : null;
 		},
-		result: function() {
+		availableParameters: function() {
+			var parameters = this.$services.page.instances[this.page.name].availableParameters;
+			var result = {};
+			result.page = parameters.page;
+			if (this.cell.on) {
+				result[this.cell.on] = parameters[this.cell.on];
+			}
+			return result;
+		},
+		definition: function() {
 			var properties = {};
 			if (this.operation) {
 				var schema = this.operation.responses["200"].schema;
@@ -75,7 +103,7 @@ nabu.views.dashboard.Table = Vue.extend({
 				var schema = this.operation.responses["200"].schema;
 				var definition = this.$services.swagger.definition(schema["$ref"]);
 				var parameters = [];
-				Object.keys(this.result).map(function(key) {
+				Object.keys(this.definition).map(function(key) {
 					parameters.push(key);
 					// TODO: we have more metadata about the field here, might want to pass it along?
 				});
@@ -86,7 +114,18 @@ nabu.views.dashboard.Table = Vue.extend({
 			return result;
 		},
 		keys: function() {
-			return Object.keys(this.result);
+			var keys = Object.keys(this.definition);
+			var self = this;
+			keys.map(function(key) {
+				if (!self.cell.state.result[key]) {
+					Vue.set(self.cell.state.result, key, {
+						label: null,
+						format: null,
+						styles: []
+					});
+				}
+			});
+			return keys;
 		},
 		orderable: function() {
 			// the operation must have an input parameter called "orderBy"
@@ -98,15 +137,74 @@ nabu.views.dashboard.Table = Vue.extend({
 	activate: function(done) {
 		this.load().then(function() {
 			done();
+		}, function() {
+			done();
 		});
 	},
 	methods: {
+		addStyle: function(key) {
+			if (!this.cell.state.result[key].styles) {
+				Vue.set(this.cell.state.result[key], "styles", []);
+			}
+			this.cell.state.result[key].styles.push({
+				class:null,
+				condition:null
+			});
+		},
+		// standard methods!
 		configure: function() {
 			this.configuring = true;	
+		},
+		refresh: function() {
+			this.load();
+		},
+		// custom methods
+		setFilter: function(filter, newValue) {
+			this.filters[filter.field] = newValue;
+			this.load();
+		},
+		filtersToAdd: function(ignoreCurrentFilters) {
+			var self = this;
+			var currentFilters = this.cell.state.filters.map(function(x) {
+				return x.name;
+			});
+			// any input parameters that are not bound
+			return this.parameters.filter(function(x) {
+				return !self.cell.bindings[x] && (currentFilters.indexOf(x) < 0 || ignoreCurrentFilters);
+			});
+		},
+		addFilter: function() {
+			this.cell.state.filters.push({
+				field: null,
+				label: null,
+				type: 'text',
+				enumerations: [],
+				value: null
+			})
+		},
+		trigger: function(action, data) {
+			// if no action is specified, it is the one without the icon
+			if (!action && !this.actionHovering) {
+				action = this.cell.state.actions.filter(function(x) {
+					return !x.icon;
+				})[0];
+			}
+			if (action) {
+				var pageInstance = this.$services.page.instances[this.page.name];
+				var self = this;
+				pageInstance.emit(action.name, data).then(function() {
+					if (action.refresh) {
+						self.load();
+					}
+				});
+			}
 		},
 		normalize: function(state) {
 			if (!state.orderBy) {
 				Vue.set(state, "orderBy", []);
+			}
+			if (!state.title) {
+				Vue.set(state, "title", null);
 			}
 			if (!state.limit) {
 				Vue.set(state, "limit", 20);
@@ -115,17 +213,26 @@ nabu.views.dashboard.Table = Vue.extend({
 			if (!state.actions) {
 				Vue.set(state, "actions", []);
 			}
-			
+			if (!state.filters) {
+				Vue.set(state, "filters", []);
+			}
+			else {
+				var self = this;
+				state.filters.map(function(x) {
+					Vue.set(self.filters, x.field, null);
+				});
+			}
 			// we add a result entry for each field
 			// we can then set formatters for each field
 			if (!state.result) {
 				Vue.set(state, "result", {});
 			}
-			Object.keys(this.result).map(function(key) {
+			Object.keys(this.definition).map(function(key) {
 				if (!state.result[key]) {
 					Vue.set(state.result, key, {
 						label: null,
-						format: null
+						format: null,
+						styles: []
 					});
 				}
 			});
@@ -142,10 +249,36 @@ nabu.views.dashboard.Table = Vue.extend({
 				this.cell.state.actions.splice(index, 1);
 			}
 		},
+		getDynamicClasses: function(key, record) {
+			var styles = this.cell.state.result[key].styles;
+			if (styles) {
+				var self = this;
+				return styles.filter(function(style) {
+					return self.isCondition(style.condition, record);
+				}).map(function(style) {
+					return style.class;
+				});
+			}
+			else {
+				return [];
+			}
+		},
+		isCondition: function(condition, record) {
+			for (var key in record) {
+				eval("var " + key + " = record[key];");
+			}
+			var result = eval(condition);
+			if (result instanceof Function) {
+				result = result(record);
+			}
+			return result == true;
+		},
 		addAction: function() {
 			this.cell.state.actions.push({
 				name: "unnamed",
-				icon: null
+				icon: null,
+				condition: null,
+				refresh: false
 			});
 		},
 		sort: function(key) {
@@ -171,12 +304,14 @@ nabu.views.dashboard.Table = Vue.extend({
 			if (operation.parameters) {
 				var self = this;
 				operation.parameters.map(function(parameter) {
-					bindings[parameter.name] = self.cell.state.bindings && self.cell.state.bindings[parameter.name]
-						? self.cell.state.bindings[parameter.name]
+					bindings[parameter.name] = self.cell.bindings && self.cell.bindings[parameter.name]
+						? self.cell.bindings[parameter.name]
 						: null;
 				});
 			}
-			Vue.set(this.cell.state, "bindings", bindings);
+			// TODO: is it OK that we simply remove all bindings?
+			// is the table the only one who sets bindings here?
+			Vue.set(this.cell, "bindings", bindings);
 		},
 		getOperations: function(name) {
 			var self = this;
@@ -226,6 +361,10 @@ nabu.views.dashboard.Table = Vue.extend({
 				else if (format == "time") {
 					value = new Date(value).toLocaleTimeString();
 				}
+				else if (typeof(value) == "string") {
+					value = value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+						.replace(/\n/g, "<br/>").replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
+				}
 			}
 			return value;
 		},
@@ -251,21 +390,30 @@ nabu.views.dashboard.Table = Vue.extend({
 						parameters[name] = pageInstance.get(self.cell.bindings[name]);
 					}
 				});
-				
-				this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
-					self.records.splice(0, self.records.length);
-					Object.keys(list).map(function(field) {
-						if (list[field] instanceof Array && !self.records.length) {
-							nabu.utils.arrays.merge(self.records, list[field]);
-						}
-					});
-					if (list.page) {
-						nabu.utils.objects.merge(self.paging, list.page);
-					}
-					promise.resolve();
-				}, function(error) {
-					promise.resolve(error);
+				this.cell.state.filters.map(function(filter) {
+					parameters[filter.field] = filter.type == 'fixed' ? filter.value : self.filters[filter.field];	
 				});
+				try {
+					this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
+						self.records.splice(0, self.records.length);
+						Object.keys(list).map(function(field) {
+							if (list[field] instanceof Array && !self.records.length) {
+								nabu.utils.arrays.merge(self.records, list[field]);
+							}
+						});
+						if (list.page) {
+							nabu.utils.objects.merge(self.paging, list.page);
+						}
+						self.last = new Date();
+						promise.resolve();
+					}, function(error) {
+						promise.resolve(error);
+					});
+				}
+				catch(error) {
+					console.warn("Could not run", this.cell.state.operation, error);
+					promise.resolve(error);
+				}
 			}
 			else {
 				promise.resolve("No operation found");

@@ -3,9 +3,15 @@ window.addEventListener("load", function() {
 		
 		$services.router.register({
 			alias: "dashboard-table",
-			query: ["test"],
 			enter: function(parameters) {
 				return new nabu.views.dashboard.Table({propsData:parameters});
+			}
+		});
+		
+		$services.router.register({
+			alias: "dashboard-form",
+			enter: function(parameters) {
+				return new nabu.views.dashboard.Form({propsData:parameters});
 			}
 		});
 	

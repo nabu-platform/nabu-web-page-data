@@ -13,10 +13,12 @@
 		}
 	}
 	table {
-		width: calc(100% - 2rem);
-		margin: 1rem;
+		width: calc(100%);
 		td {
 			padding: 0.5rem;
+			&.actions {
+				white-space: nowrap;
+			}
 		}
 		thead {
 			background-color: #666;
@@ -24,6 +26,7 @@
 		}
 		tbody {
 			tr {
+				cursor: pointer;
 				&:nth-child(odd) {
 					background-color: #fafafa;
 				}
