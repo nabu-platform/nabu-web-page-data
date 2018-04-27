@@ -3,7 +3,7 @@
 		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
 			<n-form class="layout2">
 				<n-collapsible title="Table Settings">
-					<n-form-combo label="Operation" :value="operation" :filter="getOperations"
+					<n-form-combo label="Operation" :value="operation" :filter="$services.dashboard.getDataOperations"
 						@input="updateOperation"
 						:formatter="function(x) { return x.id }"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
@@ -24,23 +24,6 @@
 					<n-page-mapper :to="parameters" :from="availableParameters" 
 						v-model="cell.bindings"/>
 				</n-collapsible>
-				<n-collapsible title="Events" class="list">
-					<div class="list-actions">
-						<button @click="addAction">Add Event</button>
-					</div>
-					<n-collapsible class="list-item" :title="action.name" v-for="action in cell.state.actions">
-						<n-form-text v-model="action.name" label="Name" :required="true"/>
-						<n-form-switch v-model="action.global" label="Global" />
-						<n-form-switch v-model="action.useSelection" v-if="action.global" label="Use Selection" />
-						<n-form-text v-model="action.icon" v-if="!action.global" label="Icon"/>
-						<n-form-text v-model="action.label" v-else label="Label"/>
-						<n-form-text v-model="action.condition" label="Condition"/>
-						<n-form-switch v-model="action.refresh" label="Reload"/>
-						<div class="list-item-actions">
-							<button @click="removeAction(action)"><span class="n-icon n-icon-trash"></span></button>
-						</div>
-					</n-collapsible>
-				</n-collapsible>
 				<n-collapsible title="Filters" v-if="cell.state.filters.length || filtersToAdd().length" class="list">
 					<div class="list-actions">
 						<button @click="addFilter" v-if="filtersToAdd().length">Add Filter</button>
@@ -57,6 +40,23 @@
 							<button @click="filter.enumerations.splice(i, 1)"><span class="n-icon n-icon-trash"></span></button>
 						</n-form-section>
 						<n-form-text v-model="filter.value" v-if="filter.type == 'fixed'" label="Fixed Value"/>
+					</n-collapsible>
+				</n-collapsible>
+				<n-collapsible title="Events" class="list">
+					<div class="list-actions">
+						<button @click="addAction">Add Event</button>
+					</div>
+					<n-collapsible class="list-item" :title="action.name" v-for="action in cell.state.actions">
+						<n-form-text v-model="action.name" label="Name" :required="true"/>
+						<n-form-switch v-model="action.global" label="Global" />
+						<n-form-switch v-model="action.useSelection" v-if="action.global" label="Use Selection" />
+						<n-form-text v-model="action.icon" v-if="!action.global" label="Icon"/>
+						<n-form-text v-model="action.label" v-else label="Label"/>
+						<n-form-text v-model="action.condition" label="Condition"/>
+						<n-form-switch v-model="action.refresh" label="Reload"/>
+						<div class="list-item-actions">
+							<button @click="removeAction(action)"><span class="n-icon n-icon-trash"></span></button>
+						</div>
 					</n-collapsible>
 				</n-collapsible>
 				<n-collapsible title="Formatters" class="list">

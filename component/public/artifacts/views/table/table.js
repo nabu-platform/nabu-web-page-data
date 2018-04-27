@@ -348,33 +348,6 @@ nabu.views.dashboard.Table = Vue.extend({
 			// is the table the only one who sets bindings here?
 			Vue.set(this.cell, "bindings", bindings);
 		},
-		getOperations: function(name) {
-			var self = this;
-			return this.$services.dashboard.getOperations(function(operation) {
-				// must be a get
-				var isAllowed = operation.method.toLowerCase() == "get"
-					// and contain the name fragment (if any)
-					&& (!name || operation.id.toLowerCase().indexOf(name.toLowerCase()) >= 0)
-					// must have _a_ response
-					&& operation.responses["200"];
-				// we also need at least _a_ complex array in the results
-				if (isAllowed) {
-					var schema = operation.responses["200"].schema;
-					var definition = self.$services.swagger.definition(schema["$ref"]);
-					// now we need a child in the definition that is a record array
-					// TODO: we currently don't actually check for a complex array, just any array, could be an array of strings...
-					isAllowed = false;
-					if (definition.properties) {
-						Object.keys(definition.properties).map(function(field) {
-							if (definition.properties[field].type == "array") {
-								isAllowed = true;
-							}
-						});
-					}
-				}
-				return isAllowed;
-			});
-		},
 		// we want to be able to hide fields to reuse the same data source in multiple settings
 		isHidden: function(key) {
 			return this.cell.state.result[key] && this.cell.state.result[key].format == "hidden";	
