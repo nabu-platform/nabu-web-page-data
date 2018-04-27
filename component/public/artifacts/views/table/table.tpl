@@ -1,33 +1,34 @@
 <template id="dashboard-table">
 	<div class="dashboard-cell dashboard-table">
-		<n-sidebar @close="configuring = false" v-if="configuring">
-			<n-form-combo slot="header" :value="operation" :filter="getOperations"
-				@input="updateOperation"
-				:formatter="function(x) { return x.id }"/>
+		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
 			<n-form class="layout2">
-				<n-form-section class="misc">
+				<n-collapsible title="Table Settings">
+					<n-form-combo label="Operation" :value="operation" :filter="getOperations"
+						@input="updateOperation"
+						:formatter="function(x) { return x.id }"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
 					<n-form-text v-model="cell.state.limit" label="Limit" :timeout="600" @input="load()"/>
-				</n-form-section>
-				<n-form-section class="refresh">
-					<h2>Refresh</h2>
-					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh"/>
-					<button @click="cell.state.refreshOn.push(null)">Add Refresh Listener</button>
-					<n-form-section v-for="i in Object.keys(cell.state.refreshOn)" class="listener">
+				</n-collapsible>
+				<n-collapsible title="Refresh">
+					<div class="list-actions">
+						<button @click="cell.state.refreshOn.push(null)">Add Refresh Listener</button>
+					</div>
+					<div v-for="i in Object.keys(cell.state.refreshOn)" class="list-row">
 						<n-form-combo v-model="cell.state.refreshOn[i]"
 							:items="$services.page.instances[page.name].getAvailableEvents()"/>
-						<button @click="cell.state.refreshOn.splice(i, 1)">Remove Refresh Listener</button>
-					</n-form-section>
-				</n-form-section>
-				<n-form-section class="mapping" v-if="parameters.length">
-					<h2>Input</h2>
+						<button @click="cell.state.refreshOn.splice(i, 1)"><span class="n-icon n-icon-trash"></span></button>
+					</div>
+					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>
+				</n-collapsible>
+				<n-collapsible title="Mapping" class="mapping" v-if="parameters.length">
 					<n-page-mapper :to="parameters" :from="availableParameters" 
 						v-model="cell.bindings"/>
-				</n-form-section>
-				<n-form-section class="actions">
-					<h2>Events</h2>
-					<button @click="addAction">Add Event</button>
-					<n-form-section class="action" v-for="action in cell.state.actions">
+				</n-collapsible>
+				<n-collapsible title="Events" class="list">
+					<div class="list-actions">
+						<button @click="addAction">Add Event</button>
+					</div>
+					<n-collapsible class="list-item" :title="action.name" v-for="action in cell.state.actions">
 						<n-form-text v-model="action.name" label="Name" :required="true"/>
 						<n-form-switch v-model="action.global" label="Global" />
 						<n-form-switch v-model="action.useSelection" v-if="action.global" label="Use Selection" />
@@ -35,44 +36,49 @@
 						<n-form-text v-model="action.label" v-else label="Label"/>
 						<n-form-text v-model="action.condition" label="Condition"/>
 						<n-form-switch v-model="action.refresh" label="Reload"/>
-						<button @click="removeAction(action)"><span class="n-icon n-icon-trash"></span></button>
-					</n-form-section>
-				</n-form-section>
-				<n-form-section class="filters" v-if="cell.state.filters.length || filtersToAdd().length">
-					<h2>Filters</h2>
-					<button @click="addFilter" v-if="filtersToAdd().length">Add Filter</button>
-					<n-form-section class="filter" v-for="filter in cell.state.filters">
+						<div class="list-item-actions">
+							<button @click="removeAction(action)"><span class="n-icon n-icon-trash"></span></button>
+						</div>
+					</n-collapsible>
+				</n-collapsible>
+				<n-collapsible title="Filters" v-if="cell.state.filters.length || filtersToAdd().length" class="list">
+					<div class="list-actions">
+						<button @click="addFilter" v-if="filtersToAdd().length">Add Filter</button>
+					</div>
+					<n-collapsible class="list-item" :title="filter.label ? filter.label : filter.field" v-for="filter in cell.state.filters">
 						<n-form-combo v-model="filter.field" label="Field" :items="filtersToAdd(true)"/>
 						<n-form-text v-model="filter.label" label="Label" />
 						<n-form-combo v-model="filter.type" label="Type" :items="['text', 'enumeration', 'date', 'number', 'fixed']"/>
-						<button v-if="filter.type == 'enumeration'" @click="filter.enumerations.push('')">Add enumeration</button>
-						<n-form-section class="enumeration" v-if="filter.type == 'enumeration'" v-for="i in Object.keys(filter.enumerations)">
+						<div class="list-actions">
+							<button v-if="filter.type == 'enumeration'" @click="filter.enumerations.push('')">Add enumeration</button>
+						</div>
+						<n-form-section class="list-row" v-if="filter.type == 'enumeration'" v-for="i in Object.keys(filter.enumerations)">
 							<n-form-text v-model="filter.enumerations[i]"/>
-							<button @click="filter.enumerations.splice(i, 1)">Remove Enumeration</button>
+							<button @click="filter.enumerations.splice(i, 1)"><span class="n-icon n-icon-trash"></span></button>
 						</n-form-section>
 						<n-form-text v-model="filter.value" v-if="filter.type == 'fixed'" label="Fixed Value"/>
-					</n-form-section>
-				</n-form-section>
-				<n-form-section class="formatters">
-					<h2>Formatting</h2>
-					<n-form-section class="formatter" v-for="key in keys">
+					</n-collapsible>
+				</n-collapsible>
+				<n-collapsible title="Formatters" class="list">
+					<n-collapsible class="list-item" :title="cell.state.result[key].label ? cell.state.result[key].label : key" v-for="key in keys">
 						<n-form-combo v-model="cell.state.result[key].format" :label="'Format ' + key + ' as'"
 							:items="['hidden', 'link', 'date', 'dateTime', 'time']"/>
 						<n-form-text v-model="cell.state.result[key].label" :label="'Label for ' + key" 
 							v-if="cell.state.result[key].format != 'hidden'"/>
-					</n-form-section>
-				</n-form-section>
-				<n-form-section class="styles">
-					<h2>Styling</h2>
-					<n-form-section class="style" v-for="key in keys">
-						<button @click="addStyle(key)">Add Style for {{key}}</button>
-						<n-form-section class="styles" v-for="style in cell.state.result[key].styles">
+					</n-collapsible>
+				</n-collapsible>
+				<n-collapsible title="Styling" class="list">
+					<n-collapsible class="list-item" :title="key" v-for="key in keys">
+						<div class="list-item-actions">
+							<button @click="addStyle(key)">Add Style for {{key}}</button>
+						</div>
+						<n-form-section class="list-row" v-for="style in cell.state.result[key].styles">
 							<n-form-text v-model="style.class" label="Class"/>
 							<n-form-text v-model="style.condition" label="Condition"/>
-							<button @click="cell.state.result[key].styles.splice(cell.state.result[key].styles.indexOf(style), 1)">Remove Style</button>
+							<button @click="cell.state.result[key].styles.splice(cell.state.result[key].styles.indexOf(style), 1)"><span class="n-icon n-icon-trash"></span></button>
 						</n-form-section>
-					</n-form-section>
-				</n-form-section>
+					</n-collapsible>
+				</n-collapsible>
 			</n-form>
 		</n-sidebar>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>

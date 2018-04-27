@@ -1,21 +1,26 @@
 <template id="dashboard-form">
 	<div class="dashboard-cell dashboard-form">
-		<n-sidebar @close="configuring = false" v-if="configuring">
-			<n-form-combo slot="header" :value="operation" :filter="getOperations"
-				@input="updateOperation"
-				:formatter="function(x) { return x.id }"/>
+		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
 			<n-form class="layout2">
-				<n-form-text v-model="cell.state.title" label="Title"/>
-				<n-form-text v-model="cell.state.class" label="Form Class"/>
-				<n-form-text v-model="cell.state.cancel" label="Cancel Label"/>
-				<n-form-text v-model="cell.state.ok" label="Ok Label"/>
-				<n-form-text v-model="cell.state.event" label="Event"/>
-				<n-page-mapper :to="Object.keys(cell.bindings)" :from="availableParameters" 
-					v-model="cell.bindings"/>
-				<n-form-section class="form">
-					<h2>Form</h2>
-					<button @click="addField" v-if="fieldsToAdd.length">Add Field</button>
-					<n-form-section class="field" v-for="field in cell.state.fields">
+				<n-collapsible title="Form Settings">
+					<n-form-combo label="Operation" :value="operation" :filter="getOperations"
+						@input="updateOperation"
+						:formatter="function(x) { return x.id }"/>
+					<n-form-text v-model="cell.state.title" label="Title"/>
+					<n-form-text v-model="cell.state.class" label="Form Class"/>
+					<n-form-text v-model="cell.state.cancel" label="Cancel Label"/>
+					<n-form-text v-model="cell.state.ok" label="Ok Label"/>
+					<n-form-text v-model="cell.state.event" label="Success Event"/>
+				</n-collapsible>
+				<n-collapsible title="Value Binding">
+					<n-page-mapper :to="Object.keys(cell.bindings)" :from="availableParameters" 
+						v-model="cell.bindings"/>
+				</n-collapsible>
+				<n-collapsible class="list" title="Fields">
+					<div class="list-actions">
+						<button @click="addField" v-if="fieldsToAdd.length">Add Field</button>
+					</div>
+					<n-collapsible class="field list-item" v-for="field in cell.state.fields" :title="field.label ? field.label : field.name">
 						<n-form-combo v-model="field.name" label="Name" :items="fieldsToAdd"/>
 						<n-form-text v-model="field.label" label="Label" />
 						<n-form-text v-model="field.description" label="Description" />
@@ -39,11 +44,13 @@
 							<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationQuery" label="Enumeration Query"
 								:filter="function() { return getEnumerationParameters(field.enumerationOperation) }"/>
 						</n-form-section>
-						<button @click="cell.state.fields.splice(cell.state.fields.indexOf(field), 1)">Remove Field</button>
-						<button @click="up(field)"><span class="n-icon n-icon-chevron-circle-up"></span></button>
-						<button @click="down(field)"><span class="n-icon n-icon-chevron-circle-down"></span></button>
-					</n-form-section>
-				</n-form-section>
+						<div class="list-item-actions">
+							<button @click="up(field)"><span class="n-icon n-icon-chevron-circle-up"></span></button>
+							<button @click="down(field)"><span class="n-icon n-icon-chevron-circle-down"></span></button>
+							<button @click="cell.state.fields.splice(cell.state.fields.indexOf(field), 1)">Remove Field</button>
+						</div>
+					</n-collapsible>
+				</n-collapsible>
 			</n-form>
 		</n-sidebar>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
