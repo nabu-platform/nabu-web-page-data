@@ -80,6 +80,9 @@
 						</n-form-section>
 					</n-collapsible>
 				</n-collapsible>
+				<n-collapsible title="Advanced" v-if="false" comment="currently disabled, transforming data is tricky because we lose definition">
+					<n-ace :timeout="600" v-model="cell.state.transform" mode="javascript"/>
+				</n-collapsible>
 				<slot name="settings"></slot>
 			</n-form>
 		</n-sidebar>

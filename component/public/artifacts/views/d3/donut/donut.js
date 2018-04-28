@@ -49,6 +49,7 @@ nabu.views.dashboard.Donut = Vue.extend({
 		this.draw();		
 	},
 	methods: {
+		// based heavily on: https://bl.ocks.org/mbhall88/b2504f8f3e384de4ff2b9dfa60f325e2
 		draw: function() {
 			var self = this;
 			if (this.cell.state.value && this.$refs.svg) {

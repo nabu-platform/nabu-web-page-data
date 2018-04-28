@@ -136,7 +136,7 @@ Vue.component("n-dashboard-data", {
 			return properties;
 		},
 		hasLimit: function() {
-			return this.operation.parameters.filter(function(x) {
+			return !this.operation || !this.operation.parameters ? false : this.operation.parameters.filter(function(x) {
 				return x.name == "limit";
 			}).length;
 		},
@@ -248,6 +248,9 @@ Vue.component("n-dashboard-data", {
 			}
 		},
 		normalize: function(state) {
+			/*if (!state.transform) {
+				Vue.set(state, "transform", null);
+			}*/
 			if (!state.orderBy) {
 				Vue.set(state, "orderBy", []);
 			}

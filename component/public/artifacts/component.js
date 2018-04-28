@@ -21,6 +21,13 @@ window.addEventListener("load", function() {
 				return new nabu.views.dashboard.Donut({propsData:parameters});
 			}
 		});
+		
+		$services.router.register({
+			alias: "dashboard-bar",
+			enter: function(parameters) {
+				return new nabu.views.dashboard.Bar({propsData:parameters});
+			}
+		});
 	
 		return $services.$register({
 			dashboard: nabu.services.Dashboard
