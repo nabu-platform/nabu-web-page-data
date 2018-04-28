@@ -1,0 +1,44 @@
+[template="dashboard-donut"] {
+	height: 100%;
+}
+.dashboard-donut {
+	height: 100%;
+	font-family: 'Roboto', sans-serif;
+	color: #333333;
+	text-align: center;
+	.settings {
+		text-align: left;
+	}
+	svg {
+		margin: auto;
+		-webkit-filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.3) );
+		filter: drop-shadow( 0px 3px 3px rgba(0,0,0,.25) );
+		overflow: visible;
+	}
+
+	polyline{
+		opacity: .3;
+		stroke: black;
+		stroke-width: 2px;
+		fill: none;
+	}
+
+	.property {
+		.key {
+			font-weight: bold;
+			&:after {
+				content: ': ';
+			}
+			margin-right: 1rem;
+		}
+	}
+	// we can add a tspan after the label as a unit
+	.labelName tspan {
+		font-style: normal;
+		font-weight: 700;
+	}
+
+	.labelName {
+		font-size: 0.9em;
+	}
+}

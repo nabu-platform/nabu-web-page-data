@@ -1,17 +1,17 @@
 <template id="dashboard-donut">
 	<div class="dashboard-donut">
-		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
-			<n-form class="layout2">
-				<n-collapsible title="Table Settings">
-					<n-form-combo label="Operation" :value="operation" :filter="$services.dashboard.getDataOperations"
-						@input="updateOperation"
-						:formatter="function(x) { return x.id }"/>
-					<n-form-text v-model="cell.state.title" label="Title"/>
-					<n-form-text v-model="cell.state.width" label="Width" :timeout="600" />
-					<n-form-text v-model="cell.state.height" label="Height" :timeout="600" />
-				</n-collapsible>
-			</n-form>
-		</n-sidebar>
-		<svg :width="cell.state.width ? cell.state.width : 960" :height="cell.state.height ? cell.state.height : 500" ref="svg"></svg>
+		<n-dashboard-data :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
+				:records="records"
+				v-model="loaded">
+			<n-form-section slot="main-settings">
+				<n-form-text v-model="cell.state.unit" label="Unit" :timeout="600" @input="draw" />
+				<n-form-text v-model="cell.state.fromColor" type="color" label="From Color" :timeout="600" @input="draw" />
+				<n-form-text v-model="cell.state.toColor" type="color" label="To Color" :timeout="600" @input="draw" />
+				<n-form-text v-model="cell.state.arcWidth" type="range" :minimum="10" :maximum="90" label="Arc Width" :timeout="600" @input="draw"/>
+				<n-form-combo v-model="cell.state.value" @input="draw" :required="true" label="Value Field" :filter="function() { return $refs.data.keys }"/>
+				<n-form-combo v-model="cell.state.label" @input="draw" label="Label Field" :filter="function() { return $refs.data.keys }"/>
+			</n-form-section>
+		</n-dashboard-data>
+		<svg ref="svg" v-if="loaded"></svg>
 	</div>
 </template>
