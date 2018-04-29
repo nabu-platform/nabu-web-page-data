@@ -155,9 +155,14 @@ nabu.views.dashboard.Bar = Vue.extend({
 				var x = d3.scaleBand()
 					.rangeRound([0, width])
 					.domain(xValues)
-					.paddingInner(0.05)
+					// if we have a grouped chart, put the groups slightly further apart
+					.paddingInner(this.cell.state.groupType == "grouped" ? 0.1 : 0.05)
 					.align(0.1);
 				
+				// the x scale for each group
+				var xSub = d3.scaleBand()
+    				.padding(0.05);
+    				
 				var y = d3.scaleLinear()
 					.rangeRound([height, 0])
 					.domain([minY, maxY])
@@ -169,7 +174,12 @@ nabu.views.dashboard.Bar = Vue.extend({
 				
 				if (zValues.length) {
 					
-					if (this.cell.state.groupType == "stacked") {
+					var z = d3.scaleLinear()
+						.domain([0, zValues.length])
+						.range([this.fromColor, this.toColor])
+						.interpolate(d3.interpolateHcl);
+						
+					if (!this.cell.state.groupType || this.cell.state.groupType == "stacked") {
 						// to retrieve the original record, we have to jump through some hoops
 						// we transformed the data to match the stuff that is required by the stacked bars
 						// however, we want to show the original record in the popup
@@ -208,11 +218,6 @@ nabu.views.dashboard.Bar = Vue.extend({
 							data.push(single);
 						})
 						
-						var z = d3.scaleLinear()
-							.domain([0, zValues.length])
-							.range([this.fromColor, this.toColor])
-							.interpolate(d3.interpolateHcl);
-							
 						g.append("g")
 							.selectAll("g")
 							.data(d3.stack().keys(zValues)(data))
@@ -254,7 +259,63 @@ nabu.views.dashboard.Bar = Vue.extend({
 					}
 					// side-by-side
 					else {
+						htmlBuilder = function (data, i) {
+							console.log("data is", data);
+							self.$services.dashboard.buildStandardD3Tooltip(data.data, i, self.$refs.data.buildToolTip);	
+						}
 						
+						// group by z
+						var data = {};
+						records.map(function(record) {
+							var zValue = record[self.cell.state.z];
+							if (!data[zValue]) {
+								data[zValue] = [];
+							}
+							data[zValue].push(record);
+						});
+
+						xSub.domain(zValues).rangeRound([0, x.bandwidth()]);
+						g.append("g")
+							.selectAll("g")
+							.data(records)
+							.enter().append("g")
+							.attr("transform", function(d) { return "translate(" + x(d[self.cell.state.x]) + ",0)"; })
+							.selectAll("rect")
+							//.data(function(d) { return zValues.map(function(key) { return {key: key, value: d[self.cell.state.y], data:d}; }); });
+							.data(function(d) { return zValues.map(function(key) { 
+								var record = data[key].filter(function(record) {
+									return record[self.cell.state.z] == key
+										&& record[self.cell.state.x] == d[self.cell.state.x];
+								})[0];
+								return {key: key, value: record ? record[self.cell.state.y] : 0, data:record}; 
+							}); })
+							.enter().append("rect")
+							.attr("class", "bar bar-" + self.cell.id)
+							.attr("x", function(d) { return xSub(d.key); })
+							.attr("y", function(d) { return y(d.value); })
+							.attr("width", xSub.bandwidth())
+							.attr("height", function(d) { return height - y(d.value); })
+							.attr("fill", function(d) { return z(zValues.indexOf(d.key)); });
+						
+						g.append("g")
+							.attr("class", "axis")
+							.attr("transform", "translate(0," + height + ")")
+							.call(d3.axisBottom(x));
+						
+						var yAxis = g.append("g")
+							.attr("class", "axis")
+							.call(d3.axisLeft(y).ticks(null, "s"))
+							.append("text")
+							.attr("x", 2)
+							.attr("y", y(y.ticks().pop()) + 0.5)
+							.attr("dy", "0.32em")
+							.attr("fill", "#000")
+							.attr("font-weight", "bold")
+							.attr("text-anchor", "start");
+							
+						if (this.cell.state.yLabel) {
+							yAxis.text(this.cell.state.yLabel);
+						}
 					}
 					
 					if (this.cell.state.legend) {
@@ -282,7 +343,6 @@ nabu.views.dashboard.Bar = Vue.extend({
 				}
 				else {
 					htmlBuilder = function (data, i) {
-						console.log("wtf?");
 						self.$services.dashboard.buildStandardD3Tooltip(data, i, self.$refs.data.buildToolTip);	
 					}
 					var xAxis = g.append("g")
@@ -374,7 +434,7 @@ nabu.views.dashboard.Bar = Vue.extend({
 				Vue.set(state, "reverseSortBy", false);
 			}
 			if (!state.groupType) {
-				Vue.set(state, "groupType", false);
+				Vue.set(state, "groupType", null);
 			}
 		},
 		// standard methods!
