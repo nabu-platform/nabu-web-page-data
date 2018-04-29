@@ -1,4 +1,4 @@
-[template="dashboard-donut"], [template="dashboard-bar"], .dashboard-donut, .dashboard-bar {
+[template="dashboard-donut"], [template="dashboard-bar"], [template="dashboard-line"], .dashboard-donut, .dashboard-bar, .dashboard-line {
 	height: 100%;
 	svg {
 		margin: auto;

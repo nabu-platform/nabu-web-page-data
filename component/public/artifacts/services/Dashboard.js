@@ -54,6 +54,83 @@ nabu.services.VueService(Vue.extend({
 			if (element) {
 				element.parentNode.removeChild(element);
 			}
+		},
+		extractValues: function(cell, records) {
+			var zValues = [];
+			var xValues = [];
+			var yValues = [];
+			var minY = 0;
+			records.map(function(record, i) {
+				if (cell.state.z) {
+					var z = record[cell.state.z];
+					if (zValues.indexOf(z) < 0) {
+						zValues.push(z);
+					}
+				}
+				if (cell.state.x) {
+					var x = record[cell.state.x];
+					if (xValues.indexOf(x) < 0) {
+						xValues.push(x);
+						yValues.push(0);
+					}
+				}
+				else {
+					xValues.push(i);
+				}
+				var y = record[cell.state.y];
+				if (minY == null || y < minY) {
+					minY = y;
+				}
+				if (cell.state.x) {
+					yValues[xValues.indexOf(record[cell.state.x])] += y;
+				}
+				else {
+					yValues.push(y);
+				}
+			});
+			
+			if (cell.state.sortBy) {
+				var combined = xValues.map(function(x, i) {
+					return {
+						x: x,
+						y: yValues[i]
+					}
+				});
+				combined.sort(function(a, b) {
+					var value1 = a[cell.state.sortBy == 'x' ? 'x' : 'y'];
+					var value2 = b[cell.state.sortBy == 'x' ? 'x' : 'y'];
+					var comparison;
+					if (typeof(value1) == "string" && typeof(value2) == "string" && value1.match(/[0-9.-]+/) && value2.match(/[0-9.-]+/)) {
+						comparison = parseFloat(value1) - parseFloat(value2);
+					}
+					else if (typeof(value1) == "string") {
+						comparison = value1.localeCompare(value2);
+					}
+					else if (value1 instanceof Date) {
+						comparison = value1.getTime() - value2.getTime();
+					}
+					else {
+						comparison = value1 - value2;
+					}
+					if (cell.state.reverseSortBy) {
+						comparison *= -1;
+					}
+					return comparison;
+				});
+				xValues = combined.map(function(a) { return a.x });
+				yValues = combined.map(function(a) { return a.y });
+			}
+			
+			// calculate the range of the Y-axis
+			var maxY = d3.max(yValues);
+			
+			return {
+				xValues: xValues,
+				yValues: yValues,
+				zValues: zValues,
+				minY: minY,
+				maxY: maxY
+			};
 		}
 	}
 }), { name: "nabu.services.Dashboard" });

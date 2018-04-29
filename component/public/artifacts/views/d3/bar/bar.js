@@ -51,73 +51,15 @@ nabu.views.dashboard.Bar = Vue.extend({
 			var self = this;
 			if (this.cell.state.y && this.$refs.svg && self.cell.state.y) {
 				var records = this.records.filter(function(record) {
-					return !!record[self.cell.state.y];
+					return typeof(record[self.cell.state.y]) != "undefined";
 				});
 				
-				var zValues = [];
-				var xValues = [];
-				var yValues = [];
-				var minY = 0;
-				records.map(function(record, i) {
-					if (self.cell.state.z) {
-						var z = record[self.cell.state.z];
-						if (zValues.indexOf(z) < 0) {
-							zValues.push(z);
-						}
-					}
-					if (self.cell.state.x) {
-						var x = record[self.cell.state.x];
-						if (xValues.indexOf(x) < 0) {
-							xValues.push(x);
-							yValues.push(0);
-						}
-					}
-					else {
-						xValues.push(i);
-					}
-					var y = record[self.cell.state.y];
-					if (minY == null || y < minY) {
-						minY = y;
-					}
-					if (self.cell.state.x) {
-						yValues[xValues.indexOf(record[self.cell.state.x])] += y;
-					}
-					else {
-						yValues.push(y);
-					}
-				});
-				
-				if (this.cell.state.sortBy) {
-					var combined = xValues.map(function(x, i) {
-						return {
-							x: x,
-							y: yValues[i]
-						}
-					});
-					combined.sort(function(a, b) {
-						var value1 = a[self.cell.state.sortBy == 'x' ? 'x' : 'y'];
-						var value2 = b[self.cell.state.sortBy == 'x' ? 'x' : 'y'];
-						var comparison;
-						if (typeof(value1) == "string") {
-							comparison = value1.localeCompare(value2);
-						}
-						else if (value1 instanceof Date) {
-							comparison = value1.getTime() - value2.getTime();
-						}
-						else {
-							comparison = value1 - value2;
-						}
-						if (self.cell.state.reverseSortBy) {
-							comparison *= -1;
-						}
-						return comparison;
-					});
-					xValues = combined.map(function(a) { return a.x });
-					yValues = combined.map(function(a) { return a.y });
-				}
-				
-				// calculate the range of the Y-axis
-				var maxY = d3.max(yValues);
+				var result = this.$services.dashboard.extractValues(self.cell, records);
+				var xValues = result.xValues;
+				var yValues = result.yValues;
+				var zValues = result.zValues;
+				var minY = result.minY;
+				var maxY = result.maxY;
 				
 				// we don't calculate the min y value here, for stacked bars this could be a concatenated value
 				// that means the "lowest" is the sum of many
@@ -233,10 +175,18 @@ nabu.views.dashboard.Bar = Vue.extend({
 								.attr("height", function(d) { return y(d[0]) - y(d[1]); })
 								.attr("width", x.bandwidth());
 						
-						g.append("g")
+						var xAxis = g.append("g")
 							.attr("class", "axis")
 							.attr("transform", "translate(0," + height + ")")
 							.call(d3.axisBottom(x));
+						
+						// if you want to rotate the labels on the x axis, make it so scotty
+						if (this.cell.state.rotateX) {
+							xAxis
+								.selectAll("text")
+								.style("text-anchor", "end")
+								.attr("transform", "rotate(-" + this.cell.state.rotateX + ")");
+						}
 						
 						var yAxis = g.append("g")
 							.attr("class", "axis")
@@ -246,7 +196,7 @@ nabu.views.dashboard.Bar = Vue.extend({
 	//						.attr("y", y(y.ticks().pop()) + 0.5)
 							.attr("class", "y-axis-label")
 							.attr("fill", "#333")
-							.attr("font-weight", "bold")
+							//.attr("font-weight", "bold")
 	//						.attr("text-anchor", "start")
 							// rotate and shift a bit
 							.attr("transform", "rotate(-90)")
@@ -257,7 +207,7 @@ nabu.views.dashboard.Bar = Vue.extend({
 							yAxis.text(this.cell.state.yLabel);
 						}
 					}
-					// side-by-side
+					// side-by-side: https://bl.ocks.org/mbostock/3887051
 					else {
 						htmlBuilder = function (data, i) {
 							console.log("data is", data);
@@ -297,10 +247,18 @@ nabu.views.dashboard.Bar = Vue.extend({
 							.attr("height", function(d) { return height - y(d.value); })
 							.attr("fill", function(d) { return z(zValues.indexOf(d.key)); });
 						
-						g.append("g")
+						var xAxis = g.append("g")
 							.attr("class", "axis")
 							.attr("transform", "translate(0," + height + ")")
 							.call(d3.axisBottom(x));
+						
+						// if you want to rotate the labels on the x axis, make it so scotty
+						if (this.cell.state.rotateX) {
+							xAxis
+								.selectAll("text")
+								.style("text-anchor", "end")
+								.attr("transform", "rotate(-" + this.cell.state.rotateX + ")");
+						}
 						
 						var yAxis = g.append("g")
 							.attr("class", "axis")
@@ -310,8 +268,11 @@ nabu.views.dashboard.Bar = Vue.extend({
 							.attr("y", y(y.ticks().pop()) + 0.5)
 							.attr("dy", "0.32em")
 							.attr("fill", "#000")
-							.attr("font-weight", "bold")
-							.attr("text-anchor", "start");
+							//.attr("font-weight", "bold")
+							//.attr("text-anchor", "start")
+							.attr("transform", "rotate(-90)")
+							.attr("y", 6)
+							.attr("dy", "0.71em");
 							
 						if (this.cell.state.yLabel) {
 							yAxis.text(this.cell.state.yLabel);

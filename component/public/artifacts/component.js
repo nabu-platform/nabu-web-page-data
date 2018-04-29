@@ -28,6 +28,13 @@ window.addEventListener("load", function() {
 				return new nabu.views.dashboard.Bar({propsData:parameters});
 			}
 		});
+		
+		$services.router.register({
+			alias: "dashboard-line",
+			enter: function(parameters) {
+				return new nabu.views.dashboard.Line({propsData:parameters});
+			}
+		});
 	
 		return $services.$register({
 			dashboard: nabu.services.Dashboard
