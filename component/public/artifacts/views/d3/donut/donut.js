@@ -105,7 +105,7 @@ nabu.views.dashboard.Donut = Vue.extend({
 					.outerRadius(radius * 0.9)
 					.innerRadius(radius * 0.9);
 					
-				var toolTipHTML = function(d) {
+				var inlineToolTipHTML = function(d) {
 					var html = "";
 					var counter = 0;
 					for (var index in self.$refs.data.keys) {
@@ -121,33 +121,45 @@ nabu.views.dashboard.Donut = Vue.extend({
 					return html;
 				}
 				
+				var buildToolTip = function(d) {
+					return self.$refs.data.buildToolTip(d.data);
+				};
+				
 				var toolTip = function(selection) {
 					// add tooltip (svg circle element) when mouse enters label or slice
 					selection.on('mouseenter', function (data, i) {
-						var useFull = innerFactor > 0.4;
-						
-						// if the inner radius becomes too small, we can't really display text on it, switch to a solid
-						var circleRadius = !useFull ? radius * 0.5 :  radius * (innerFactor * 0.95);
-						
-						svg.append('circle')
-							.attr('class', 'toolCircle')
-							.attr('r', circleRadius) // radius of tooltip circle
-							.style('fill', !useFull ? "#fff" : color(i)) // colour based on category mouse is over
-							.style('fill-opacity', !useFull ? 0.9 : 0.35)
-							.attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
+						if (!self.cell.state.detail || self.cell.state.detail == 'inline') {
+							// if the inner radius becomes too small, we can't really display text on it, switch to a solid
+							var circleRadius = radius * (innerFactor * 0.95);
 							
-						svg.append('text')
-							.attr('class', 'toolCircle')
-							.attr('dy', -15) // hard-coded. can adjust this to adjust text vertical alignment in tooltip
-							.html(toolTipHTML(data)) // add text to the circle.
-							.style('font-size', '.9em')
-							.style('text-anchor', 'middle')
-							.attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')'); // centres text in tooltip
+							svg.append('circle')
+								.attr('class', 'toolCircle')
+								.attr('r', circleRadius) // radius of tooltip circle
+								.style('fill', color(i)) // colour based on category mouse is over
+								.style('fill-opacity', 0.35)
+								.attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
+								
+							svg.append('text')
+								.attr('class', 'toolCircle')
+								.attr('dy', -15) // hard-coded. can adjust this to adjust text vertical alignment in tooltip
+								.html(inlineToolTipHTML(data)) // add text to the circle.
+								.style('font-size', '.9em')
+								.style('text-anchor', 'middle')
+								.attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')'); // centres text in tooltip
+						}
+						else {
+							self.$services.dashboard.buildStandardD3Tooltip(data, i, buildToolTip);
+						}
 					});
 						
 					// remove the tooltip when mouse leaves the slice/label
 					selection.on('mouseout', function () {
-						d3.selectAll('.toolCircle').remove();
+						if (!self.cell.state.detail || self.cell.state.detail == 'inline') {
+							d3.selectAll('.toolCircle').remove();
+						}
+						else {
+							self.$services.dashboard.removeStandardD3Tooltip();
+						}
 					});
 				}
 					
@@ -230,6 +242,9 @@ nabu.views.dashboard.Donut = Vue.extend({
 			}
 			if (!state.arcWidth) {
 				Vue.set(state, "arcWidth", 30);
+			}
+			if (!state.detail) {
+				Vue.set(state, "detail", null);
 			}
 		},
 		// standard methods!

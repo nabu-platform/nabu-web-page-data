@@ -10,6 +10,12 @@
 				<n-form-combo v-model="cell.state.x" @input="draw" :required="true" label="X Field" :filter="function() { return $refs.data.keys }"/>
 				<n-form-combo v-model="cell.state.y" @input="draw" label="Y Field" :filter="function() { return $refs.data.keys }"/>
 				<n-form-combo v-model="cell.state.z" @input="draw" label="Z Field" :filter="function() { return $refs.data.keys }"/>
+				<n-form-combo v-model="cell.state.groupType" v-if="cell.state.z" @input="draw" label="Group Type" :items="['stacked', 'grouped']"/>
+				<n-form-text type="range" v-model="cell.state.rotateX" :minimum="0" :maximum="90" label="Rotation X Label" :timeout="600" @input="draw"/>
+				<n-form-text v-model="cell.state.yLabel" label="Y-Axis Label" :timeout="600" @input="draw" />
+				<n-form-switch v-model="cell.state.legend" label="Legend" @input="draw"/>
+				<n-form-combo v-model="cell.state.sortBy" @input="draw" label="Sort By" :items="['x', 'y']"/>
+				<n-form-switch v-model="cell.state.reverseSortBy" v-if="cell.state.orderBy" label="Reverse Sort By" @input="draw"/>
 			</n-form-section>
 		</n-dashboard-data>
 		<svg ref="svg" v-if="loaded"></svg>

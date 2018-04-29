@@ -187,6 +187,20 @@ Vue.component("n-dashboard-data", {
 		}
 	},
 	methods: {
+		buildToolTip: function(d) {
+			var html = "";
+			var counter = 0;
+			for (var index in this.keys) {
+				var key = this.keys[index];
+				if (!this.isHidden(key)) {
+					html += "<div class='property'><span class='key'>" 
+						+ (this.cell.state.result[key].label ? this.cell.state.result[key].label : key) 
+						+ "</span><span class='value'>" 
+						+ this.interpret(key, d[key]) + "</span></div>";
+				}
+			}
+			return html;
+		},
 		addStyle: function(key) {
 			if (!this.cell.state.result[key].styles) {
 				Vue.set(this.cell.state.result[key], "styles", []);
