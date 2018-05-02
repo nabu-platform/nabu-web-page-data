@@ -49,17 +49,15 @@ nabu.views.dashboard.Line = Vue.extend({
 		this.draw();		
 	},
 	methods: {
-		// based heavily on: https://bl.ocks.org/mbhall88/b2504f8f3e384de4ff2b9dfa60f325e2
+		// http://projects.delimited.io/experiments/multi-series/multi-line-full.html
 		draw: function() {
 			var self = this;
 			if (this.cell.state.y && this.$refs.svg && self.cell.state.y) {
 				var records = this.records.filter(function(record) {
 					return typeof(record[self.cell.state.y]) != "undefined";
 				});
-				var margin = {top: 20, right: 55, bottom: 30, left: 40},
-					width = 1000 - margin.left - margin.right,
-					height = 500 - margin.top - margin.bottom;
-				
+				var margin = {top: 20, right: 55, bottom: 30, left: 40};
+					
 				var x = d3.scaleBand()
 					.rangeRound([0, width]);
 				
@@ -71,6 +69,11 @@ nabu.views.dashboard.Line = Vue.extend({
 					// reserve some space for title etc
 					height = this.$el.offsetHeight - (self.cell.state.title ? 80 : 30);
 					
+				// subtract for actions
+				if (self.$refs.data.globalActions.length) {
+					height -= 75;
+				}
+				
 				// copy from bar.js to determine height based on angle of labels
 				if (this.cell.state.rotateX) {
 					var longest = 0;
@@ -202,9 +205,12 @@ nabu.views.dashboard.Line = Vue.extend({
 						.attr("cx", function (d) { return x(d.label) + x.bandwidth()/2; })
 						.attr("cy", function (d) { return y(d.value); })
 						.attr("r", self.cell.state.pointRadius + "px")
-						.style("fill", function (d) { return color(zValues.length ? zValues.indexOf(d.name) : 0); })
-						.style("stroke", "grey")
-						.style("stroke-width", "1px")
+						//.style("fill", function (d) { return color(zValues.length ? zValues.indexOf(d.name) : 0); })
+						//.style("stroke", "grey")
+						//.style("stroke-width", "1px")
+						.style("fill", "#fff")
+						.style("stroke", function (d) { return color(zValues.length ? zValues.indexOf(d.name) : 0); })
+						.style("stroke-width", "2px")
 						.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 						.on("mouseover", htmlBuilder)
 						.on("mouseout",  self.$services.dashboard.removeStandardD3Tooltip)

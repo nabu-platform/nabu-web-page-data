@@ -66,9 +66,10 @@ nabu.views.dashboard.Form = Vue.extend({
 			var fields = [];
 			var self = this;
 			Object.keys(this.cell.bindings).map(function(key) {
-				if (!self.cell.bindings[key]) {
+				// can bind a value that is bound, to update!
+			//	if (!self.cell.bindings[key]) {
 					fields.push(key);
-				}
+			//	}
 			});
 			return fields;
 		},
@@ -79,7 +80,7 @@ nabu.views.dashboard.Form = Vue.extend({
 				var schema = this.operation.responses["200"] ? this.operation.responses["200"].schema : null;
 				if (schema) {
 					var definition = this.$services.swagger.definition(schema["$ref"]);
-					Object.keys(this.definition).map(function(key) {
+					Object.keys(definition.properties).map(function(key) {
 						parameters.push(key);
 						// TODO: we have more metadata about the field here, might want to pass it along?
 					});
@@ -91,6 +92,16 @@ nabu.views.dashboard.Form = Vue.extend({
 	},
 	created: function() {
 		this.normalize(this.cell.state);
+		
+		var self = this;
+		var pageInstance = this.$services.page.instances[this.page.name];
+		if (this.cell.bindings) {
+			Object.keys(this.cell.bindings).map(function(key) {
+				if (self.cell.bindings[key]) {
+					self.result[key] = pageInstance.get(self.cell.bindings[key]);
+				}
+			});
+		}
 	},
 	methods: {
 		configure: function() {
@@ -305,6 +316,31 @@ nabu.views.dashboard.Form = Vue.extend({
 			});
 			this.result[field.name].push(result);
 		},
+		createResult: function() {
+			var result = this.result;
+			var transformed = {};
+			Object.keys(result).map(function(name) {
+				var parts = name.split(".");
+				var tmp = transformed;
+				for (var i = 0; i < parts.length - 1; i++) {
+					if (!tmp[parts[i]]) {
+						Vue.set(tmp, parts[i], {});
+					}
+					tmp = tmp[parts[i]];
+				}
+				Vue.set(tmp, parts[parts.length - 1], result[name]);	
+			});
+			var self = this;
+			var pageInstance = this.$services.page.instances[this.page.name];
+			// bind additional stuff from the page
+			Object.keys(this.cell.bindings).map(function(name) {
+				// don't overwrite manually set values
+				if (self.cell.bindings[name] && !transformed[name]) {
+					transformed[name] = pageInstance.get(self.cell.bindings[name]);
+				}
+			});
+			return transformed;
+		},
 		doIt: function() {
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
@@ -312,9 +348,9 @@ nabu.views.dashboard.Form = Vue.extend({
 				// refresh things that are necessary
 				// send out event! > can use this to refresh stuff!
 				// globale parameters that we can pass along
-				
 				var self = this;
-				this.$services.swagger.execute(this.cell.state.operation, this.result).then(function(result) {
+				var result = this.createResult();
+				this.$services.swagger.execute(this.cell.state.operation, result).then(function(result) {
 					if (self.cell.state.event) {
 						var pageInstance = self.$services.page.instances[self.page.name];
 						pageInstance.emit(self.cell.state.event, result);

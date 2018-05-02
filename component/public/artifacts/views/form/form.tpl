@@ -1,6 +1,6 @@
 <template id="dashboard-form">
 	<div class="dashboard-cell dashboard-form">
-		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
+		<n-sidebar @close="configuring = false" v-show="configuring" class="settings">
 			<n-form class="layout2">
 				<n-collapsible title="Form Settings">
 					<n-form-combo label="Operation" :value="operation" :filter="getOperations"

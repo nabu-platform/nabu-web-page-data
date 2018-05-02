@@ -17,7 +17,7 @@
 				<n-form-combo v-model="cell.state.sortBy" @input="draw" label="Sort By" :items="['x', 'y']"/>
 				<n-form-switch v-model="cell.state.reverseSortBy" v-if="cell.state.orderBy" label="Reverse Sort By" @input="draw"/>
 			</n-form-section>
+			<svg ref="svg" v-if="loaded"></svg>
 		</n-dashboard-data>
-		<svg ref="svg" v-if="loaded"></svg>
 	</div>
 </template>

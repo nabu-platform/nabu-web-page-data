@@ -244,7 +244,7 @@ nabu.views.dashboard.Donut = Vue.extend({
 				Vue.set(state, "arcWidth", 30);
 			}
 			if (!state.detail) {
-				Vue.set(state, "detail", null);
+				Vue.set(state, "detail", 'popup');
 			}
 		},
 		// standard methods!

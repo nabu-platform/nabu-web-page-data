@@ -43,7 +43,6 @@ Vue.component("n-dashboard-data", {
 		}	
 	},
 	created: function() {
-		console.log("setting in", this.parent);
 		this.load();
 		
 		this.normalize(this.cell.state);
@@ -56,7 +55,6 @@ Vue.component("n-dashboard-data", {
 		});
 	},
 	beforeDestroy: function() {
-		console.log("destroying " + this.subscriptions.length + " subscriptions");
 		this.subscriptions.map(function(x) {
 			x();
 		});
@@ -95,7 +93,8 @@ Vue.component("n-dashboard-data", {
 				var self = this;
 				this.cell.state.actions.map(function(action) {
 					result[action.name] = action.global && !action.useSelection
-						? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
+						//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
+						? (self.cell.on ? self.cell.on : [])
 						: parameters;
 				});
 			}
@@ -173,6 +172,7 @@ Vue.component("n-dashboard-data", {
 					Vue.set(self.cell.state.result, key, {
 						label: null,
 						format: null,
+						custom: null,
 						styles: []
 					});
 				}
@@ -196,7 +196,7 @@ Vue.component("n-dashboard-data", {
 					html += "<div class='property'><span class='key'>" 
 						+ (this.cell.state.result[key].label ? this.cell.state.result[key].label : key) 
 						+ "</span><span class='value'>" 
-						+ this.interpret(key, d[key]) + "</span></div>";
+						+ this.interpret(key, d[key], d) + "</span></div>";
 				}
 			}
 			return html;
@@ -245,10 +245,10 @@ Vue.component("n-dashboard-data", {
 			if (!action) {
 				this.lastTriggered = data;
 			}
-			// if no action is specified, it is the one without the icon
+			// if no action is specified, it is the one without the icon (and not global)
 			if (!action && !this.actionHovering) {
 				action = this.cell.state.actions.filter(function(x) {
-					return !x.icon;
+					return !x.icon && !x.global;
 				})[0];
 			}
 			if (action) {
@@ -303,6 +303,7 @@ Vue.component("n-dashboard-data", {
 					Vue.set(state.result, key, {
 						label: null,
 						format: null,
+						custom: null,
 						styles: []
 					});
 				}
@@ -390,7 +391,7 @@ Vue.component("n-dashboard-data", {
 		isHidden: function(key) {
 			return this.cell.state.result[key] && this.cell.state.result[key].format == "hidden";	
 		},
-		interpret: function(key, value) {
+		interpret: function(key, value, record) {
 			if (value) {
 				var format = this.cell.state.result[key] ? this.cell.state.result[key].format : null;
 				if (format == "link") {
@@ -407,12 +408,32 @@ Vue.component("n-dashboard-data", {
 				else if (format == "time") {
 					value = new Date(value).toLocaleTimeString();
 				}
+				else if (format == "masterdata") {
+					value = this.$services.masterdata.resolve(value);
+				}
+				else if (format == "custom") {
+					value = this.formatCustom(key, value, record);
+				}
 				else if (typeof(value) == "string") {
 					value = value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 						.replace(/\n/g, "<br/>").replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;");
 				}
 			}
 			return value;
+		},
+		formatCustom: function(key, value, record) {
+			if (this.cell.state.result[key].custom) {
+				try {
+					var result = eval(this.cell.state.result[key].custom);
+					if (result instanceof Function) {
+						result = result(key, value, record);	
+					}
+					return result;
+				}
+				catch (exception) {
+					return exception.message;
+				}
+			}
 		},
 		load: function(page) {
 			var promise = this.$services.q.defer();

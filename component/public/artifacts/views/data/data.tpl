@@ -62,10 +62,11 @@
 				</n-collapsible>
 				<n-collapsible title="Formatters" class="list">
 					<n-collapsible class="list-item" :title="cell.state.result[key].label ? cell.state.result[key].label : key" v-for="key in keys">
-						<n-form-combo v-model="cell.state.result[key].format" :label="'Format ' + key + ' as'"
-							:items="['hidden', 'link', 'date', 'dateTime', 'time']"/>
 						<n-form-text v-model="cell.state.result[key].label" :label="'Label for ' + key" 
 							v-if="cell.state.result[key].format != 'hidden'"/>
+						<n-form-combo v-model="cell.state.result[key].format" :label="'Format ' + key + ' as'"
+							:items="['hidden', 'link', 'date', 'dateTime', 'time', 'masterdata', 'custom']"/>
+						<n-ace v-if="cell.state.result[key].format == 'custom'" mode="javascript" v-model="cell.state.result[key].custom"/>
 					</n-collapsible>
 				</n-collapsible>
 				<n-collapsible title="Styling" class="list">
@@ -101,7 +102,7 @@
 			</n-form>
 		</div>
 		<slot></slot>
-		<div class="global-actions" v-if="globalActions">
+		<div class="global-actions" v-if="globalActions.length">
 			<button :disabled="action.useSelection && !lastTriggered" v-for="action in globalActions" 
 				@click="trigger(action, action.useSelection ? lastTriggered : (cell.on ? $services.page.instances[page.name].variables[cell.on] : {}))">{{action.label}}</button>
 		</div>
