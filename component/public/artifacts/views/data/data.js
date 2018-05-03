@@ -39,7 +39,8 @@ Vue.component("n-dashboard-data", {
 			filters: {},
 			ready: false,
 			subscriptions: [],
-			lastTriggered: null
+			lastTriggered: null,
+			query: null
 		}	
 	},
 	created: function() {
@@ -80,33 +81,20 @@ Vue.component("n-dashboard-data", {
 		dataClass: function() {
 			return this.cell.state.class ? this.cell.state.class : [];        
 		},
-		events: function() {
-			var result = {};
-			if (this.operation) {
-				var schema = this.operation.responses["200"].schema;
-				var definition = this.$services.swagger.definition(schema["$ref"]);
-				var parameters = [];
-				Object.keys(this.definition).map(function(key) {
-					parameters.push(key);
-					// TODO: we have more metadata about the field here, might want to pass it along?
-				});
-				var self = this;
-				this.cell.state.actions.map(function(action) {
-					result[action.name] = action.global && !action.useSelection
-						//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
-						? (self.cell.on ? self.cell.on : [])
-						: parameters;
-				});
-			}
-			return result;
-		},
 		operation: function() {
 			return this.cell.state.operation ? this.$services.swagger.operations[this.cell.state.operation] : null;
 		},
 		availableParameters: function() {
 			var parameters = this.$services.page.instances[this.page.name].availableParameters;
 			var result = {};
+			// we map the states that are available on the entire page
+			this.page.content.states.map(function(state) {
+				result[state.name] = parameters[state.name];
+			})
+			// we map the page-level parameters
 			result.page = parameters.page;
+			// and we map the event that this is based on (if any)
+			// other events are not accessible here
 			if (this.cell.on) {
 				result[this.cell.on] = parameters[this.cell.on];
 			}
@@ -140,15 +128,20 @@ Vue.component("n-dashboard-data", {
 			}).length;
 		},
 		// all the actual parameters (apart from the spec-based ones)
-		parameters: function() {
-			if (!this.operation) {
-				return [];
+		inputParameters: function() {
+			var result = {
+				properties: {}
+			};
+			var self = this;
+			if (this.operation && this.operation.parameters) {
+				var blacklist = ["limit", "offset", "orderBy", "connectionId"];
+				var parameters = this.operation.parameters.filter(function(x) {
+					return blacklist.indexOf(x.name) < 0;
+				}).map(function(x) {
+					result.properties[x.name] = self.$services.swagger.resolve(x);
+				})
 			}
-			var blacklist = ["limit", "offset", "orderBy", "connectionId"];
-			var parameters = this.operation.parameters.filter(function(x) {
-				return blacklist.indexOf(x.name) < 0;
-			});
-			return parameters.map(function(x) { return x.name });
+			return result;
 		},
 		eventDefinition: function() {
 			if (this.operation) {
@@ -187,6 +180,35 @@ Vue.component("n-dashboard-data", {
 		}
 	},
 	methods: {
+		getEvents: function() {
+			var result = {};
+			if (this.operation) {
+				var schema = this.operation.responses["200"].schema;
+				
+				// the return is always a singular object
+				var definition = this.$services.swagger.resolve(schema).properties;
+				var found = false;
+				// we are interested in the (complex) array within this object
+				Object.keys(definition).map(function(key) {
+					if (!found && definition[key].type == "array" && definition[key].items.properties) {
+						definition = definition[key].items;
+						found = true;
+					}
+				});
+				if (!found) {
+					definition = null;
+				}
+				
+				var self = this;
+				this.cell.state.actions.map(function(action) {
+					result[action.name] = action.global && !action.useSelection
+						//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
+						? (self.cell.on ? self.cell.on : [])
+						: definition;
+				});
+			}
+			return result;
+		},
 		buildToolTip: function(d) {
 			var html = "";
 			var counter = 0;
@@ -222,15 +244,35 @@ Vue.component("n-dashboard-data", {
 			this.filters[filter.field] = newValue;
 			this.load();
 		},
+		setComboFilter: function(value, label) {
+			this.setFilter(this.cell.state.filters.filter(function(x) { return x.label == label })[0], value);
+		},
+		filterCombo: function(value, label) {
+			var filter = this.cell.state.filters.filter(function(x) { return x.label == label })[0];
+			if (filter.type == 'enumeration') {
+				return value ? filter.enumerations.filter(function(x) {
+					return x.toLowerCase().indexOf(value.toLowerCase()) >= 0;
+				}) : filter.enumerations;
+			}
+			else {
+				this.setComboFilter(value, label);
+				return [];
+			}
+		},
 		filtersToAdd: function(ignoreCurrentFilters) {
 			var self = this;
 			var currentFilters = this.cell.state.filters.map(function(x) {
 				return x.name;
 			});
 			// any input parameters that are not bound
-			return this.parameters.filter(function(x) {
-				return !self.cell.bindings[x] && (currentFilters.indexOf(x) < 0 || ignoreCurrentFilters);
-			});
+			var result = Object.keys(this.inputParameters.properties);
+			if (!ignoreCurrentFilters) {
+				result = result.filter(function(key) {
+					// must not be bound and not yet a filter
+					return !self.cell.bindings[key] && (currentFilters.indexOf(key) < 0 || ignoreCurrentFilters);
+				});
+			}
+			return result;
 		},
 		addFilter: function() {
 			this.cell.state.filters.push({
@@ -267,6 +309,12 @@ Vue.component("n-dashboard-data", {
 			}*/
 			if (!state.orderBy) {
 				Vue.set(state, "orderBy", []);
+			}
+			if (!state.filterPlaceHolder) {
+				Vue.set(state, "filterPlaceHolder", null);
+			}
+			if (!state.filterType) {
+				Vue.set(state, "filterType", null);
 			}
 			if (!state.title) {
 				Vue.set(state, "title", null);
@@ -309,7 +357,7 @@ Vue.component("n-dashboard-data", {
 				}
 			});
 			var self = this;
-			this.parameters.map(function(x) {
+			Object.keys(this.inputParameters).map(function(x) {
 				if (!self.cell.bindings[x]) {
 					Vue.set(self.cell.bindings, x, null);
 				}
@@ -336,12 +384,12 @@ Vue.component("n-dashboard-data", {
 			}
 		},
 		isCondition: function(condition, record) {
-			for (var key in record) {
-				eval("var " + key + " = record[key];");
+			var state = {
+				record: record	
 			}
 			var result = eval(condition);
 			if (result instanceof Function) {
-				result = result(record);
+				result = result(state);
 			}
 			return result == true;
 		},
@@ -422,11 +470,14 @@ Vue.component("n-dashboard-data", {
 			return value;
 		},
 		formatCustom: function(key, value, record) {
+			var state = {
+				record: record
+			}
 			if (this.cell.state.result[key].custom) {
 				try {
 					var result = eval(this.cell.state.result[key].custom);
 					if (result instanceof Function) {
-						result = result(key, value, record);	
+						result = result(key, value, state);	
 					}
 					return result;
 				}

@@ -46,6 +46,9 @@ nabu.views.dashboard.Bar = Vue.extend({
 		this.draw();		
 	},
 	methods: {
+		getEvents: function() {
+			return this.$refs.data.getEvents();
+		},
 		// based heavily on: https://bl.ocks.org/mbostock/3886208
 		draw: function() {
 			var self = this;

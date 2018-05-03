@@ -40,4 +40,7 @@ window.addEventListener("load", function() {
 			dashboard: nabu.services.Dashboard
 		});	
 	});
+	
+	// register data filter provider
+	nabu.page.provide("data-filter", { component: "nabu-data-filter-default", name: "Default Filter" });
 });

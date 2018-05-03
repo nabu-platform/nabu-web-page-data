@@ -16,41 +16,7 @@
 					<n-page-mapper :to="Object.keys(cell.bindings)" :from="availableParameters" 
 						v-model="cell.bindings"/>
 				</n-collapsible>
-				<n-collapsible class="list" title="Fields">
-					<div class="list-actions">
-						<button @click="addField" v-if="fieldsToAdd.length">Add Field</button>
-					</div>
-					<n-collapsible class="field list-item" v-for="field in cell.state.fields" :title="field.label ? field.label : field.name">
-						<n-form-combo v-model="field.name" label="Name" :items="fieldsToAdd"/>
-						<n-form-text v-model="field.label" label="Label" />
-						<n-form-text v-model="field.description" label="Description" />
-						<n-form-combo v-model="field.type" v-if="!isList(field.name)" label="Type" :items="['text', 'area', 'enumeration', 'enumerationOperation', 'date', 'number', 'fixed']"/>
-						<button v-if="field.type == 'enumeration'" @click="field.enumerations.push('')">Add enumeration</button>
-						<n-form-section class="enumeration" v-if="field.type == 'enumeration'" v-for="i in Object.keys(field.enumerations)" :key="field.name + 'enumeration_' + i">
-							<n-form-text v-model="field.enumerations[i]"/>
-							<button @click="field.enumerations.splice(i, 1)">Remove Enumeration</button>
-						</n-form-section>
-						<n-form-text v-model="field.value" v-if="field.type == 'fixed'" label="Fixed Value"/>
-						<n-form-section class="enumeration" v-if="field.type == 'enumerationOperation'">
-							<n-form-combo :value="field.enumerationOperation ? $services.swagger.operations[field.enumerationOperation] : null"
-								label="Enumeration Operation"
-								@input="function(newValue) { field.enumerationOperation = newValue.id }"
-								:formatter="function(x) { return x.id }"
-								:filter="getEnumerationServices"/>
-							<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationLabel" label="Enumeration Label"
-								:filter="function() { return getEnumerationFields(field.enumerationOperation) }"/>
-							<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationValue" label="Enumeration Value"
-								:filter="function() { return getEnumerationFields(field.enumerationOperation) }"/>
-							<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationQuery" label="Enumeration Query"
-								:filter="function() { return getEnumerationParameters(field.enumerationOperation) }"/>
-						</n-form-section>
-						<div class="list-item-actions">
-							<button @click="up(field)"><span class="n-icon n-icon-chevron-circle-up"></span></button>
-							<button @click="down(field)"><span class="n-icon n-icon-chevron-circle-down"></span></button>
-							<button @click="cell.state.fields.splice(cell.state.fields.indexOf(field), 1)">Remove Field</button>
-						</div>
-					</n-collapsible>
-				</n-collapsible>
+				<nabu-form-configure title="Fields" :fields="cell.state.fields" :is-list="isList" :possible-fields="fieldsToAdd"/>
 			</n-form>
 		</n-sidebar>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
@@ -86,11 +52,13 @@
 			:schema="schema"
 			@input="function(newValue) { $emit('input', newValue) }"
 			:label="field.label ? field.label : field.name"
-			:value="value"/>
+			:value="value"
+			:timeout="600"/>
 		<n-form-date v-if="field.type == 'date'"
 			@input="function(newValue) { $emit('input', newValue) }"
 			:label="field.label ? field.label : field.name"
-			:value="value"/>
+			:value="value"
+			:timeout="600"/>
 		<n-form-combo v-if="field.type == 'enumeration'" :items="field.enumeration"
 			@input="function(newValue) { $emit('input', newValue) }"
 			:label="field.label ? field.label : field.name"
@@ -98,6 +66,49 @@
 		<n-form-combo v-if="field.type == 'enumerationOperation'" :filter="filterEnumeration"
 			:formatter="function(x) { return field.enumerationOperationLabel ? x[field.enumerationOperationLabel] : x }"
 			v-model="currentEnumerationValue"
+			:timeout="600"
 			:label="field.label ? field.label : field.name"/>
+		<n-form-switch v-if="field.type == 'boolean'" 
+			:value="value"
+			:label="field.label ? field.label : field.name"
+			@input="function(newValue) { $emit('input', newValue) }"/>
 	</n-form-section>
+</template>
+
+<template id="dashboard-form-configure">
+	<n-collapsible class="list" :title="title">
+		<div class="list-actions">
+			<button @click="addField" v-if="possibleFields.length">Add</button>
+		</div>
+		<n-collapsible class="field list-item" v-for="field in fields" :title="field.label ? field.label : field.name">
+			<n-form-combo v-model="field.name" label="Name" :items="possibleFields"/>
+			<n-form-text v-model="field.label" label="Label" />
+			<n-form-text v-model="field.description" label="Description" />
+			<n-form-combo v-model="field.type" v-if="!isList || !isList(field.name)" label="Type" :items="['text', 'area', 'enumeration', 'enumerationOperation', 'date', 'number', 'fixed', 'boolean']"/>
+			<button v-if="field.type == 'enumeration'" @click="field.enumerations.push('')">Add enumeration</button>
+			<n-form-section class="enumeration" v-if="field.type == 'enumeration'" v-for="i in Object.keys(field.enumerations)" :key="field.name + 'enumeration_' + i">
+				<n-form-text v-model="field.enumerations[i]"/>
+				<button @click="field.enumerations.splice(i, 1)">Remove Enumeration</button>
+			</n-form-section>
+			<n-form-text v-model="field.value" v-if="field.type == 'fixed'" label="Fixed Value"/>
+			<n-form-section class="enumeration" v-if="field.type == 'enumerationOperation'">
+				<n-form-combo :value="field.enumerationOperation ? $services.swagger.operations[field.enumerationOperation] : null"
+					label="Enumeration Operation"
+					@input="function(newValue) { field.enumerationOperation = newValue.id }"
+					:formatter="function(x) { return x.id }"
+					:filter="getEnumerationServices"/>
+				<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationLabel" label="Enumeration Label"
+					:filter="function() { return getEnumerationFields(field.enumerationOperation) }"/>
+				<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationValue" label="Enumeration Value"
+					:filter="function() { return getEnumerationFields(field.enumerationOperation) }"/>
+				<n-form-combo v-if="field.enumerationOperation" v-model="field.enumerationOperationQuery" label="Enumeration Query"
+					:filter="function() { return getEnumerationParameters(field.enumerationOperation) }"/>
+			</n-form-section>
+			<div class="list-item-actions">
+				<button @click="up(field)"><span class="n-icon n-icon-chevron-circle-up"></span></button>
+				<button @click="down(field)"><span class="n-icon n-icon-chevron-circle-down"></span></button>
+				<button @click="fields.splice(fields.indexOf(field), 1)"><span class="n-icon n-icon-trash"></span></button>
+			</div>
+		</n-collapsible>
+	</n-collapsible>
 </template>

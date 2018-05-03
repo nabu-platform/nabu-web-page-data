@@ -8,6 +8,9 @@
 						:formatter="function(x) { return x.id }"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
 					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()"/>
+					<n-form-combo label="Filter Type" :items="$window.nabu.page.providers('data-filter')" v-model="cell.state.filterType"
+						:formatter="function(x) { return x.name }"/>
+					<n-form-text v-if="cell.state.filterType == 'combo'" v-model="cell.state.filterPlaceHolder" label="Combo placeholder"/>
 					<slot name="main-settings"></slot>
 				</n-collapsible>
 				<n-collapsible title="Refresh">
@@ -21,8 +24,8 @@
 					</div>
 					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>
 				</n-collapsible>
-				<n-collapsible title="Mapping" class="mapping" v-if="parameters.length">
-					<n-page-mapper :to="parameters" :from="availableParameters" 
+				<n-collapsible title="Mapping" class="mapping" v-if="Object.keys(inputParameters.properties).length">
+					<n-page-mapper :to="inputParameters" :from="availableParameters" 
 						v-model="cell.bindings"/>
 				</n-collapsible>
 				<n-collapsible title="Events" class="list">
@@ -42,24 +45,9 @@
 						</div>
 					</n-collapsible>
 				</n-collapsible>
-				<n-collapsible title="Filters" v-if="cell.state.filters.length || filtersToAdd().length" class="list">
-					<div class="list-actions">
-						<button @click="addFilter" v-if="filtersToAdd().length">Add Filter</button>
-					</div>
-					<n-collapsible class="list-item" :title="filter.label ? filter.label : filter.field" v-for="filter in cell.state.filters">
-						<n-form-combo v-model="filter.field" label="Field" :items="filtersToAdd(true)"/>
-						<n-form-text v-model="filter.label" label="Label" />
-						<n-form-combo v-model="filter.type" label="Type" :items="['text', 'enumeration', 'date', 'number', 'fixed']"/>
-						<div class="list-actions">
-							<button v-if="filter.type == 'enumeration'" @click="filter.enumerations.push('')">Add enumeration</button>
-						</div>
-						<n-form-section class="list-row" v-if="filter.type == 'enumeration'" v-for="i in Object.keys(filter.enumerations)">
-							<n-form-text v-model="filter.enumerations[i]"/>
-							<button @click="filter.enumerations.splice(i, 1)"><span class="n-icon n-icon-trash"></span></button>
-						</n-form-section>
-						<n-form-text v-model="filter.value" v-if="filter.type == 'fixed'" label="Fixed Value"/>
-					</n-collapsible>
-				</n-collapsible>
+				<nabu-form-configure title="Filters" v-if="cell.state.filters.length || filtersToAdd().length"
+					:fields="cell.state.filters" 
+					:possible-fields="filtersToAdd()"/>
 				<n-collapsible title="Formatters" class="list">
 					<n-collapsible class="list-item" :title="cell.state.result[key].label ? cell.state.result[key].label : key" v-for="key in keys">
 						<n-form-text v-model="cell.state.result[key].label" :label="'Label for ' + key" 
@@ -88,19 +76,17 @@
 			</n-form>
 		</n-sidebar>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
-		<div class="cell-actions">
-			<span v-if="cell.state.showRefresh" class="n-icon n-icon-refresh" @click="load(0)"></span>
-			<span class="n-icon n-icon-search" @click="showFilter = !showFilter" v-if="filterable"></span>
-			<n-form class="layout2 filter" v-if="showFilter">
-				<div v-for="filter in cell.state.filters.filter(function(x) { return x.type != 'fixed' })">
-					<n-form-combo :label="filter.label ? filter.label : filter.field" v-if="filter.type == 'enumeration'" :items="filter.enumerations"
-						:value="filters[filter.field]" @input="function(newValue) { setFilter(filter, newValue) }"/>
-					<n-form-text v-else-if="filter.type == 'text'" :label="filter.label ? filter.label : filter.field" :value="filters[filter.field]"
-						@input="function(newValue) { setFilter(filter, newValue) }"
-						:timeout="600"/>
-				</div>
-			</n-form>
-		</div>
+		
+		<component v-if="cell.state.filterType" :is="cell.state.filterType.component" 
+			class="cell-actions"
+			:show-refresh="cell.state.showRefresh"
+			:filters="cell.state.filters"
+			:formatters="cell.state.formatters"
+			:orderable="orderable"
+			@refresh="load(0)"
+			@filter="setFilter"
+			@sort="sort"/>
+			
 		<slot></slot>
 		<div class="global-actions" v-if="globalActions.length">
 			<button :disabled="action.useSelection && !lastTriggered" v-for="action in globalActions" 
@@ -108,3 +94,4 @@
 		</div>
 	</div>
 </template>
+

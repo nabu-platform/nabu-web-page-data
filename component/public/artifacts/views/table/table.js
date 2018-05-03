@@ -40,6 +40,9 @@ nabu.views.dashboard.Table = Vue.extend({
 		},
 		refresh: function() {
 			this.$refs.data.load();
+		},
+		getEvents: function() {
+			return this.$refs.data.getEvents();
 		}
 	}
 });

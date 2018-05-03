@@ -475,3 +475,59 @@ Vue.component("n-dashboard-form-field", {
 		}
 	}
 });
+
+Vue.component("nabu-form-configure", {
+	template: "#dashboard-form-configure",
+	props: {
+		title: {
+			type: String,
+			required: true
+		},
+		// string list of field names
+		possibleFields: {
+			type: Array,
+			required: true
+		},
+		// field values
+		fields: {
+			type: Array,
+			required: true
+		},
+		isList: {
+			type: Function,
+			required: false
+		}
+	},
+	methods: {
+		up: function(field) {
+			var index = this.fields.indexOf(field);
+			if (index > 0) {
+				var replacement = this.fields[index - 1];
+				this.fields.splice(index - 1, 1, this.fields[index]);
+				this.fields.splice(index, 1, replacement);
+			}
+		},
+		down: function(field) {
+			var index = this.fields.indexOf(field);
+			if (index < this.fields.length - 1) {
+				var replacement = this.fields[index + 1];
+				this.fields.splice(index + 1, 1, this.fields[index]);
+				this.fields.splice(index, 1, replacement);
+			}
+		},
+		addField: function() {
+			this.fields.push({
+				name: null,
+				label: null,
+				description: null,
+				type: 'text',
+				enumerations: [],
+				value: null,
+				enumerationOperation: null,
+				enumerationOperationLabel: null,
+				enumerationOperationValue: null,
+				enumerationOperationQuery: null
+			})
+		}
+	}
+})

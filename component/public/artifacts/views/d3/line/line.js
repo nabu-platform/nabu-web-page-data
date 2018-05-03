@@ -49,6 +49,9 @@ nabu.views.dashboard.Line = Vue.extend({
 		this.draw();		
 	},
 	methods: {
+		getEvents: function() {
+			return this.$refs.data.getEvents();
+		},
 		// http://projects.delimited.io/experiments/multi-series/multi-line-full.html
 		draw: function() {
 			var self = this;
