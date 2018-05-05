@@ -111,6 +111,9 @@ nabu.views.dashboard.Form = Vue.extend({
 			if (!state.title) {
 				Vue.set(state, "title", null);
 			}
+			if (!state.immediate) {
+				Vue.set(state, "immediate", false);
+			}
 			if (!state.fields) {
 				Vue.set(state, "fields", []);
 			}
@@ -125,6 +128,9 @@ nabu.views.dashboard.Form = Vue.extend({
 			}
 			if (!state.event) {
 				Vue.set(state, "event", null);
+			}
+			if (!state.synchronize) {
+				Vue.set(state, "synchronize", false);
 			}
 		},
 		getOperations: function() {
@@ -341,6 +347,11 @@ nabu.views.dashboard.Form = Vue.extend({
 			});
 			return transformed;
 		},
+		changed: function() {
+			if (this.cell.state.immediate) {
+				this.doIt();
+			}	
+		},
 		doIt: function() {
 			var messages = this.$refs.form.validate();
 			if (!messages.length) {
@@ -350,10 +361,16 @@ nabu.views.dashboard.Form = Vue.extend({
 				// globale parameters that we can pass along
 				var self = this;
 				var result = this.createResult();
-				this.$services.swagger.execute(this.cell.state.operation, result).then(function(result) {
+				this.$services.swagger.execute(this.cell.state.operation, result).then(function(returnValue) {
+					var pageInstance = self.$services.page.instances[self.page.name];
+					// if we want to synchronize the values, do so
+					if (self.cell.state.synchronize) {
+						Object.keys(self.cell.bindings).map(function(name) {
+							pageInstance.set(self.cell.bindings[name], result[name]);
+						});
+					}
 					if (self.cell.state.event) {
-						var pageInstance = self.$services.page.instances[self.page.name];
-						pageInstance.emit(self.cell.state.event, result);
+						pageInstance.emit(self.cell.state.event, returnValue);
 					}
 					self.$emit("close");
 				}, function(error) {
@@ -385,7 +402,7 @@ Vue.component("n-dashboard-form-field", {
 	props: {
 		schema: {
 			type: Object,
-			required: true
+			required: false
 		},
 		field: {
 			type: Object,

@@ -26,7 +26,7 @@ Vue.component("nabu-data-filter-default", {
 	methods: {
 		setFilter: function(filter, newValue) {
 			// set locally
-			Vue.set(this.state, filter.field, newValue);
+			Vue.set(this.state, filter.name, newValue);
 			// broadcast to parent
 			this.$emit('filter', filter, newValue);
 		}

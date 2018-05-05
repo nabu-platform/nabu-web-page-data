@@ -7,18 +7,30 @@
 				<thead>
 					<tr>
 						<td @click="$refs.data.sort(key)" 
-								v-for="key in $refs.data.keys" v-if="!$refs.data.isHidden(key)"><span>{{ cell.state.result[key].label ? cell.state.result[key].label : key }}</span>
-							<span class="n-icon n-icon-sort-asc" v-if="cell.state.orderBy.indexOf(key) >= 0"></span>
-							<span class="n-icon n-icon-sort-desc" v-if="cell.state.orderBy.indexOf(key + ' desc') >= 0"></span>
+								v-for="key in $refs.data.keys" v-if="false && !$refs.data.isHidden(key)"><span>{{ cell.state.result[key].label ? cell.state.result[key].label : key }}</span>
+							<span class="fa fa-sort-asc" v-if="cell.state.orderBy.indexOf(key) >= 0"></span>
+							<span class="fa fa-sort-desc" v-if="cell.state.orderBy.indexOf(key + ' desc') >= 0"></span>
+						</td>
+						<td @click="$refs.data.sort($refs.data.getSortKey(field))"
+								v-for="field in cell.state.fields"><span>{{ field.label }}</span>
+							<span class="fa fa-sort-asc" v-if="cell.state.orderBy.indexOf($refs.data.getSortKey(field)) >= 0"></span>
+							<span class="fa fa-sort-desc" v-if="cell.state.orderBy.indexOf($refs.data.getSortKey(field) + ' desc') >= 0"></span>
 						</td>
 						<td v-if="$refs.data.actions.length"></td>
 					</tr>
 				</thead>
 				<tbody>
 					<tr v-for="record in records" @click="$refs.data.trigger(null, record)" :class="{'selected': $refs.data.lastTriggered == record}">
-						<td :class="$refs.data.getDynamicClasses(key, record)" v-for="key in $refs.data.keys" v-if="!$refs.data.isHidden(key)" v-html="$refs.data.interpret(key, record[key], record)"></td>
+						<td :class="$refs.data.getDynamicClasses(key, record)" v-for="key in $refs.data.keys" v-if="false && !$refs.data.isHidden(key)" v-html="$refs.data.interpret(key, record[key], record)"></td>
+						<td :class="$services.page.getDynamicClasses(field.styles, record)" v-for="field in cell.state.fields">
+							<nabu-page-field :field="field" :data="record" :style="false"/>
+						</td>
 						<td class="actions" v-if="$refs.data.actions.length" @mouseover="$refs.data.actionHovering = true" @mouseout="$refs.data.actionHovering = false">
-							<button v-if="!action.condition || $refs.data.isCondition(action.condition, record)" v-for="action in $refs.data.actions" @click="$refs.data.trigger(action, record)"><span class="n-icon" :class="'n-icon-' + action.icon"></span></button>
+							<button v-if="!action.condition || $refs.data.isCondition(action.condition, record)" 
+								v-for="action in $refs.data.actions" 
+								@click="$refs.data.trigger(action, record)"
+								class="inline"
+								:class="action.class"><span class="fa" :class="'fa-' + action.icon"></span></button>
 						</td>
 					</tr>
 				</tbody>

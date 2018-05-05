@@ -1,0 +1,36 @@
+[template="dashboard-table"] {
+	.n-form {
+		.operation {
+			display: flex;
+			padding: 1rem;
+			.n-form-component {
+				flex-grow: 1;
+			}
+		}
+		.action, .formatter {
+			display: flex;
+			align-items: center;
+		}
+	}
+	table {
+		width: calc(100%);
+		td {
+			padding: 0.5rem;
+			&.actions {
+				white-space: nowrap;
+			}
+		}
+		thead {
+			background-color: #666;
+			color: #fff;
+		}
+		tbody {
+			tr {
+				cursor: pointer;
+				&:nth-child(odd) {
+					background-color: #fafafa;
+				}
+			}
+		}
+	}
+}

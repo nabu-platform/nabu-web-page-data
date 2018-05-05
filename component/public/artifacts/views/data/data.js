@@ -180,6 +180,15 @@ Vue.component("n-dashboard-data", {
 		}
 	},
 	methods: {
+		getSortKey: function(field) {
+			for (var i = 0; i < field.fragments.length; i++) {
+				var fragment = field.fragments[i];
+				if (fragment.type == "data" && fragment.key) {
+					return fragment.key;
+				}
+			}
+			return null;
+		},
 		getEvents: function() {
 			var result = {};
 			if (this.operation) {
@@ -203,13 +212,29 @@ Vue.component("n-dashboard-data", {
 				this.cell.state.actions.map(function(action) {
 					result[action.name] = action.global && !action.useSelection
 						//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
-						? (self.cell.on ? self.cell.on : [])
+						? (self.cell.on ? self.cell.on : {})
 						: definition;
 				});
 			}
 			return result;
 		},
 		buildToolTip: function(d) {
+			if (!this.cell.state.fields.length) {
+				return null;
+			}
+			var self = this;
+			var component = Vue.extend({
+				template: "<nabu-page-fields class='nabu-dashboard-field' :cell='cell' :label='true' :page='page' :data='record' :style='true' :edit='edit'/>",
+				data: function() {
+					return {
+						cell: self.cell,
+						page: self.page,
+						record: d,
+						edit: self.edit
+					}
+				}
+			});
+			return new component();
 			var html = "";
 			var counter = 0;
 			for (var index in this.keys) {
@@ -294,6 +319,7 @@ Vue.component("n-dashboard-data", {
 				})[0];
 			}
 			if (action) {
+				console.log("doing", action, data);
 				var pageInstance = this.$services.page.instances[this.page.name];
 				var self = this;
 				pageInstance.emit(action.name, data).then(function() {
@@ -328,6 +354,9 @@ Vue.component("n-dashboard-data", {
 			}
 			if (!state.filters) {
 				Vue.set(state, "filters", []);
+			}
+			if (!state.fields) {
+				Vue.set(state, "fields", []);
 			}
 			if (!state.refreshOn) {
 				Vue.set(state, "refreshOn", []);
@@ -370,17 +399,23 @@ Vue.component("n-dashboard-data", {
 			}
 		},
 		getDynamicClasses: function(key, record) {
-			var styles = this.cell.state.result[key].styles;
-			if (styles) {
-				var self = this;
-				return styles.filter(function(style) {
-					return self.isCondition(style.condition, record);
-				}).map(function(style) {
-					return style.class;
-				});
+			// the old way
+			if (typeof(key) == "string") {
+				var styles = this.cell.state.result[key].styles;
+				if (styles) {
+					var self = this;
+					return styles.filter(function(style) {
+						return self.isCondition(style.condition, record);
+					}).map(function(style) {
+						return style.class;
+					});
+				}
+				else {
+					return [];
+				}
 			}
 			else {
-				return [];
+				
 			}
 		},
 		isCondition: function(condition, record) {
@@ -397,6 +432,7 @@ Vue.component("n-dashboard-data", {
 			this.cell.state.actions.push({
 				name: "unnamed",
 				icon: null,
+				class: null,
 				label: null,
 				condition: null,
 				refresh: false,
@@ -422,19 +458,34 @@ Vue.component("n-dashboard-data", {
 			}
 		},
 		updateOperation: function(operation) {
-			this.cell.state.operation = operation.id;
-			var bindings = {};
-			if (operation.parameters) {
+			if (this.cell.state.operation != operation.id) {
+				this.cell.state.operation = operation.id;
+				var bindings = {};
 				var self = this;
-				operation.parameters.map(function(parameter) {
-					bindings[parameter.name] = self.cell.bindings && self.cell.bindings[parameter.name]
-						? self.cell.bindings[parameter.name]
-						: null;
+				if (operation.parameters) {
+					operation.parameters.map(function(parameter) {
+						bindings[parameter.name] = self.cell.bindings && self.cell.bindings[parameter.name]
+							? self.cell.bindings[parameter.name]
+							: null;
+					});
+				}
+				// TODO: is it OK that we simply remove all bindings?
+				// is the table the only one who sets bindings here?
+				Vue.set(this.cell, "bindings", bindings);
+				
+				// we clear out the fields, they are most likely useless with another operation
+				this.cell.state.fields.splice(0, this.cell.state.fields.length);
+				// instead we add entries for all the fields in the return value
+				this.keys.map(function(key) {
+					self.cell.state.fields.push({
+						label: key,
+						fragments: [{
+							type: "data",
+							key: key
+						}]
+					});
 				});
 			}
-			// TODO: is it OK that we simply remove all bindings?
-			// is the table the only one who sets bindings here?
-			Vue.set(this.cell, "bindings", bindings);
 		},
 		isHidden: function(key) {
 			return this.cell.state.result[key] && this.cell.state.result[key].format == "hidden";	

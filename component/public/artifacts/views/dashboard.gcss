@@ -1,4 +1,26 @@
+.d3-tooltip {
+	.nabu-field {
+		&.with-label {
+			label {
+				display: inline-block;
+				font-weight: bold;
+				&:after {
+					content: ': ';
+				}
+			}
+			.nabu-field-fragment {
+				display: inline-block;
+			}
+		}
+	}
+}
+
 .nabu-dashboard {
+	.nabu-data-filter-default {
+		.filter {
+			z-index: 10;
+		}
+	}
 	background-color: #eaebed;
 	.n-prompt-content {
 		background-color: #fff;
@@ -111,6 +133,9 @@
 				}
 			}
 			tbody {
+				.nabu-field-fragment {
+					display: inline-block;
+				}
 				tr {
 					&:nth-child(even) {
 						background-color: rgba(82, 149, 187, 0.1);

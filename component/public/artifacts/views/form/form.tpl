@@ -8,9 +8,11 @@
 						:formatter="function(x) { return x.id }"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
 					<n-form-text v-model="cell.state.class" label="Form Class"/>
-					<n-form-text v-model="cell.state.cancel" label="Cancel Label"/>
-					<n-form-text v-model="cell.state.ok" label="Ok Label"/>
+					<n-form-switch v-model="cell.state.immediate" label="Save On Change"/>
+					<n-form-text v-model="cell.state.cancel" v-if="!cell.state.immediate" label="Cancel Label"/>
+					<n-form-text v-model="cell.state.ok" v-if="!cell.state.immediate" label="Ok Label"/>
 					<n-form-text v-model="cell.state.event" label="Success Event"/>
+					<n-form-switch v-model="cell.state.synchronize" label="Synchronize Changes"/>
 				</n-collapsible>
 				<n-collapsible title="Value Binding">
 					<n-page-mapper :to="Object.keys(cell.bindings)" :from="availableParameters" 
@@ -29,18 +31,19 @@
 							<n-form-section v-for="key in Object.keys(result[field.name][i])" :key="field.name + '_wrapper' + i + '_wrapper'"
 									v-if="getField(field.name + '.' + key)">
 								<n-dashboard-form-field :key="field.name + '_value' + i + '_' + key" :field="getField(field.name + '.' + key)" 
-									:schema="getSchemaFor(field.name + '.' + key)" v-model="result[field.name][i][key]"/>
+									:schema="getSchemaFor(field.name + '.' + key)" v-model="result[field.name][i][key]"
+									@input="changed"/>
 							</n-form-section>
 							<button @click="result[field.name].splice(i, 1)">Remove {{field.label ? field.label : field.name}}</button>	
 						</n-form-section>
 					</n-form-section>
 				</n-form-section>
 				<n-dashboard-form-field v-else :key="field.name + '_value'" :field="field" :schema="getSchemaFor(field.name)" :value="result[field.name]"
-					@input="function(newValue) { $window.Vue.set(result, field.name, newValue) }"/>
+					@input="function(newValue) { $window.Vue.set(result, field.name, newValue); changed(); }"/>
 			</n-form-section>
-			<footer class="global-actions">
-				<a href="javascript:void(0)" @click="$emit('close')" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
-				<button @click="doIt" v-if="cell.state.ok">{{cell.state.ok}}</button>
+			<footer class="global-actions" v-if="!cell.state.immediate">
+				<a class="cancel" href="javascript:void(0)" @click="$emit('close')" v-if="cell.state.cancel">{{cell.state.cancel}}</a>
+				<button class="primary" @click="doIt" v-if="cell.state.ok">{{cell.state.ok}}</button>
 			</footer>
 		</n-form>
 	</div>

@@ -43,11 +43,20 @@ nabu.services.VueService(Vue.extend({
 			var x = d3.event.pageX;
 			var y = d3.event.pageY;
 			var div = document.createElement("div");
-			div.innerHTML = builder(data);
-			// add 10 pixels to prevent blinking
-			div.setAttribute("style", "position:absolute;top:" + (y+10) + "px;left:" + (x+10) + "px");
-			div.setAttribute("class", "d3-tooltip");
-			document.body.appendChild(div);
+			var result = builder(data);
+			if (result) {
+				// add 10 pixels to prevent blinking
+				div.setAttribute("style", "position:absolute;top:" + (y+10) + "px;left:" + (x+10) + "px");
+				div.setAttribute("class", "d3-tooltip");
+				document.body.appendChild(div);
+				if (result.$mount) {
+					console.log("mounting!", result);
+					result.$mount().$appendTo(div);
+				}
+				else {
+					div.innerHTML = builder(data);
+				}
+			}
 		},
 		removeStandardD3Tooltip: function() {
 			var element = document.body.querySelector(".d3-tooltip");

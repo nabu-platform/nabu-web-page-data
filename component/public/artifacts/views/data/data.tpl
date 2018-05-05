@@ -20,7 +20,7 @@
 					<div v-for="i in Object.keys(cell.state.refreshOn)" class="list-row">
 						<n-form-combo v-model="cell.state.refreshOn[i]"
 							:items="$services.page.instances[page.name].getAvailableEvents()"/>
-						<button @click="cell.state.refreshOn.splice(i, 1)"><span class="n-icon n-icon-trash"></span></button>
+						<button @click="cell.state.refreshOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
 					</div>
 					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>
 				</n-collapsible>
@@ -34,6 +34,7 @@
 					</div>
 					<n-collapsible class="list-item" :title="action.name" v-for="action in cell.state.actions">
 						<n-form-text v-model="action.name" label="Name" :required="true"/>
+						<n-form-combo v-model="action.class" :filter="$services.page.getSimpleClasses" label="Class"/>
 						<n-form-switch v-model="action.global" label="Global" />
 						<n-form-switch v-model="action.useSelection" v-if="action.global" label="Use Selection" />
 						<n-form-text v-model="action.icon" v-if="!action.global" label="Icon"/>
@@ -41,14 +42,15 @@
 						<n-form-text v-model="action.condition" label="Condition"/>
 						<n-form-switch v-model="action.refresh" label="Reload"/>
 						<div class="list-item-actions">
-							<button @click="removeAction(action)"><span class="n-icon n-icon-trash"></span></button>
+							<button @click="removeAction(action)"><span class="fa fa-trash"></span></button>
 						</div>
 					</n-collapsible>
 				</n-collapsible>
 				<nabu-form-configure title="Filters" v-if="cell.state.filters.length || filtersToAdd().length"
 					:fields="cell.state.filters" 
 					:possible-fields="filtersToAdd()"/>
-				<n-collapsible title="Formatters" class="list">
+				<nabu-page-fields-edit :cell="cell" :page="page" :keys="keys"/>
+				<n-collapsible title="Formatters" class="list" v-if="false">
 					<n-collapsible class="list-item" :title="cell.state.result[key].label ? cell.state.result[key].label : key" v-for="key in keys">
 						<n-form-text v-model="cell.state.result[key].label" :label="'Label for ' + key" 
 							v-if="cell.state.result[key].format != 'hidden'"/>
@@ -65,7 +67,7 @@
 						<n-form-section class="list-row" v-for="style in cell.state.result[key].styles">
 							<n-form-text v-model="style.class" label="Class"/>
 							<n-form-text v-model="style.condition" label="Condition"/>
-							<button @click="cell.state.result[key].styles.splice(cell.state.result[key].styles.indexOf(style), 1)"><span class="n-icon n-icon-trash"></span></button>
+							<button @click="cell.state.result[key].styles.splice(cell.state.result[key].styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
 						</n-form-section>
 					</n-collapsible>
 				</n-collapsible>
@@ -89,7 +91,8 @@
 			
 		<slot></slot>
 		<div class="global-actions" v-if="globalActions.length">
-			<button :disabled="action.useSelection && !lastTriggered" v-for="action in globalActions" 
+			<button :disabled="action.useSelection && !lastTriggered" v-for="action in globalActions"
+				:class="action.class"
 				@click="trigger(action, action.useSelection ? lastTriggered : (cell.on ? $services.page.instances[page.name].variables[cell.on] : {}))">{{action.label}}</button>
 		</div>
 	</div>
