@@ -32,9 +32,6 @@ nabu.views.dashboard.Bar = Vue.extend({
 		this.normalize(this.cell.state);
 	},
 	computed: {
-		events: function() {
-			return this.$refs.data ? this.$refs.data.events : {};
-		},
 		fromColor: function() {
 			return this.cell.state.fromColor ? this.cell.state.fromColor : "darkred";
 		},
@@ -47,7 +44,7 @@ nabu.views.dashboard.Bar = Vue.extend({
 	},
 	methods: {
 		getEvents: function() {
-			return this.$refs.data.getEvents();
+			return this.$refs.data ? this.$refs.data.getEvents() : {};
 		},
 		// based heavily on: https://bl.ocks.org/mbostock/3886208
 		draw: function() {

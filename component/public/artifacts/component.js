@@ -9,13 +9,6 @@ window.addEventListener("load", function() {
 		});
 		
 		$services.router.register({
-			alias: "dashboard-form",
-			enter: function(parameters) {
-				return new nabu.views.dashboard.Form({propsData:parameters});
-			}
-		});
-		
-		$services.router.register({
 			alias: "dashboard-donut",
 			enter: function(parameters) {
 				return new nabu.views.dashboard.Donut({propsData:parameters});
@@ -42,5 +35,5 @@ window.addEventListener("load", function() {
 	});
 	
 	// register data filter provider
-	nabu.page.provide("data-filter", { component: "nabu-data-filter-default", name: "Default Filter" });
+	nabu.page.provide("page-data-filter", { component: "page-data-filter-default", name: "Default Filter" });
 });

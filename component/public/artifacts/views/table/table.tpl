@@ -2,28 +2,25 @@
 	<div class="dashboard-cell dashboard-table">
 		<n-dashboard-data :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
 				:records="records"
-				v-model="loaded">
+				v-model="loaded"
+				:updatable="true">
 			<table class="classic dashboard" cellspacing="0" cellpadding="0" :class="$refs.data.dataClass" v-if="loaded">
 				<thead>
 					<tr>
-						<td @click="$refs.data.sort(key)" 
-								v-for="key in $refs.data.keys" v-if="false && !$refs.data.isHidden(key)"><span>{{ cell.state.result[key].label ? cell.state.result[key].label : key }}</span>
-							<span class="fa fa-sort-asc" v-if="cell.state.orderBy.indexOf(key) >= 0"></span>
-							<span class="fa fa-sort-desc" v-if="cell.state.orderBy.indexOf(key + ' desc') >= 0"></span>
-						</td>
 						<td @click="$refs.data.sort($refs.data.getSortKey(field))"
 								v-for="field in cell.state.fields"><span>{{ field.label }}</span>
-							<span class="fa fa-sort-asc" v-if="cell.state.orderBy.indexOf($refs.data.getSortKey(field)) >= 0"></span>
-							<span class="fa fa-sort-desc" v-if="cell.state.orderBy.indexOf($refs.data.getSortKey(field) + ' desc') >= 0"></span>
+							<span class="fa fa-sort-up" v-if="cell.state.orderBy.indexOf($refs.data.getSortKey(field)) >= 0"></span>
+							<span class="fa fa-sort-down" v-if="cell.state.orderBy.indexOf($refs.data.getSortKey(field) + ' desc') >= 0"></span>
 						</td>
 						<td v-if="$refs.data.actions.length"></td>
 					</tr>
 				</thead>
 				<tbody>
 					<tr v-for="record in records" @click="$refs.data.trigger(null, record)" :class="{'selected': $refs.data.lastTriggered == record}">
-						<td :class="$refs.data.getDynamicClasses(key, record)" v-for="key in $refs.data.keys" v-if="false && !$refs.data.isHidden(key)" v-html="$refs.data.interpret(key, record[key], record)"></td>
 						<td :class="$services.page.getDynamicClasses(field.styles, record)" v-for="field in cell.state.fields">
-							<nabu-page-field :field="field" :data="record" :style="false"/>
+							<page-field :field="field" :data="record" :style="false" 
+								:label="false"
+								@updated="$refs.data.update(record)"/>
 						</td>
 						<td class="actions" v-if="$refs.data.actions.length" @mouseover="$refs.data.actionHovering = true" @mouseout="$refs.data.actionHovering = false">
 							<button v-if="!action.condition || $refs.data.isCondition(action.condition, record)" 

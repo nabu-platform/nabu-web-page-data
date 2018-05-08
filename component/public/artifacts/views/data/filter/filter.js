@@ -1,5 +1,5 @@
-Vue.component("nabu-data-filter-default", {
-	template: "#nabu-data-filter-default",
+Vue.component("page-data-filter-default", {
+	template: "#page-data-filter-default",
 	props: {
 		showRefresh: {
 			type: Boolean, 
@@ -13,9 +13,6 @@ Vue.component("nabu-data-filter-default", {
 			type: Array,
 			required: true
 		}
-	},
-	created: function() {
-		console.log("filters are", this.filters);
 	},
 	data: function() {
 		return {

@@ -32,9 +32,6 @@ nabu.views.dashboard.Line = Vue.extend({
 		this.normalize(this.cell.state);
 	},
 	computed: {
-		events: function() {
-			return this.$refs.data ? this.$refs.data.events : {};
-		},
 		fromColor: function() {
 			return this.cell.state.fromColor ? this.cell.state.fromColor : "darkred";
 		},
@@ -50,7 +47,7 @@ nabu.views.dashboard.Line = Vue.extend({
 	},
 	methods: {
 		getEvents: function() {
-			return this.$refs.data.getEvents();
+			return this.$refs.data ? this.$refs.data.getEvents() : {};
 		},
 		// http://projects.delimited.io/experiments/multi-series/multi-line-full.html
 		draw: function() {

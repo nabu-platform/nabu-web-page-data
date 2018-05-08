@@ -32,9 +32,6 @@ nabu.views.dashboard.Donut = Vue.extend({
 		this.normalize(this.cell.state);
 	},
 	computed: {
-		events: function() {
-			return this.$refs.data ? this.$refs.data.events : {};
-		},
 		fromColor: function() {
 			return this.cell.state.fromColor ? this.cell.state.fromColor : "darkred";
 		},
@@ -50,7 +47,7 @@ nabu.views.dashboard.Donut = Vue.extend({
 	},
 	methods: {
 		getEvents: function() {
-			return this.$refs.data.getEvents();
+			return this.$refs.data ? this.$refs.data.getEvents() : {};
 		},
 		// based heavily on: https://bl.ocks.org/mbhall88/b2504f8f3e384de4ff2b9dfa60f325e2
 		draw: function() {

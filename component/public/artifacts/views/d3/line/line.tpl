@@ -7,8 +7,8 @@
 				<n-form-text v-model="cell.state.unit" label="Unit" :timeout="600" @input="draw" />
 				<n-form-text v-model="cell.state.fromColor" type="color" :label="cell.state.z ? 'From Color' : 'Color'" :timeout="600" @input="draw" />
 				<n-form-text v-model="cell.state.toColor" v-if="cell.state.z" type="color" label="To Color" :timeout="600" @input="draw" />
-				<n-form-combo v-model="cell.state.x" @input="draw" :required="true" label="X Field" :filter="function() { return $refs.data.keys }"/>
-				<n-form-combo v-model="cell.state.y" @input="draw" label="Y Field" :filter="function() { return $refs.data.keys }"/>
+				<n-form-combo v-model="cell.state.x" @input="draw" label="X Field" :filter="function() { return $refs.data.keys }"/>
+				<n-form-combo v-model="cell.state.y" @input="draw" :required="true" label="Y Field" :filter="function() { return $refs.data.keys }"/>
 				<n-form-combo v-model="cell.state.z" @input="draw" label="Z Field" :filter="function() { return $refs.data.keys }"/>
 				<n-form-text type="range" v-model="cell.state.rotateX" :minimum="0" :maximum="90" label="Rotation X Label" :timeout="600" @input="draw"/>
 				<n-form-text v-model="cell.state.yLabel" label="Y-Axis Label" :timeout="600" @input="draw" />

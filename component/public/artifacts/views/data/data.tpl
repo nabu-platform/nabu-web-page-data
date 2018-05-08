@@ -3,14 +3,22 @@
 		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
 			<n-form class="layout2">
 				<n-collapsible title="Dashboard Settings">
-					<n-form-combo label="Operation" :value="operation" :filter="$services.dashboard.getDataOperations"
-						@input="updateOperation"
-						:formatter="function(x) { return x.id }"/>
+					<n-form-combo label="Operation" :value="cell.state.operation" 
+						:filter="getDataOperations"
+						@input="updateOperation"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
 					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()"/>
-					<n-form-combo label="Filter Type" :items="$window.nabu.page.providers('data-filter')" v-model="cell.state.filterType"
+					<n-form-combo label="Filter Type" :items="$window.nabu.page.providers('page-data-filter')" v-model="cell.state.filterType"
 						:formatter="function(x) { return x.name }"/>
 					<n-form-text v-if="cell.state.filterType == 'combo'" v-model="cell.state.filterPlaceHolder" label="Combo placeholder"/>
+					<n-form-combo label="Update Operation" :value="cell.state.updateOperation"
+						v-if="updatable"
+						:filter="getFormOperations"
+						@input="updateFormOperation"/>
+					<n-page-mapper v-if="cell.state.updateOperation"
+						v-model="cell.state.updateBindings"
+						:from="formAvailableParameters"
+						:to="formInputParameters"/>
 					<slot name="main-settings"></slot>
 				</n-collapsible>
 				<n-collapsible title="Refresh">
@@ -46,10 +54,10 @@
 						</div>
 					</n-collapsible>
 				</n-collapsible>
-				<nabu-form-configure title="Filters" v-if="cell.state.filters.length || filtersToAdd().length"
+				<page-form-configure title="Filters" v-if="cell.state.filters.length || filtersToAdd().length"
 					:fields="cell.state.filters" 
 					:possible-fields="filtersToAdd()"/>
-				<nabu-page-fields-edit :cell="cell" :page="page" :keys="keys"/>
+				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-form="!!cell.state.updateOperation"/>
 				<n-collapsible title="Formatters" class="list" v-if="false">
 					<n-collapsible class="list-item" :title="cell.state.result[key].label ? cell.state.result[key].label : key" v-for="key in keys">
 						<n-form-text v-model="cell.state.result[key].label" :label="'Label for ' + key" 
@@ -59,7 +67,7 @@
 						<n-ace v-if="cell.state.result[key].format == 'custom'" mode="javascript" v-model="cell.state.result[key].custom"/>
 					</n-collapsible>
 				</n-collapsible>
-				<n-collapsible title="Styling" class="list">
+				<n-collapsible title="Styling" class="list" v-if="false">
 					<n-collapsible class="list-item" :title="key" v-for="key in keys">
 						<div class="list-item-actions">
 							<button @click="addStyle(key)">Add Style for {{key}}</button>

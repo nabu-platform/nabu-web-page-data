@@ -8,6 +8,7 @@ TODO:
 - can add support for bound input for enumerations, for example could pass in a contextual id to further limit relevant choices
 	- then we have to choose the field you use to bind "q" input to as there are multiple inputs
 
+deprecated! moved to main component for better reuse
 */
 
 nabu.views.dashboard.Form = Vue.extend({
@@ -547,4 +548,61 @@ Vue.component("nabu-form-configure", {
 			})
 		}
 	}
-})
+});
+
+Vue.component("nabu-form-configure-single", {
+	template: "#dashboard-form-configure-single",
+	props: {
+		field: {
+			type: Object,
+			required: true
+		},
+		allowLabel: {
+			type: Boolean,
+			required: false,
+			default: true
+		},
+		allowDescription: {
+			type: Boolean,
+			required: false,
+			default: true
+		}
+	},
+	created: function() {
+		this.normalize(this.field);
+	},
+	methods: {
+		normalize: function(field) {
+			if (!field.name) {
+				Vue.set(field, "name", null);
+			}
+			if (!field.label) {
+				Vue.set(field, "label", null);
+			}
+			if (!field.description) {
+				Vue.set(field, "description", null);
+			}
+			if (!field.type) {
+				Vue.set(field, "type", "text");
+			}
+			if (!field.enumerations) {
+				Vue.set(field, "enumerations", []);
+			}
+			if (!field.value) {
+				Vue.set(field, "value", null);
+			}
+			if (!field.enumerationOperation) {
+				Vue.set(field, "enumerationOperation", null);
+			}
+			if (!field.enumerationOperationLabel) {
+				Vue.set(field, "enumerationOperationLabel", null);
+			}
+			if (!field.enumerationOperationValue) {
+				Vue.set(field, "enumerationOperationValue", null);
+			}
+			if (!field.enumerationOperationQuery) {
+				Vue.set(field, "enumerationOperationQuery", null);
+			}
+		}
+	}
+});

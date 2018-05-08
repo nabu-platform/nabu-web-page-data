@@ -27,6 +27,11 @@ Vue.component("n-dashboard-data", {
 		},
 		value: {
 			required: true
+		},
+		updatable: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	data: function() {
@@ -143,6 +148,26 @@ Vue.component("n-dashboard-data", {
 			}
 			return result;
 		},
+		formInputParameters: function() {
+			var result = {
+				properties: {}
+			};
+			if (this.cell.state.updateOperation && this.$services.swagger.operations[this.cell.state.updateOperation]) {
+				this.$services.swagger.operations[this.cell.state.updateOperation].parameters.filter(function(x) {
+					return x.in != "body";
+				}).map(function(parameter) {
+					result.properties[parameter.name] = parameter;
+				});
+			}
+			return result;
+		},
+		formAvailableParameters: function() {
+			return {
+				record: {
+					properties: this.definition
+				}
+			};
+		},
 		eventDefinition: function() {
 			if (this.operation) {
 				var schema = this.operation.responses["200"].schema;
@@ -180,6 +205,9 @@ Vue.component("n-dashboard-data", {
 		}
 	},
 	methods: {
+		getDataOperations: function(value) {
+			return this.$services.dashboard.getDataOperations(value).map(function(x) { return x.id });	
+		},
 		getSortKey: function(field) {
 			for (var i = 0; i < field.fragments.length; i++) {
 				var fragment = field.fragments[i];
@@ -266,7 +294,8 @@ Vue.component("n-dashboard-data", {
 		},
 		// custom methods
 		setFilter: function(filter, newValue) {
-			this.filters[filter.field] = newValue;
+			Vue.set(this.filters, filter.name, newValue);
+			console.log("set filter", filter, newValue, this.filters);
 			this.load();
 		},
 		setComboFilter: function(value, label) {
@@ -329,6 +358,15 @@ Vue.component("n-dashboard-data", {
 				});
 			}
 		},
+		getFormOperations: function() {
+			var self = this;
+			return this.$services.page.getOperations(function(operation) {
+				// must be a put or post
+				return (operation.method.toLowerCase() == "put" || operation.method.toLowerCase() == "post")
+					// and contain the name fragment (if any)
+					&& (!name || operation.id.toLowerCase().indexOf(name.toLowerCase()) >= 0);
+			}).map(function(x) { return x.id });
+		},
 		normalize: function(state) {
 			/*if (!state.transform) {
 				Vue.set(state, "transform", null);
@@ -357,6 +395,12 @@ Vue.component("n-dashboard-data", {
 			}
 			if (!state.fields) {
 				Vue.set(state, "fields", []);
+			}
+			if (!state.updateOperation) {
+				Vue.set(state, "updateOperation", null);
+			}
+			if (!state.updateBindings) {
+				Vue.set(state, "updateBindings", {});
 			}
 			if (!state.refreshOn) {
 				Vue.set(state, "refreshOn", []);
@@ -457,9 +501,26 @@ Vue.component("n-dashboard-data", {
 				this.load();
 			}
 		},
-		updateOperation: function(operation) {
-			if (this.cell.state.operation != operation.id) {
-				this.cell.state.operation = operation.id;
+		updateFormOperation: function(operationId) {
+			if (this.cell.state["updateOperation"] != operationId) {
+				Vue.set(this.cell.state, "updateOperation", operationId);
+				var operation = this.$services.swagger.operations[operationId];
+				var bindings = {};
+				var self = this;
+				if (operation.parameters) {
+					operation.parameters.map(function(parameter) {
+						bindings[parameter.name] = self.cell.state.updateBindings && self.cell.state.updateBindings[parameter.name]
+							? self.cell.state.updateBindings[parameter.name]
+							: null;
+					});
+					Vue.set(this.cell.state, "updateBindings", bindings);
+				}
+			}
+		},
+		updateOperation: function(operationId) {
+			if (this.cell.state["operation"] != operationId) {
+				var operation = this.$services.swagger.operations[operationId];
+				Vue.set(this.cell.state, "operation", operationId);
 				var bindings = {};
 				var self = this;
 				if (operation.parameters) {
@@ -485,7 +546,22 @@ Vue.component("n-dashboard-data", {
 						}]
 					});
 				});
+				// if there are no parameters required, do an initial load
+				if (!operation.parameters.filter(function(x) { return x.required }).length) {
+					this.load();
+				}
 			}
+		},
+		update: function(record) {
+			var parameters = {};
+			var self = this;
+			Object.keys(this.cell.state.updateBindings).map(function(key) {
+				if (self.cell.state.updateBindings[key]) {
+					parameters[key] = record[self.cell.state.updateBindings[key].substring("record.".length)];
+				}
+			});
+			parameters.body = record;
+			return this.$services.swagger.execute(this.cell.state.updateOperation, parameters);
 		},
 		isHidden: function(key) {
 			return this.cell.state.result[key] && this.cell.state.result[key].format == "hidden";	
@@ -560,7 +636,7 @@ Vue.component("n-dashboard-data", {
 					}
 				});
 				this.cell.state.filters.map(function(filter) {
-					parameters[filter.field] = filter.type == 'fixed' ? filter.value : self.filters[filter.field];	
+					parameters[filter.name] = filter.type == 'fixed' ? filter.value : self.filters[filter.name];	
 				});
 				try {
 					this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
