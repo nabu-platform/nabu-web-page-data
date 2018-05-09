@@ -1,6 +1,6 @@
-<template id="dashboard-donut">
-	<div class="dashboard-donut">
-		<n-dashboard-data :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
+<template id="data-donut">
+	<div class="data-donut">
+		<data-common :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
 				:records="records"
 				v-model="loaded">
 			<n-form-section slot="main-settings">
@@ -13,6 +13,6 @@
 				<n-form-combo v-model="cell.state.detail" :items="['inline', 'popup']" label="Label Style" @input="draw"/>
 			</n-form-section>
 			<svg ref="svg" v-if="loaded"></svg>
-		</n-dashboard-data>
+		</data-common>
 	</div>
 </template>

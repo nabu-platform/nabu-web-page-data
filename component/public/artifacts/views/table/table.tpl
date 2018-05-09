@@ -1,18 +1,18 @@
-<template id="dashboard-table">
-	<div class="dashboard-cell dashboard-table">
-		<n-dashboard-data :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
+<template id="data-table">
+	<div class="data-cell data-table">
+		<data-common :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
 				:records="records"
 				v-model="loaded"
 				:updatable="true">
-			<table class="classic dashboard" cellspacing="0" cellpadding="0" :class="$refs.data.dataClass" v-if="loaded">
+			<table class="classic data" cellspacing="0" cellpadding="0" :class="$refs.data.dataClass" v-if="loaded">
 				<thead>
 					<tr>
-						<td @click="$refs.data.sort($refs.data.getSortKey(field))"
+						<th @click="$refs.data.sort($refs.data.getSortKey(field))"
 								v-for="field in cell.state.fields"><span>{{ field.label }}</span>
 							<span class="fa fa-sort-up" v-if="cell.state.orderBy.indexOf($refs.data.getSortKey(field)) >= 0"></span>
 							<span class="fa fa-sort-down" v-if="cell.state.orderBy.indexOf($refs.data.getSortKey(field) + ' desc') >= 0"></span>
-						</td>
-						<td v-if="$refs.data.actions.length"></td>
+						</th>
+						<th v-if="$refs.data.actions.length"></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -33,6 +33,6 @@
 				</tbody>
 			</table>
 			<n-paging :value="$refs.data.paging.current" :total="$refs.data.paging.total" :load="$refs.data.load" :initialize="false" v-if="loaded"/>
-		</n-dashboard-data>
+		</data-common>
 	</div>
 </template>

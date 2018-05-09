@@ -1,4 +1,4 @@
-[template="dashboard-donut"], [template="dashboard-bar"], [template="dashboard-line"], .dashboard-donut, .dashboard-bar, .dashboard-line {
+[template="data-donut"], [template="data-bar"], [template="data-line"], .data-donut, .data-bar, .data-line {
 	height: 100%;
 	svg {
 		margin: auto;
@@ -10,17 +10,25 @@
 .d3-tooltip {
 	padding: 1rem;
 	background-color: #feffc0;
-	.key {
-		font-weight: bold;
-		&:after {
-			content: ': ';
+	dl {
+		dt {
+			display: inline-block;
+			font-weight: bold;
+			&:after {
+				content: ': ';
+			}
+			margin-right: 0.3rem;
+		}
+		dd {
+			margin-left: 0.3rem;
+			display: inline-block;
 		}
 	}
 	border: $border;
 	border-radius: 5px;
 	font-size: 0.8rem;
 }
-.dashboard-donut {
+.data-donut {
 	font-family: 'Roboto', sans-serif;
 	color: #333333;
 	text-align: center;
@@ -35,15 +43,7 @@
 		fill: none;
 	}
 
-	.property {
-		.key {
-			font-weight: bold;
-			&:after {
-				content: ': ';
-			}
-			margin-right: 1rem;
-		}
-	}
+	
 	// we can add a tspan after the label as a unit
 	.labelName tspan {
 		font-style: normal;

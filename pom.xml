@@ -4,8 +4,8 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nabu.web.page</groupId>
-	<artifactId>dashboard</artifactId>
-	<version>${nabu.web.page-dashboard-version}</version>
+	<artifactId>data</artifactId>
+	<version>${nabu.web.page-data-version}</version>
 	
 	<parent>
 		<groupId>be.nabu</groupId>

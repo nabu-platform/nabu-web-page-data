@@ -1,9 +1,10 @@
-if (!nabu) { var nabu = {} };
-if (!nabu.views) { nabu.views = {} };
-if (!nabu.views.dashboard) { nabu.views.dashboard = {} };
+if (!nabu) { var nabu = {} }
+if (!nabu.page) { nabu.page = {} }
+if (!nabu.page.views) { nabu.page.views = {} }
+if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
-nabu.views.dashboard.Line = Vue.extend({
-	template: "#dashboard-line",
+nabu.page.views.data.Line = Vue.extend({
+	template: "#data-line",
 	props: {
 		page: {
 			type: Object,
@@ -90,7 +91,7 @@ nabu.views.dashboard.Line = Vue.extend({
 					.attr('height', height + margin.top + margin.bottom);
 					
 	
-				var result = this.$services.dashboard.extractValues(self.cell, records);
+				var result = this.$services.dataUtils.extractValues(self.cell, records);
 				var xValues = result.xValues;
 				var yValues = result.yValues;
 				var zValues = result.zValues;
@@ -181,7 +182,7 @@ nabu.views.dashboard.Line = Vue.extend({
 				
 				var htmlBuilder = function (data, i) {
 					console.log("data is", data);
-					self.$services.dashboard.buildStandardD3Tooltip(data.data, i, self.$refs.data.buildToolTip);	
+					self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.$refs.data.buildToolTip);	
 				};
 				
 				var series = svg.selectAll(".series")
@@ -213,7 +214,7 @@ nabu.views.dashboard.Line = Vue.extend({
 						.style("stroke-width", "2px")
 						.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 						.on("mouseover", htmlBuilder)
-						.on("mouseout",  self.$services.dashboard.removeStandardD3Tooltip)
+						.on("mouseout",  self.$services.dataUtils.removeStandardD3Tooltip)
 				}
 				
 				if (this.cell.state.legend && zValues.length) {

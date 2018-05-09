@@ -1,9 +1,10 @@
-if (!nabu) { var nabu = {} };
-if (!nabu.views) { nabu.views = {} };
-if (!nabu.views.dashboard) { nabu.views.dashboard = {} };
+if (!nabu) { var nabu = {} }
+if (!nabu.page) { nabu.page = {} }
+if (!nabu.page.views) { nabu.page.views = {} }
+if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
-Vue.component("n-dashboard-data", {
-	template: "#dashboard-data",
+Vue.component("data-common", {
+	template: "#data-common",
 	props: {
 		page: {
 			type: Object,
@@ -206,7 +207,7 @@ Vue.component("n-dashboard-data", {
 	},
 	methods: {
 		getDataOperations: function(value) {
-			return this.$services.dashboard.getDataOperations(value).map(function(x) { return x.id });	
+			return this.$services.dataUtils.getDataOperations(value).map(function(x) { return x.id });	
 		},
 		getSortKey: function(field) {
 			for (var i = 0; i < field.fragments.length; i++) {
@@ -252,7 +253,7 @@ Vue.component("n-dashboard-data", {
 			}
 			var self = this;
 			var component = Vue.extend({
-				template: "<nabu-page-fields class='nabu-dashboard-field' :cell='cell' :label='true' :page='page' :data='record' :style='true' :edit='edit'/>",
+				template: "<page-fields class='data-field' :cell='cell' :label='true' :page='page' :data='record' :style='true' :edit='edit'/>",
 				data: function() {
 					return {
 						cell: self.cell,

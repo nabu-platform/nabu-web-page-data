@@ -1,6 +1,6 @@
-<template id="dashboard-line">
-	<div class="dashboard-line">
-		<n-dashboard-data :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
+<template id="data-line">
+	<div class="data-line">
+		<data-common :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
 				:records="records"
 				v-model="loaded">
 			<n-form-section slot="main-settings">
@@ -20,6 +20,6 @@
 					:filter="getInterpolation"/>
 			</n-form-section>
 			<svg ref="svg" v-if="loaded"></svg>
-		</n-dashboard-data>
+		</data-common>
 	</div>
 </template>

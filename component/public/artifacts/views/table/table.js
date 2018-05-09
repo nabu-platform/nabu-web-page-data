@@ -1,9 +1,10 @@
-if (!nabu) { var nabu = {} };
-if (!nabu.views) { nabu.views = {} };
-if (!nabu.views.dashboard) { nabu.views.dashboard = {} };
+if (!nabu) { var nabu = {} }
+if (!nabu.page) { nabu.page = {} }
+if (!nabu.page.views) { nabu.page.views = {} }
+if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
-nabu.views.dashboard.Table = Vue.extend({
-	template: "#dashboard-table",
+nabu.page.views.data.Table = Vue.extend({
+	template: "#data-table",
 	props: {
 		page: {
 			type: Object,

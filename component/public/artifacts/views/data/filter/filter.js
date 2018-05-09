@@ -1,5 +1,5 @@
-Vue.component("page-data-filter-default", {
-	template: "#page-data-filter-default",
+Vue.component("data-filter-default", {
+	template: "#data-filter-default",
 	props: {
 		showRefresh: {
 			type: Boolean, 

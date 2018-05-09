@@ -1,6 +1,6 @@
-<template id="dashboard-bar">
-	<div class="dashboard-bar">
-		<n-dashboard-data :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
+<template id="data-bar">
+	<div class="data-bar">
+		<data-common :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
 				:records="records"
 				v-model="loaded">
 			<n-form-section slot="main-settings">
@@ -18,6 +18,6 @@
 				<n-form-switch v-model="cell.state.reverseSortBy" v-if="cell.state.orderBy" label="Reverse Sort By" @input="draw"/>
 			</n-form-section>
 			<svg ref="svg" v-if="loaded"></svg>
-		</n-dashboard-data>
+		</data-common>
 	</div>
 </template>

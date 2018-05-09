@@ -1,5 +1,5 @@
-<template id="dashboard-data">
-	<div class="dashboard-data">
+<template id="data-common">
+	<div class="data-common">
 		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
 			<n-form class="layout2">
 				<n-collapsible title="Dashboard Settings">
@@ -7,8 +7,9 @@
 						:filter="getDataOperations"
 						@input="updateOperation"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
+					<n-form-text v-model="cell.state.class" label="Class"/>
 					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()"/>
-					<n-form-combo label="Filter Type" :items="$window.nabu.page.providers('page-data-filter')" v-model="cell.state.filterType"
+					<n-form-combo label="Filter Type" :items="$window.nabu.page.providers('data-filter')" v-model="cell.state.filterType"
 						:formatter="function(x) { return x.name }"/>
 					<n-form-text v-if="cell.state.filterType == 'combo'" v-model="cell.state.filterPlaceHolder" label="Combo placeholder"/>
 					<n-form-combo label="Update Operation" :value="cell.state.updateOperation"

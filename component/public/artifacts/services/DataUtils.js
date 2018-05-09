@@ -142,4 +142,4 @@ nabu.services.VueService(Vue.extend({
 			};
 		}
 	}
-}), { name: "nabu.services.Dashboard" });
+}), { name: "nabu.services.DataUtils" });

@@ -1,9 +1,10 @@
-if (!nabu) { var nabu = {} };
-if (!nabu.views) { nabu.views = {} };
-if (!nabu.views.dashboard) { nabu.views.dashboard = {} };
+if (!nabu) { var nabu = {} }
+if (!nabu.page) { nabu.page = {} }
+if (!nabu.page.views) { nabu.page.views = {} }
+if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
-nabu.views.dashboard.Bar = Vue.extend({
-	template: "#dashboard-bar",
+nabu.page.views.data.Bar = Vue.extend({
+	template: "#data-bar",
 	props: {
 		page: {
 			type: Object,
@@ -54,7 +55,7 @@ nabu.views.dashboard.Bar = Vue.extend({
 					return typeof(record[self.cell.state.y]) != "undefined";
 				});
 				
-				var result = this.$services.dashboard.extractValues(self.cell, records);
+				var result = this.$services.dataUtils.extractValues(self.cell, records);
 				var xValues = result.xValues;
 				var yValues = result.yValues;
 				var zValues = result.zValues;
@@ -138,7 +139,7 @@ nabu.views.dashboard.Bar = Vue.extend({
 								return x[self.cell.state.x] == xValue && x[self.cell.state.z] == zValue;
 							})[0];
 							// build the standard tooltip from that
-							self.$services.dashboard.buildStandardD3Tooltip(record, i, self.$refs.data.buildToolTip);	
+							self.$services.dataUtils.buildStandardD3Tooltip(record, i, self.$refs.data.buildToolTip);	
 						};
 						// we need to transform the data, we receive M records
 						// where each record has one combination of x,y,z
@@ -211,7 +212,7 @@ nabu.views.dashboard.Bar = Vue.extend({
 					else {
 						htmlBuilder = function (data, i) {
 							console.log("data is", data);
-							self.$services.dashboard.buildStandardD3Tooltip(data.data, i, self.$refs.data.buildToolTip);	
+							self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.$refs.data.buildToolTip);	
 						}
 						
 						// group by z
@@ -304,7 +305,7 @@ nabu.views.dashboard.Bar = Vue.extend({
 				}
 				else {
 					htmlBuilder = function (data, i) {
-						self.$services.dashboard.buildStandardD3Tooltip(data, i, self.$refs.data.buildToolTip);	
+						self.$services.dataUtils.buildStandardD3Tooltip(data, i, self.$refs.data.buildToolTip);	
 					}
 					var xAxis = g.append("g")
 						.attr("class", "axis axis--x")
@@ -351,9 +352,12 @@ nabu.views.dashboard.Bar = Vue.extend({
 				var toolTip = function(selection) {
 					selection.on('mouseenter', htmlBuilder);
 					selection.on('mouseout', function () {
-						self.$services.dashboard.removeStandardD3Tooltip();
+						self.$services.dataUtils.removeStandardD3Tooltip();
 					});
 				}
+				// made specific by the cell.id
+				// so three different mechanisms for targetting for three different components, not good :|
+				// this is the worst of the three
 				d3.selectAll(".bar-" + self.cell.id).call(toolTip);
 			}
 		},

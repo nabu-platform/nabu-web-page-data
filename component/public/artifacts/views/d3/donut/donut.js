@@ -1,9 +1,10 @@
-if (!nabu) { var nabu = {} };
-if (!nabu.views) { nabu.views = {} };
-if (!nabu.views.dashboard) { nabu.views.dashboard = {} };
+if (!nabu) { var nabu = {} }
+if (!nabu.page) { nabu.page = {} }
+if (!nabu.page.views) { nabu.page.views = {} }
+if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
-nabu.views.dashboard.Donut = Vue.extend({
-	template: "#dashboard-donut",
+nabu.page.views.data.Donut = Vue.extend({
+	template: "#data-donut",
 	props: {
 		page: {
 			type: Object,
@@ -148,7 +149,7 @@ nabu.views.dashboard.Donut = Vue.extend({
 								.attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')'); // centres text in tooltip
 						}
 						else {
-							self.$services.dashboard.buildStandardD3Tooltip(data, i, buildToolTip);
+							self.$services.dataUtils.buildStandardD3Tooltip(data, i, buildToolTip);
 						}
 					});
 						
@@ -158,7 +159,7 @@ nabu.views.dashboard.Donut = Vue.extend({
 							d3.selectAll('.toolCircle').remove();
 						}
 						else {
-							self.$services.dashboard.removeStandardD3Tooltip();
+							self.$services.dataUtils.removeStandardD3Tooltip();
 						}
 					});
 				}
@@ -221,7 +222,9 @@ nabu.views.dashboard.Donut = Vue.extend({
 						return [arc.centroid(d), outerArc.centroid(d), pos]
 				});
 				
-				d3.selectAll('.labelName text, .slices path').call(toolTip);
+				// too wide! multiple donuts possible
+				//d3.selectAll('.labelName text, .slices path').call(toolTip);
+				svg.selectAll(".labelName text, .slices path").call(toolTip);
 			}
 		},
 		normalize: function(state) {
