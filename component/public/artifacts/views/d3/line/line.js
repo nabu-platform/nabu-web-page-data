@@ -53,7 +53,8 @@ nabu.page.views.data.Line = Vue.extend({
 		// http://projects.delimited.io/experiments/multi-series/multi-line-full.html
 		draw: function() {
 			var self = this;
-			if (this.cell.state.y && this.$refs.svg && self.cell.state.y) {
+			if (this.cell.state.y && this.$refs.svg) {
+				nabu.utils.elements.clear(this.$refs.svg);
 				var records = this.records.filter(function(record) {
 					return typeof(record[self.cell.state.y]) != "undefined";
 				});
@@ -90,7 +91,6 @@ nabu.page.views.data.Line = Vue.extend({
 				svg.attr('width', width + margin.left + margin.right)
 					.attr('height', height + margin.top + margin.bottom);
 					
-	
 				var result = this.$services.dataUtils.extractValues(self.cell, records);
 				var xValues = result.xValues;
 				var yValues = result.yValues;
@@ -115,7 +115,9 @@ nabu.page.views.data.Line = Vue.extend({
 				var xAxis = g.append("g")
 					.attr("class", "axis")
 					.attr("transform", "translate(0," + height + ")")
-					.call(d3.axisBottom(x));
+					.call(d3.axisBottom(x).tickFormat(function(d) {
+						return self.$services.formatter.format(d, self.cell.state.xFormat);	
+					}));
 					
 				// if you want to rotate the labels on the x axis, make it so scotty
 				if (this.cell.state.rotateX) {
@@ -127,7 +129,9 @@ nabu.page.views.data.Line = Vue.extend({
 					
 				var yAxis = g.append("g")
 					.attr("class", "axis")
-					.call(d3.axisLeft(y).ticks(10))
+					.call(d3.axisLeft(y).tickFormat(function(d) {
+						return self.$services.formatter.format(d, self.cell.state.yFormat);	
+					}))
 					.append("text")
 					.attr("class", "y-axis-label")
 					.attr("fill", "#333")
@@ -181,7 +185,6 @@ nabu.page.views.data.Line = Vue.extend({
 				}
 				
 				var htmlBuilder = function (data, i) {
-					console.log("data is", data);
 					self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.$refs.data.buildToolTip);	
 				};
 				
@@ -192,7 +195,7 @@ nabu.page.views.data.Line = Vue.extend({
 				
 				series.append("path")
 					.attr("class", "line")
-					.attr("d", function (d) { console.log("d", line(d.values)); return line(d.values); })
+					.attr("d", function (d) { return line(d.values); })
 					.style("stroke", function (d) { return color(zValues.length ? zValues.indexOf(d.name) : 0); })
 					.style("stroke-width", "4px")
 					.style("fill", "none")
@@ -249,8 +252,14 @@ nabu.page.views.data.Line = Vue.extend({
 			if (!state.x) {
 				Vue.set(state, "x", null);
 			}
+			if (!state.xFormat) {
+				Vue.set(state, "xFormat", {});
+			}
 			if (!state.y) {
 				Vue.set(state, "y", null);
+			}
+			if (!state.yFormat) {
+				Vue.set(state, "yFormat", {});
 			}
 			if (!state.z) {
 				Vue.set(state, "z", null);
@@ -296,6 +305,13 @@ nabu.page.views.data.Line = Vue.extend({
 			if (this.loaded) {
 				this.draw();
 			}
+		},
+		cell: {
+			handler: function() {
+				console.log("state updated");
+				this.draw();
+			},
+			deep: true
 		}
 	}
 });

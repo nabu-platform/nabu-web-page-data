@@ -182,7 +182,9 @@ nabu.page.views.data.Bar = Vue.extend({
 						var xAxis = g.append("g")
 							.attr("class", "axis")
 							.attr("transform", "translate(0," + height + ")")
-							.call(d3.axisBottom(x));
+							.call(d3.axisBottom(x).tickFormat(function(d) {
+								return self.$services.formatter.format(d, self.cell.state.xFormat);	
+							}));
 						
 						// if you want to rotate the labels on the x axis, make it so scotty
 						if (this.cell.state.rotateX) {
@@ -194,7 +196,9 @@ nabu.page.views.data.Bar = Vue.extend({
 						
 						var yAxis = g.append("g")
 							.attr("class", "axis")
-							.call(d3.axisLeft(y).ticks(10))
+							.call(d3.axisLeft(y).tickFormat(function(d) {
+								return self.$services.formatter.format(d, self.cell.state.yFormat);	
+							}))
 							.append("text")
 	//						.attr("x", 2)
 	//						.attr("y", y(y.ticks().pop()) + 0.5)
@@ -254,7 +258,9 @@ nabu.page.views.data.Bar = Vue.extend({
 						var xAxis = g.append("g")
 							.attr("class", "axis")
 							.attr("transform", "translate(0," + height + ")")
-							.call(d3.axisBottom(x));
+							.call(d3.axisBottom(x).tickFormat(function(d) {
+								return self.$services.formatter.format(d, self.cell.state.xFormat);	
+							}));
 						
 						// if you want to rotate the labels on the x axis, make it so scotty
 						if (this.cell.state.rotateX) {
@@ -266,7 +272,9 @@ nabu.page.views.data.Bar = Vue.extend({
 						
 						var yAxis = g.append("g")
 							.attr("class", "axis")
-							.call(d3.axisLeft(y).ticks(null, "s"))
+							.call(d3.axisLeft(y).tickFormat(function(d) {
+								return self.$services.formatter.format(d, self.cell.state.yFormat);	
+							}))
 							.append("text")
 							.attr("x", 2)
 							.attr("y", y(y.ticks().pop()) + 0.5)
@@ -313,7 +321,9 @@ nabu.page.views.data.Bar = Vue.extend({
 					var xAxis = g.append("g")
 						.attr("class", "axis axis--x")
 						.attr("transform", "translate(0," + height + ")")
-						.call(d3.axisBottom(x));
+						.call(d3.axisBottom(x).tickFormat(function(d) {
+							return self.$services.formatter.format(d, self.cell.state.xFormat);	
+						}));
 						
 					// if you want to rotate the labels on the x axis, make it so scotty
 					if (this.cell.state.rotateX) {
@@ -325,7 +335,9 @@ nabu.page.views.data.Bar = Vue.extend({
 					
 					var yAxis = g.append("g")
 						.attr("class", "axis axis--y")
-						.call(d3.axisLeft(y).ticks(10))
+						.call(d3.axisLeft(y).tickFormat(function(d) {
+							return self.$services.formatter.format(d, self.cell.state.yFormat);	
+						}))
 						.append("text")
 						.attr("class", "y-axis-label")
 						.attr("fill", "#333")
@@ -368,8 +380,14 @@ nabu.page.views.data.Bar = Vue.extend({
 			if (!state.x) {
 				Vue.set(state, "x", null);
 			}
+			if (!state.xFormat) {
+				Vue.set(state, "xFormat", {});
+			}
 			if (!state.y) {
 				Vue.set(state, "y", null);
+			}
+			if (!state.yFormat) {
+				Vue.set(state, "yFormat", {});
 			}
 			if (!state.z) {
 				Vue.set(state, "z", null);
