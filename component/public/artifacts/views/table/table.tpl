@@ -27,7 +27,7 @@
 								v-for="action in $refs.data.actions" 
 								@click="$refs.data.trigger(action, record)"
 								class="inline"
-								:class="action.class"><span class="fa" :class="'fa-' + action.icon"></span></button>
+								:class="action.class"><span class="fa" :class="action.icon"></span></button>
 						</td>
 					</tr>
 				</tbody>

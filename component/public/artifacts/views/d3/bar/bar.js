@@ -91,6 +91,9 @@ nabu.page.views.data.Bar = Vue.extend({
 					// we take a percentage based on the angle
 					height -= longest * 14 * (Math.min(50, this.cell.state.rotateX) / 100);
 				}
+				
+				
+				height = Math.max(0, height);
 					
 				svg.attr('width', width + margin.left + margin.right)
 					.attr('height', height + margin.top + margin.bottom);
@@ -173,7 +176,7 @@ nabu.page.views.data.Bar = Vue.extend({
 								.attr("class", "bar bar-" + self.cell.id)
 								.attr("x", function(d, i) { return self.cell.state.x ? x(d.data[self.cell.state.x]) : x(i); })
 								.attr("y", function(d) { return y(d[1]); })
-								.attr("height", function(d) { return y(d[0]) - y(d[1]); })
+								.attr("height", function(d) { return Math.max(0, y(d[0]) - y(d[1])); })
 								.attr("width", x.bandwidth());
 						
 						var xAxis = g.append("g")
@@ -245,7 +248,7 @@ nabu.page.views.data.Bar = Vue.extend({
 							.attr("x", function(d) { return xSub(d.key); })
 							.attr("y", function(d) { return y(d.value); })
 							.attr("width", xSub.bandwidth())
-							.attr("height", function(d) { return height - y(d.value); })
+							.attr("height", function(d) { return Math.max(0, height - y(d.value)); })
 							.attr("fill", function(d) { return z(zValues.indexOf(d.key)); });
 						
 						var xAxis = g.append("g")
@@ -345,7 +348,7 @@ nabu.page.views.data.Bar = Vue.extend({
 						.attr("x", function(d, i) { return self.cell.state.x ? x(d[self.cell.state.x]) : x(i) })
 						.attr("y", function(d) { return y(d[self.cell.state.y]); })
 						.attr("width", x.bandwidth())
-						.attr("height", function(d) { return height - y(d[self.cell.state.y]); });
+						.attr("height", function(d) { return Math.max(0, height - y(d[self.cell.state.y])); });
 				}
 				
 				// standard tooltip logic

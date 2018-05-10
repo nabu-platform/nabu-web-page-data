@@ -50,7 +50,6 @@ nabu.services.VueService(Vue.extend({
 				div.setAttribute("class", "d3-tooltip");
 				document.body.appendChild(div);
 				if (result.$mount) {
-					console.log("mounting!", result);
 					result.$mount().$appendTo(div);
 				}
 				else {
