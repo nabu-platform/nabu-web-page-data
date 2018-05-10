@@ -50,7 +50,9 @@ nabu.page.views.data.Bar = Vue.extend({
 		// based heavily on: https://bl.ocks.org/mbostock/3886208
 		draw: function() {
 			var self = this;
-			if (this.cell.state.y && this.$refs.svg && self.cell.state.y) {
+			if (this.cell.state.y && this.$refs.svg) {
+				nabu.utils.elements.clear(this.$refs.svg);
+				
 				var records = this.records.filter(function(record) {
 					return typeof(record[self.cell.state.y]) != "undefined";
 				});
@@ -436,6 +438,13 @@ nabu.page.views.data.Bar = Vue.extend({
 			if (this.loaded) {
 				this.draw();
 			}
+		},
+		cell: {
+			handler: function() {
+				console.log("state updated");
+				this.draw();
+			},
+			deep: true
 		}
 	}
 });
