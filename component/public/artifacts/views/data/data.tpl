@@ -90,6 +90,8 @@
 		
 		<component v-if="cell.state.filterType" :is="cell.state.filterType.component" 
 			class="cell-actions"
+			:page="page"
+			:cell="cell"
 			:show-refresh="cell.state.showRefresh"
 			:filters="cell.state.filters"
 			:formatters="cell.state.formatters"

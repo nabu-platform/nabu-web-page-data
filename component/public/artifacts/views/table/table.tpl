@@ -20,7 +20,9 @@
 						<td :class="$services.page.getDynamicClasses(field.styles, record)" v-for="field in cell.state.fields">
 							<page-field :field="field" :data="record" :style="false" 
 								:label="false"
-								@updated="$refs.data.update(record)"/>
+								@updated="$refs.data.update(record)"
+								:page="page"
+								:cell="cell"/>
 						</td>
 						<td class="actions" v-if="$refs.data.actions.length" @mouseover="$refs.data.actionHovering = true" @mouseout="$refs.data.actionHovering = false">
 							<button v-if="!action.condition || $refs.data.isCondition(action.condition, record)" 

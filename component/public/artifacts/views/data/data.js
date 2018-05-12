@@ -91,20 +91,7 @@ Vue.component("data-common", {
 			return this.cell.state.operation ? this.$services.swagger.operations[this.cell.state.operation] : null;
 		},
 		availableParameters: function() {
-			var parameters = this.$services.page.instances[this.page.name].availableParameters;
-			var result = {};
-			// we map the states that are available on the entire page
-			this.page.content.states.map(function(state) {
-				result[state.name] = parameters[state.name];
-			})
-			// we map the page-level parameters
-			result.page = parameters.page;
-			// and we map the event that this is based on (if any)
-			// other events are not accessible here
-			if (this.cell.on) {
-				result[this.cell.on] = parameters[this.cell.on];
-			}
-			return result;
+			return this.$services.page.getAvailableParameters(this.page, this.cell);
 		},
 		definition: function() {
 			var properties = {};

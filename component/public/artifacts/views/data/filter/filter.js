@@ -1,6 +1,14 @@
 Vue.component("data-filter-default", {
 	template: "#data-filter-default",
 	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
 		showRefresh: {
 			type: Boolean, 
 			required: false
