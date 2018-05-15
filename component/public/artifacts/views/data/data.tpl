@@ -58,7 +58,7 @@
 				<page-form-configure title="Filters" v-if="cell.state.filters.length || filtersToAdd().length"
 					:fields="cell.state.filters" 
 					:possible-fields="filtersToAdd()"/>
-				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-form="!!cell.state.updateOperation"/>
+				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="!!cell.state.updateOperation"/>
 				<n-collapsible title="Formatters" class="list" v-if="false">
 					<n-collapsible class="list-item" :title="cell.state.result[key].label ? cell.state.result[key].label : key" v-for="key in keys">
 						<n-form-text v-model="cell.state.result[key].label" :label="'Label for ' + key" 
