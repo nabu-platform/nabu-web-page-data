@@ -33,6 +33,11 @@ Vue.component("data-common", {
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		multiselect: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	data: function() {
@@ -46,11 +51,17 @@ Vue.component("data-common", {
 			ready: false,
 			subscriptions: [],
 			lastTriggered: null,
+			selected: [],
 			query: null
 		}	
 	},
 	created: function() {
-		this.load();
+		if (this.cell.state.array) {
+			this.loadArray();
+		}
+		else {
+			this.load();
+		}
 		
 		this.normalize(this.cell.state);
 		var pageInstance = this.$services.page.instances[this.page.name];
@@ -113,6 +124,14 @@ Vue.component("data-common", {
 					});
 				}
 			}
+			else if (this.cell.state.array) {
+				var available = this.$services.page.getAvailableParameters(this.page, this.cell);
+				var variable = this.cell.state.array.substring(0, this.cell.state.array.indexOf("."));
+				var rest = this.cell.state.array.substring(this.cell.state.array.indexOf(".") + 1);
+				if (available[variable]) {
+					nabu.utils.objects.merge(properties, this.$services.page.getChildDefinition(available[variable], rest).items.properties);
+				}
+			}
 			return properties;
 		},
 		hasLimit: function() {
@@ -155,20 +174,6 @@ Vue.component("data-common", {
 					properties: this.definition
 				}
 			};
-		},
-		eventDefinition: function() {
-			if (this.operation) {
-				var schema = this.operation.responses["200"].schema;
-				var definition = this.$services.swagger.definition(schema["$ref"]);
-				var parameters = [];
-				Object.keys(this.definition).map(function(key) {
-					parameters.push(key);
-				});
-				return parameters;
-			}
-			else {
-				return [];
-			}
 		},
 		keys: function() {
 			var keys = Object.keys(this.definition);
@@ -325,25 +330,61 @@ Vue.component("data-common", {
 				value: null
 			})
 		},
+		select: function(record) {
+			if (!this.multiselect || !this.cell.state.multiselect) {
+				this.selected.splice(0, this.selected.length);
+			}
+			var index = this.selected.indexOf(record);
+			// if we are adding it, send out an event
+			if (index < 0) {
+				this.selected.push(record);
+				this.trigger(null, record);
+			}
+			else {
+				this.selected.splice(index, 1);
+			}
+		},
 		trigger: function(action, data) {
 			if (!action) {
 				this.lastTriggered = data;
 			}
-			// if no action is specified, it is the one without the icon (and not global)
+			// if no action is specified, it is the one without the icon and label (and not global)
+			// this is row specific (not global) but does not have an actual presence (no icon & label)
 			if (!action && !this.actionHovering) {
 				action = this.cell.state.actions.filter(function(x) {
-					return !x.icon && !x.global;
+					return !x.icon && !x.label && !x.global;
 				})[0];
 			}
 			if (action) {
-				console.log("doing", action, data);
 				var pageInstance = this.$services.page.instances[this.page.name];
 				var self = this;
-				pageInstance.emit(action.name, data).then(function() {
-					if (action.refresh) {
-						self.load();
+				// if there is no data (for a global event) 
+				if (action.global) {
+					if (action.useSelection) {
+						data = this.multiselect && this.cell.state.multiselect && this.selected.length > 1 
+							? this.selected
+							: (this.selected.length ? this.selected[0] : null);
 					}
-				});
+					else {
+						data = this.$services.page.instances[this.page.name].get(this.cell.on);
+					}
+					if (!data) {
+						data = {};
+					}
+				}
+				if (action.name) {
+					return pageInstance.emit(action.name, data).then(function() {
+						if (action.refresh) {
+							self.load();
+						}
+						else if (action.close) {
+							self.$emit("close");
+						}
+					});
+				}
+				else if (action.close) {
+					this.$emit("close");
+				}
 			}
 		},
 		getFormOperations: function() {
@@ -389,6 +430,9 @@ Vue.component("data-common", {
 			}
 			if (!state.updateBindings) {
 				Vue.set(state, "updateBindings", {});
+			}
+			if (!state.multiselect) {
+				Vue.set(state, "multiselect", false);
 			}
 			if (!state.refreshOn) {
 				Vue.set(state, "refreshOn", []);
@@ -469,8 +513,27 @@ Vue.component("data-common", {
 				condition: null,
 				refresh: false,
 				global: false,
+				close: false,
+				type: "button",
 				useSelection: false
 			});
+		},
+		upAction: function(action) {
+			var index = this.cell.state.actions.indexOf(action);
+			console.log("index is", index);
+			if (index > 0) {
+				var replacement = this.cell.state.actions[index - 1];
+				this.cell.state.actions.splice(index - 1, 1, action);
+				this.cell.state.actions.splice(index, 1, replacement);
+			}
+		},
+		downAction: function(action) {
+			var index = this.cell.state.actions.indexOf(action);
+			if (index < this.cell.state.length - 1) {
+				var replacement = this.cell.state.actions[index + 1];
+				this.cell.state.actions.splice(index + 1, 1, action);
+				this.cell.state.actions.splice(index, 1, replacement);
+			}
 		},
 		sort: function(key) {
 			if (this.orderable) {
@@ -505,6 +568,33 @@ Vue.component("data-common", {
 				}
 			}
 		},
+		updateArray: function(array) {
+			Vue.set(this.cell.state, "array", array);
+			Vue.set(this.cell, "bindings", {});
+			Vue.set(this.cell, "result", {});
+			// we clear out the fields, they are most likely useless with another operation
+			this.cell.state.fields.splice(0, this.cell.state.fields.length);
+			// instead we add entries for all the fields in the return value
+			this.keys.map(function(key) {
+				self.cell.state.fields.push({
+					label: key,
+					fragments: [{
+						type: "data",
+						key: key
+					}]
+				});
+			});
+			this.loadArray();
+		},
+		loadArray: function() {
+			if (this.cell.state.array) {
+				var current = this.$services.page.instances[this.page.name].get(this.cell.state.array);
+				if (current) {
+					this.records.splice(0, this.records.length);
+					nabu.utils.arrays.merge(this.records, current);
+				}
+			}
+		},
 		updateOperation: function(operationId) {
 			if (this.cell.state["operation"] != operationId) {
 				var operation = this.$services.swagger.operations[operationId];
@@ -521,6 +611,8 @@ Vue.component("data-common", {
 				// TODO: is it OK that we simply remove all bindings?
 				// is the table the only one who sets bindings here?
 				Vue.set(this.cell, "bindings", bindings);
+				
+				Vue.set(this.cell, "result", {});
 				
 				// we clear out the fields, they are most likely useless with another operation
 				this.cell.state.fields.splice(0, this.cell.state.fields.length);

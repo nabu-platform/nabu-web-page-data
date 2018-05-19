@@ -3,6 +3,9 @@
 		<data-common :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
 				:records="records"
 				v-model="loaded"
+				@updatedEvents="$emit('updatedEvents')"
+				@close="$emit('close')"
+				:multiselect="true"
 				:updatable="true">
 			<table class="classic data" cellspacing="0" cellpadding="0" :class="$refs.data.dataClass" v-if="loaded">
 				<thead>
@@ -16,7 +19,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="record in records" @click="$refs.data.trigger(null, record)" :class="{'selected': $refs.data.lastTriggered == record}">
+					<tr v-for="record in records" @click="$refs.data.select(record)" :class="{'selected': $refs.data.selected.indexOf(record) >= 0}">
 						<td :class="$services.page.getDynamicClasses(field.styles, record)" v-for="field in cell.state.fields">
 							<page-field :field="field" :data="record" :style="false" 
 								:label="false"
@@ -29,7 +32,7 @@
 								v-for="action in $refs.data.actions" 
 								@click="$refs.data.trigger(action, record)"
 								class="inline"
-								:class="action.class"><span class="fa" :class="action.icon"></span></button>
+								:class="[action.class, {'has-icon': action.icon}]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{action.label}}</label></button>
 						</td>
 					</tr>
 				</tbody>

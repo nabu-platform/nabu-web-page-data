@@ -2,6 +2,7 @@
 	<div class="data-donut">
 		<data-common :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
 				:records="records"
+				@updatedEvents="$emit('updatedEvents')"
 				v-model="loaded">
 			<n-form-section slot="main-settings">
 				<n-form-text v-model="cell.state.unit" label="Unit" :timeout="600" @input="draw" />

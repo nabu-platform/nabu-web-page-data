@@ -28,6 +28,13 @@ window.addEventListener("load", function() {
 				return new nabu.page.views.data.Line({propsData:parameters});
 			}
 		});
+		
+		$services.router.register({
+			alias: "data-card",
+			enter: function(parameters) {
+				return new nabu.page.views.data.Card({propsData:parameters});
+			}
+		});
 	
 		return $services.$register({
 			dataUtils: nabu.services.DataUtils

@@ -5,11 +5,17 @@
 				<n-collapsible title="Dashboard Settings">
 					<n-form-combo label="Operation" :value="cell.state.operation" 
 						:filter="getDataOperations"
-						@input="updateOperation"/>
+						@input="updateOperation"
+						v-if="!cell.state.array"/>
+					<n-form-combo label="Array" :value="cell.state.array"
+						:filter="function(value) { return $services.page.getAllArrays(page, cell.id) }"
+						v-if="!cell.state.operation"
+						@input="updateArray"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
 					<n-form-text v-model="cell.state.class" label="Class"/>
 					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()"/>
-					<n-form-combo label="Filter Type" :items="$window.nabu.page.providers('data-filter')" v-model="cell.state.filterType"
+					<n-form-switch v-if="multiselect" v-model="cell.state.multiselect" label="Allow Multiselect"/>
+					<n-form-combo label="Filter Type" :filter="function(value) { return $window.nabu.page.providers('data-filter') }" v-model="cell.state.filterType"
 						:formatter="function(x) { return x.name }"/>
 					<n-form-text v-if="cell.state.filterType == 'combo'" v-model="cell.state.filterPlaceHolder" label="Combo placeholder"/>
 					<n-form-combo label="Update Operation" :value="cell.state.updateOperation"
@@ -28,7 +34,7 @@
 					</div>
 					<div v-for="i in Object.keys(cell.state.refreshOn)" class="list-row">
 						<n-form-combo v-model="cell.state.refreshOn[i]"
-							:items="$services.page.instances[page.name].getAvailableEvents()"/>
+							:filter="function(value) { return $services.page.instances[page.name].getAvailableEvents() }"/>
 						<button @click="cell.state.refreshOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
 					</div>
 					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>
@@ -41,16 +47,20 @@
 					<div class="list-actions">
 						<button @click="addAction">Add Event</button>
 					</div>
-					<n-collapsible class="list-item" :title="action.name" v-for="action in cell.state.actions">
-						<n-form-text v-model="action.name" label="Name" :required="true"/>
+					<n-collapsible class="list-item" :title="action.name ? action.name : 'Unnamed'" v-for="action in cell.state.actions">
+						<n-form-text v-model="action.name" label="Name" @input="$emit('updatedEvents')"/>
 						<n-form-combo v-model="action.class" :filter="$services.page.getSimpleClasses" label="Class"/>
 						<n-form-switch v-model="action.global" label="Global" />
 						<n-form-switch v-model="action.useSelection" v-if="action.global" label="Use Selection" />
-						<n-form-text v-model="action.icon" v-if="!action.global" label="Icon"/>
-						<n-form-text v-model="action.label" v-else label="Label"/>
+						<n-form-text v-model="action.icon" label="Icon"/>
+						<n-form-text v-model="action.label" label="Label"/>
 						<n-form-text v-model="action.condition" label="Condition"/>
 						<n-form-switch v-model="action.refresh" label="Reload"/>
+						<n-form-switch v-model="action.close" label="Close"/>
+						<n-form-combo v-model="action.type" v-if="action.global" :items="['button', 'link']" :nillable="false" label="Type"/>
 						<div class="list-item-actions">
+							<button @click="upAction(action)"><span class="fa fa-chevron-circle-up"></span></button>
+							<button @click="downAction(action)"><span class="fa fa-chevron-circle-down"></span></button>
 							<button @click="removeAction(action)"><span class="fa fa-trash"></span></button>
 						</div>
 					</n-collapsible>
@@ -102,9 +112,13 @@
 			
 		<slot></slot>
 		<div class="global-actions" v-if="globalActions.length">
-			<button :disabled="action.useSelection && !lastTriggered" v-for="action in globalActions"
-				:class="action.class"
-				@click="trigger(action, action.useSelection ? lastTriggered : (cell.on ? $services.page.instances[page.name].variables[cell.on] : {}))">{{action.label}}</button>
+			<component
+				v-for="action in globalActions"
+				:is="action.type == 'link' ? 'a' : 'button'"
+				:disabled="action.useSelection && !lastTriggered"
+				:class="[action.class, {'has-icon': action.icon}]"
+				href="javascript:void(0)"
+				v-action="function() { trigger(action) }"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{action.label}}</label></component>
 		</div>
 	</div>
 </template>
