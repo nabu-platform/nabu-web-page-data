@@ -13,7 +13,7 @@
 				<n-form-combo v-model="cell.state.label" @input="draw" label="Label Field" :filter="function() { return $refs.data.keys }"/>
 				<n-form-combo v-model="cell.state.detail" :items="['inline', 'popup']" label="Label Style" @input="draw"/>
 			</n-form-section>
-			<svg ref="svg" v-if="loaded"></svg>
+			<svg ref="svg"></svg>
 		</data-common>
 	</div>
 </template>

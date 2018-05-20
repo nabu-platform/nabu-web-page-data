@@ -22,7 +22,7 @@
 				<n-form-combo v-if="false" v-model="cell.state.interpolation" label="Interpolation" @input="draw" 
 					:filter="getInterpolation"/>
 			</n-form-section>
-			<svg ref="svg" v-if="loaded"></svg>
+			<svg ref="svg"></svg>
 		</data-common>
 	</div>
 </template>

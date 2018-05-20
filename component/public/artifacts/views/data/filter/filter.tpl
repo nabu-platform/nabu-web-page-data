@@ -5,6 +5,8 @@
 		<n-form class="layout2 filter" v-if="showFilter">
 			<page-form-field v-for="field in filters" :key="field.name + '_value'" :field="field" 
 				:value="state[field.name]"
+				:page="page"
+				:cell="cell"
 				@input="function(newValue) { setFilter(field, newValue) }"/>
 		</n-form>
 	</div>

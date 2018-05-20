@@ -40,9 +40,6 @@ nabu.page.views.data.Bar = Vue.extend({
 			return this.cell.state.toColor ? this.cell.state.toColor : "darkolivegreen";
 		}
 	},
-	ready: function() {
-		this.draw();		
-	},
 	methods: {
 		getEvents: function() {
 			return this.$refs.data ? this.$refs.data.getEvents() : {};
@@ -445,6 +442,9 @@ nabu.page.views.data.Bar = Vue.extend({
 				this.draw();
 			},
 			deep: true
+		},
+		loaded: function() {
+			this.draw();		
 		}
 	}
 });

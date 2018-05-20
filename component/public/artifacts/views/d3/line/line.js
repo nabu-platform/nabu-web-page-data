@@ -43,9 +43,6 @@ nabu.page.views.data.Line = Vue.extend({
 			return this.cell.state.arcWidth ? this.cell.state.arcWidth / 100 : 0.1;
 		}
 	},
-	ready: function() {
-		this.draw();		
-	},
 	methods: {
 		getEvents: function() {
 			return this.$refs.data ? this.$refs.data.getEvents() : {};
@@ -312,6 +309,9 @@ nabu.page.views.data.Line = Vue.extend({
 				this.draw();
 			},
 			deep: true
+		},
+		loaded: function(newValue) {
+			this.draw();
 		}
 	}
 });

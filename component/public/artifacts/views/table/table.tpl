@@ -7,7 +7,7 @@
 				@close="$emit('close')"
 				:multiselect="true"
 				:updatable="true">
-			<table class="classic data" cellspacing="0" cellpadding="0" :class="$refs.data.dataClass" v-if="loaded">
+			<table class="classic data" cellspacing="0" cellpadding="0" :class="$refs.data.dataClass" v-if="loaded && (edit || records.length)">
 				<thead>
 					<tr>
 						<th @click="$refs.data.sort($refs.data.getSortKey(field))"
@@ -28,16 +28,16 @@
 								:cell="cell"/>
 						</td>
 						<td class="actions" v-if="$refs.data.actions.length" @mouseover="$refs.data.actionHovering = true" @mouseout="$refs.data.actionHovering = false">
-							<button v-if="!action.condition || $refs.data.isCondition(action.condition, record)" 
+							<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record})" 
 								v-for="action in $refs.data.actions" 
 								@click="$refs.data.trigger(action, record)"
-								class="inline"
-								:class="[action.class, {'has-icon': action.icon}]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{action.label}}</label></button>
+								:class="[action.class, {'has-icon': action.icon}, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{action.label}}</label></button>
 						</td>
 					</tr>
 				</tbody>
 			</table>
 			<n-paging :value="$refs.data.paging.current" :total="$refs.data.paging.total" :load="$refs.data.load" :initialize="false" v-if="loaded"/>
 		</data-common>
+		<div v-if="loaded && !records.length" class="no-data">%{No data available}</div>
 	</div>
 </template>

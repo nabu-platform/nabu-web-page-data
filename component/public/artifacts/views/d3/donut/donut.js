@@ -43,9 +43,6 @@ nabu.page.views.data.Donut = Vue.extend({
 			return this.cell.state.arcWidth ? this.cell.state.arcWidth / 100 : 0.1;
 		}
 	},
-	ready: function() {
-		this.draw();		
-	},
 	methods: {
 		getEvents: function() {
 			return this.$refs.data ? this.$refs.data.getEvents() : {};
@@ -263,6 +260,9 @@ nabu.page.views.data.Donut = Vue.extend({
 			if (this.loaded) {
 				this.draw();
 			}
+		},
+		loaded: function() {
+			this.draw();		
 		}
 	}
 });

@@ -60,7 +60,10 @@ Vue.component("data-common", {
 			this.loadArray();
 		}
 		else {
-			this.load();
+			var self = this;
+			this.load().then(function() {
+				self.$emit("input", true);
+			});
 		}
 		
 		this.normalize(this.cell.state);
@@ -79,7 +82,9 @@ Vue.component("data-common", {
 	},
 	ready: function() {
 		this.ready = true;
-		this.$emit("input", true);
+		if (this.cell.state.array) {
+			this.$emit("input", true);
+		}
 	},
 	computed: {
 		filterable: function() {
@@ -211,6 +216,7 @@ Vue.component("data-common", {
 			return null;
 		},
 		getEvents: function() {
+			var self = this;
 			var result = {};
 			if (this.operation) {
 				var schema = this.operation.responses["200"].schema;
@@ -229,12 +235,18 @@ Vue.component("data-common", {
 					definition = null;
 				}
 				
-				var self = this;
 				this.cell.state.actions.map(function(action) {
 					result[action.name] = action.global && !action.useSelection
 						//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
 						? (self.cell.on ? self.cell.on : {})
 						: definition;
+				});
+			}
+			else {
+				this.cell.state.actions.map(function(action) {
+					result[action.name] = action.global && !action.useSelection
+						? (self.cell.on ? self.cell.on : {})
+						: {properties:self.definition};
 				});
 			}
 			return result;
@@ -288,7 +300,13 @@ Vue.component("data-common", {
 		// custom methods
 		setFilter: function(filter, newValue) {
 			Vue.set(this.filters, filter.name, newValue);
-			console.log("set filter", filter, newValue, this.filters);
+			// if we adjusted the filter, do we want to rescind the selection event we may have sent out?
+			var pageInstance = this.$services.page.instances[this.page.name];
+			this.cell.state.actions.map(function(action) {
+				if (action.name && pageInstance.get(action.name)) {
+					pageInstance.emit(action.name, null);
+				}
+			})
 			this.load();
 		},
 		setComboFilter: function(value, label) {
@@ -331,17 +349,20 @@ Vue.component("data-common", {
 			})
 		},
 		select: function(record) {
-			if (!this.multiselect || !this.cell.state.multiselect) {
-				this.selected.splice(0, this.selected.length);
-			}
-			var index = this.selected.indexOf(record);
-			// if we are adding it, send out an event
-			if (index < 0) {
-				this.selected.push(record);
-				this.trigger(null, record);
-			}
-			else {
-				this.selected.splice(index, 1);
+			// if you are hovering over an action, you are most likely triggering that, not selecting
+			if (!this.actionHovering) {
+				if (!this.multiselect || !this.cell.state.multiselect) {
+					this.selected.splice(0, this.selected.length);
+				}
+				var index = this.selected.indexOf(record);
+				// if we are adding it, send out an event
+				if (index < 0) {
+					this.selected.push(record);
+					this.trigger(null, record);
+				}
+				else {
+					this.selected.splice(index, 1);
+				}
 			}
 		},
 		trigger: function(action, data) {
@@ -520,7 +541,6 @@ Vue.component("data-common", {
 		},
 		upAction: function(action) {
 			var index = this.cell.state.actions.indexOf(action);
-			console.log("index is", index);
 			if (index > 0) {
 				var replacement = this.cell.state.actions[index - 1];
 				this.cell.state.actions.splice(index - 1, 1, action);
@@ -551,6 +571,46 @@ Vue.component("data-common", {
 				nabu.utils.arrays.merge(this.cell.state.orderBy, newOrderBy);
 				this.load();
 			}
+			// do a frontend sort
+			else if (this.cell.state.array) {
+				var newOrderBy = [];
+				var multiplier = 1;
+				if (this.cell.state.orderBy.indexOf(key) >= 0) {
+					newOrderBy.push(key + " desc");
+					multiplier = -1;
+				}
+				else if (this.cell.state.orderBy.indexOf(key + " desc") >= 0) {
+					// do nothing, we want to remove the filter
+				}
+				else {
+					newOrderBy.push(key);
+				}
+				this.cell.state.orderBy.splice(0, this.cell.state.orderBy.length);
+				nabu.utils.arrays.merge(this.cell.state.orderBy, newOrderBy);
+				if (newOrderBy.length) {
+					this.internalSort(key, multiplier);
+				}
+			}
+		},
+		internalSort: function(key, multiplier) {
+			this.records.sort(function(a, b) {
+				var valueA = a[key];
+				var valueB = b[key];
+				var result = 0;
+				if (!valueA && valueB) {
+					result = -1;
+				}
+				else if (valueA && !valueB) {
+					result = 1;
+				}
+				else if (valueA instanceof Date && valueB instanceof Date) {
+					result = valueA.getTime() - valueB.getTime();
+				}
+				else if (typeof(valueA) == "string" || typeof(valueB) == "string") {
+					result = valueA.localeCompare(valueB);
+				}
+				return result * multiplier;
+			});
 		},
 		updateFormOperation: function(operationId) {
 			if (this.cell.state["updateOperation"] != operationId) {
@@ -592,6 +652,16 @@ Vue.component("data-common", {
 				if (current) {
 					this.records.splice(0, this.records.length);
 					nabu.utils.arrays.merge(this.records, current);
+				}
+				if (this.cell.state.orderBy && this.cell.state.orderBy.length) {
+					var field = this.cell.state.orderBy[0];
+					var index = field.indexOf(" desc");
+					var multiplier = 1;
+					if (index >= 0) {
+						multiplier = -1;
+						field = field.substring(0, index);
+					}
+					this.internalSort(field, multiplier);
 				}
 			}
 		},
@@ -712,7 +782,10 @@ Vue.component("data-common", {
 				// bind additional stuff from the page
 				Object.keys(this.cell.bindings).map(function(name) {
 					if (self.cell.bindings[name]) {
-						parameters[name] = pageInstance.get(self.cell.bindings[name]);
+						var value = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[name]);
+						if (value != null && typeof(value) != "undefined") {
+							parameters[name] = value;
+						}
 					}
 				});
 				this.cell.state.filters.map(function(filter) {
