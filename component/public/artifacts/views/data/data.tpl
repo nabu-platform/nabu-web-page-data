@@ -78,7 +78,17 @@
 						<n-ace v-if="cell.state.result[key].format == 'custom'" mode="javascript" v-model="cell.state.result[key].custom"/>
 					</n-collapsible>
 				</n-collapsible>
-				<n-collapsible title="Styling" class="list" v-if="false">
+				<n-collapsible title="Record Styling">
+					<div class="list-actions">
+						<button @click="addRecordStyle()">Add Style</button>
+					</div>
+					<n-form-section class="list-row" v-for="style in cell.state.styles">
+						<n-form-text v-model="style.class" label="Class"/>
+						<n-form-text v-model="style.condition" label="Condition"/>
+						<button @click="cell.state.styles.splice(cell.state.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
+					</n-form-section>
+				</n-collapsible>
+				<n-collapsible title="Column Styling" class="list" v-if="false">
 					<n-collapsible class="list-item" :title="key" v-for="key in keys">
 						<div class="list-item-actions">
 							<button @click="addStyle(key)">Add Style for {{key}}</button>
@@ -110,9 +120,10 @@
 			@filter="setFilter"
 			@sort="sort"/>
 			
-		<slot></slot>
+		<div class="content"><slot></slot></div>
 		<div class="global-actions" v-if="globalActions.length">
 			<component
+				v-if="!action.condition || $services.page.isCondition(action.condition, state)"
 				v-for="action in globalActions"
 				:is="action.type == 'link' ? 'a' : 'button'"
 				:disabled="action.useSelection && !lastTriggered"

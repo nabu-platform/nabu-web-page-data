@@ -107,7 +107,7 @@ Vue.component("data-common", {
 			return this.cell.state.operation ? this.$services.swagger.operations[this.cell.state.operation] : null;
 		},
 		availableParameters: function() {
-			return this.$services.page.getAvailableParameters(this.page, this.cell);
+			return this.$services.page.getAvailableParameters(this.page, this.cell, true);
 		},
 		definition: function() {
 			var properties = {};
@@ -212,6 +212,9 @@ Vue.component("data-common", {
 				if (fragment.type == "data" && fragment.key) {
 					return fragment.key;
 				}
+				else if (fragment.type == "form" && fragment.name) {
+					return fragment.name;
+				}
 			}
 			return null;
 		},
@@ -257,7 +260,7 @@ Vue.component("data-common", {
 			}
 			var self = this;
 			var component = Vue.extend({
-				template: "<page-fields class='data-field' :cell='cell' :label='true' :page='page' :data='record' :style='true' :edit='edit'/>",
+				template: "<page-fields class='data-field' :cell='cell' :label='true' :page='page' :data='record' :should-style='true' :edit='edit'/>",
 				data: function() {
 					return {
 						cell: self.cell,
@@ -280,6 +283,17 @@ Vue.component("data-common", {
 				}
 			}
 			return html;
+		},
+		getRecordStyles: function(record) {
+			var styles = [{'selected': this.selected.indexOf(record) >= 0}];
+			nabu.utils.arrays.merge(styles, this.$services.page.getDynamicClasses(this.cell.state.styles, {record:record}));
+			return styles;
+		},
+		addRecordStyle: function() {
+			this.cell.state.styles.push({
+				class: null,
+				condition: null
+			});
 		},
 		addStyle: function(key) {
 			if (!this.cell.state.result[key].styles) {
@@ -454,6 +468,9 @@ Vue.component("data-common", {
 			}
 			if (!state.multiselect) {
 				Vue.set(state, "multiselect", false);
+			}
+			if (!state.styles) {
+				Vue.set(state, "styles", []);
 			}
 			if (!state.refreshOn) {
 				Vue.set(state, "refreshOn", []);

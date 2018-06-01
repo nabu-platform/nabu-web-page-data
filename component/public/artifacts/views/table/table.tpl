@@ -19,9 +19,10 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr v-for="record in records" @click="$refs.data.select(record)" :class="{'selected': $refs.data.selected.indexOf(record) >= 0}">
-						<td :class="$services.page.getDynamicClasses(field.styles, record)" v-for="field in cell.state.fields">
-							<page-field :field="field" :data="record" :style="false" 
+					<tr v-for="record in records" @click="$refs.data.select(record)" :class="$refs.data.getRecordStyles(record)" :custom-style="cell.state.styles.length > 0">
+						<td :class="$services.page.getDynamicClasses(field.styles, {record:record})" v-for="field in cell.state.fields">
+							<page-field :field="field" :data="record" 
+								:should-style="false" 
 								:label="false"
 								@updated="$refs.data.update(record)"
 								:page="page"
@@ -37,7 +38,7 @@
 				</tbody>
 			</table>
 			<n-paging :value="$refs.data.paging.current" :total="$refs.data.paging.total" :load="$refs.data.load" :initialize="false" v-if="loaded"/>
+			<div v-if="loaded && !records.length" class="no-data">%{No data available}</div>
 		</data-common>
-		<div v-if="loaded && !records.length" class="no-data">%{No data available}</div>
 	</div>
 </template>

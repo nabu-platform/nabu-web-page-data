@@ -1,5 +1,5 @@
 <template id="data-donut">
-	<div class="data-donut">
+	<div class="data-cell data-donut">
 		<data-common :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
 				:records="records"
 				@updatedEvents="$emit('updatedEvents')"

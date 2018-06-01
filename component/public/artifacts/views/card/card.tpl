@@ -1,5 +1,5 @@
 <template id="data-card">
-	<div class="data-cell">
+	<div class="data-cell data-cards">
 		<data-common :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
 				:records="records"
 				v-model="loaded"
@@ -8,7 +8,7 @@
 			<div class="data-card-list">
 				<div class="data-card" v-for="record in records">
 					<dl class="data-card" :class="$services.page.getDynamicClasses(field.styles, record)" v-for="field in cell.state.fields">
-						<page-field :field="field" :data="record" :style="false" 
+						<page-field :field="field" :data="record" :should-style="false" 
 							:label="false"
 							@updated="$refs.data.update(record)"
 							:page="page"

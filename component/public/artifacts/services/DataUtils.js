@@ -14,7 +14,7 @@ nabu.services.VueService(Vue.extend({
 			});
 			return result;
 		},
-		getDataOperations: function() {
+		getDataOperations: function(name) {
 			var self = this;
 			return this.getOperations(function(operation) {
 				// must be a get

@@ -32,6 +32,9 @@ nabu.page.views.data.Line = Vue.extend({
 	created: function() {
 		this.normalize(this.cell.state);
 	},
+	beforeDestroy: function() {
+		this.$services.page.destroy(this);
+	},
 	computed: {
 		fromColor: function() {
 			return this.cell.state.fromColor ? this.cell.state.fromColor : "darkred";
@@ -73,6 +76,13 @@ nabu.page.views.data.Line = Vue.extend({
 					height -= 75;
 				}
 				
+				var result = this.$services.dataUtils.extractValues(self.cell, records);
+				var xValues = result.xValues;
+				var yValues = result.yValues;
+				var zValues = result.zValues;
+				var minY = result.minY;
+				var maxY = result.maxY;
+				
 				// copy from bar.js to determine height based on angle of labels
 				if (this.cell.state.rotateX) {
 					var longest = 0;
@@ -88,12 +98,6 @@ nabu.page.views.data.Line = Vue.extend({
 				svg.attr('width', width + margin.left + margin.right)
 					.attr('height', height + margin.top + margin.bottom);
 					
-				var result = this.$services.dataUtils.extractValues(self.cell, records);
-				var xValues = result.xValues;
-				var yValues = result.yValues;
-				var zValues = result.zValues;
-				var minY = result.minY;
-				var maxY = result.maxY;
 				
 				var g = svg.append("g")
 					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");

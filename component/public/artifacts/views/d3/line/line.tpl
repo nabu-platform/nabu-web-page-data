@@ -1,5 +1,5 @@
 <template id="data-line">
-	<div class="data-line">
+	<div class="data-cell data-line">
 		<data-common :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
 				:records="records"
 				@updatedEvents="$emit('updatedEvents')"

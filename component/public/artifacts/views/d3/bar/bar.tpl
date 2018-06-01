@@ -1,5 +1,5 @@
 <template id="data-bar">
-	<div class="data-bar">
+	<div class="data-cell data-bar">
 		<data-common :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
 				:records="records"
 				@updatedEvents="$emit('updatedEvents')"
