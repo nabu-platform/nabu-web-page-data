@@ -52,10 +52,15 @@ Vue.component("data-common", {
 			subscriptions: [],
 			lastTriggered: null,
 			selected: [],
-			query: null
+			query: null,
+			// the current order by
+			orderBy: []
 		}	
 	},
 	created: function() {
+		// merge the configured orderby into the actual
+		nabu.utils.arrays.merge(this.orderBy, this.cell.state.orderBy);
+		
 		if (this.cell.state.array) {
 			this.loadArray();
 		}
@@ -212,8 +217,8 @@ Vue.component("data-common", {
 				if (fragment.type == "data" && fragment.key) {
 					return fragment.key;
 				}
-				else if (fragment.type == "form" && fragment.name) {
-					return fragment.name;
+				else if (fragment.type == "form" && fragment.form.name) {
+					return fragment.form.name;
 				}
 			}
 			return null;
@@ -573,39 +578,49 @@ Vue.component("data-common", {
 			}
 		},
 		sort: function(key) {
-			if (this.orderable) {
-				var newOrderBy = [];
-				if (this.cell.state.orderBy.indexOf(key) >= 0) {
-					newOrderBy.push(key + " desc");
+			if (key) {
+				if (this.orderable) {
+					var newOrderBy = [];
+					if (this.orderBy.indexOf(key) >= 0) {
+						newOrderBy.push(key + " desc");
+					}
+					else if (this.orderBy.indexOf(key + " desc") >= 0) {
+						// do nothing, we want to remove the filter
+					}
+					else {
+						newOrderBy.push(key);
+					}
+					this.orderBy.splice(0, this.orderBy.length);
+					nabu.utils.arrays.merge(this.orderBy, newOrderBy);
+					if (this.edit) {
+						this.cell.state.orderBy.splice(0, this.cell.state.orderBy.length);
+						nabu.utils.arrays.merge(this.cell.state.orderBy, this.orderBy);
+					}
+					this.load();
 				}
-				else if (this.cell.state.orderBy.indexOf(key + " desc") >= 0) {
-					// do nothing, we want to remove the filter
-				}
-				else {
-					newOrderBy.push(key);
-				}
-				this.cell.state.orderBy.splice(0, this.cell.state.orderBy.length);
-				nabu.utils.arrays.merge(this.cell.state.orderBy, newOrderBy);
-				this.load();
-			}
-			// do a frontend sort
-			else if (this.cell.state.array) {
-				var newOrderBy = [];
-				var multiplier = 1;
-				if (this.cell.state.orderBy.indexOf(key) >= 0) {
-					newOrderBy.push(key + " desc");
-					multiplier = -1;
-				}
-				else if (this.cell.state.orderBy.indexOf(key + " desc") >= 0) {
-					// do nothing, we want to remove the filter
-				}
-				else {
-					newOrderBy.push(key);
-				}
-				this.cell.state.orderBy.splice(0, this.cell.state.orderBy.length);
-				nabu.utils.arrays.merge(this.cell.state.orderBy, newOrderBy);
-				if (newOrderBy.length) {
-					this.internalSort(key, multiplier);
+				// do a frontend sort
+				else if (this.cell.state.array) {
+					var newOrderBy = [];
+					var multiplier = 1;
+					if (this.orderBy.indexOf(key) >= 0) {
+						newOrderBy.push(key + " desc");
+						multiplier = -1;
+					}
+					else if (this.orderBy.indexOf(key + " desc") >= 0) {
+						// do nothing, we want to remove the filter
+					}
+					else {
+						newOrderBy.push(key);
+					}
+					this.orderBy.splice(0, this.orderBy.length);
+					nabu.utils.arrays.merge(this.orderBy, newOrderBy);
+					if (this.edit) {
+						this.cell.state.orderBy.splice(0, this.cell.state.orderBy.length);
+						nabu.utils.arrays.merge(this.cell.state.orderBy, this.orderBy);
+					}
+					if (newOrderBy.length) {
+						this.internalSort(key, multiplier);
+					}
 				}
 			}
 		},
@@ -670,7 +685,7 @@ Vue.component("data-common", {
 					this.records.splice(0, this.records.length);
 					nabu.utils.arrays.merge(this.records, current);
 				}
-				if (this.cell.state.orderBy && this.cell.state.orderBy.length) {
+				if (this.orderBy && this.orderBy.length) {
 					var field = this.cell.state.orderBy[0];
 					var index = field.indexOf(" desc");
 					var multiplier = 1;
@@ -785,8 +800,8 @@ Vue.component("data-common", {
 			if (this.cell.state.operation) {
 				var self = this;
 				var parameters = {};
-				if (this.orderable && this.cell.state.orderBy.length) {
-					parameters.orderBy = this.cell.state.orderBy;
+				if (this.orderable && this.orderBy.length) {
+					parameters.orderBy = this.orderBy;
 				}
 				
 				// we put a best effort limit & offset on there, but the operation might not support it

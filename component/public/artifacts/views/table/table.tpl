@@ -1,6 +1,8 @@
 <template id="data-table">
 	<div class="data-cell data-table">
-		<data-common :page="page" :parameters="parameters" :cell="cell" :edit="edit" ref="data"
+		<data-common :page="page" :parameters="parameters" :cell="cell" 
+				:edit="edit"
+				ref="data"
 				:records="records"
 				v-model="loaded"
 				@updatedEvents="$emit('updatedEvents')"
@@ -12,8 +14,8 @@
 					<tr>
 						<th @click="$refs.data.sort($refs.data.getSortKey(field))"
 								v-for="field in cell.state.fields"><span>{{ field.label }}</span>
-							<span class="fa fa-sort-up" v-if="cell.state.orderBy.indexOf($refs.data.getSortKey(field)) >= 0"></span>
-							<span class="fa fa-sort-down" v-if="cell.state.orderBy.indexOf($refs.data.getSortKey(field) + ' desc') >= 0"></span>
+							<span class="fa fa-sort-up" v-if="$refs.data.orderBy.indexOf($refs.data.getSortKey(field)) >= 0"></span>
+							<span class="fa fa-sort-down" v-if="$refs.data.orderBy.indexOf($refs.data.getSortKey(field) + ' desc') >= 0"></span>
 						</th>
 						<th v-if="$refs.data.actions.length"></th>
 					</tr>
