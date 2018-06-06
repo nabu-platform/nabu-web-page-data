@@ -129,7 +129,6 @@ nabu.page.views.data.Bar = Vue.extend({
 						// we transformed the data to match the stuff that is required by the stacked bars
 						// however, we want to show the original record in the popup
 						htmlBuilder = function (data, i, rects) {
-							console.log("got here?");
 							// we get the rectangle that triggered the event
 							var rect = rects[i];
 							// in the parent, we injected the zValue as an attribute with the correct key
@@ -217,7 +216,6 @@ nabu.page.views.data.Bar = Vue.extend({
 					// side-by-side: https://bl.ocks.org/mbostock/3887051
 					else {
 						htmlBuilder = function (data, i) {
-							console.log("data is", data);
 							self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.$refs.data.buildToolTip);	
 						}
 						
@@ -438,7 +436,6 @@ nabu.page.views.data.Bar = Vue.extend({
 		},
 		cell: {
 			handler: function() {
-				console.log("state updated");
 				this.draw();
 			},
 			deep: true

@@ -72,8 +72,8 @@ Vue.component("data-common", {
 		}
 		
 		this.normalize(this.cell.state);
-		var pageInstance = this.$services.page.instances[this.page.name];
 		var self = this;
+		var pageInstance = self.$services.page.getPageInstance(self.page, self);
 		this.cell.state.refreshOn.map(function(x) {
 			self.subscriptions.push(pageInstance.subscribe(x, function() {
 				self.load();
@@ -320,7 +320,8 @@ Vue.component("data-common", {
 		setFilter: function(filter, newValue) {
 			Vue.set(this.filters, filter.name, newValue);
 			// if we adjusted the filter, do we want to rescind the selection event we may have sent out?
-			var pageInstance = this.$services.page.instances[this.page.name];
+			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			this.cell.state.actions.map(function(action) {
 				if (action.name && pageInstance.get(action.name)) {
 					pageInstance.emit(action.name, null);
@@ -396,8 +397,8 @@ Vue.component("data-common", {
 				})[0];
 			}
 			if (action) {
-				var pageInstance = this.$services.page.instances[this.page.name];
 				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				// if there is no data (for a global event) 
 				if (action.global) {
 					if (action.useSelection) {
@@ -406,7 +407,7 @@ Vue.component("data-common", {
 							: (this.selected.length ? this.selected[0] : null);
 					}
 					else {
-						data = this.$services.page.instances[this.page.name].get(this.cell.on);
+						data = this.$services.page.getPageInstance(this.page, this).get(this.cell.on);
 					}
 					if (!data) {
 						data = {};
@@ -680,7 +681,7 @@ Vue.component("data-common", {
 		},
 		loadArray: function() {
 			if (this.cell.state.array) {
-				var current = this.$services.page.instances[this.page.name].get(this.cell.state.array);
+				var current = this.$services.page.getPageInstance(this.page, this).get(this.cell.state.array);
 				if (current) {
 					this.records.splice(0, this.records.length);
 					nabu.utils.arrays.merge(this.records, current);
@@ -810,7 +811,7 @@ Vue.component("data-common", {
 				parameters.offset = (page ? page : 0) * limit;
 				parameters.limit = limit;
 				
-				var pageInstance = this.$services.page.instances[this.page.name];
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				// bind additional stuff from the page
 				Object.keys(this.cell.bindings).map(function(name) {
 					if (self.cell.bindings[name]) {

@@ -66,6 +66,8 @@
 					</n-collapsible>
 				</n-collapsible>
 				<page-form-configure title="Filters" v-if="cell.state.filters.length || filtersToAdd().length"
+					:page="page"
+					:cell="cell"
 					:fields="cell.state.filters" 
 					:possible-fields="filtersToAdd()"/>
 				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="!!cell.state.updateOperation"/>

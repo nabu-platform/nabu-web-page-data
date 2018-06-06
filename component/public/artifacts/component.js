@@ -43,4 +43,5 @@ window.addEventListener("load", function() {
 	
 	// register data filter provider
 	nabu.page.provide("data-filter", { component: "data-filter-default", name: "Default Filter" });
+	nabu.page.provide("data-filter", { component: "data-combo-filter", name: "Combo Filter" });
 });

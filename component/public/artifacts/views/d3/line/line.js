@@ -309,7 +309,6 @@ nabu.page.views.data.Line = Vue.extend({
 		},
 		cell: {
 			handler: function() {
-				console.log("state updated");
 				this.draw();
 			},
 			deep: true
