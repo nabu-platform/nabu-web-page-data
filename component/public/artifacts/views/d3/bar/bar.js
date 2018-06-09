@@ -51,7 +51,8 @@ nabu.page.views.data.Bar = Vue.extend({
 				nabu.utils.elements.clear(this.$refs.svg);
 				
 				var records = this.records.filter(function(record) {
-					return typeof(record[self.cell.state.y]) != "undefined";
+					var yValue = self.$services.page.getValue(record, self.cell.state.y);
+					return yValue != null;
 				});
 				
 				var result = this.$services.dataUtils.extractValues(self.cell, records);
@@ -134,10 +135,10 @@ nabu.page.views.data.Bar = Vue.extend({
 							// in the parent, we injected the zValue as an attribute with the correct key
 							var zValue = rect.parentNode.getAttribute("zValue");
 							// we can extract the correct x value from the record
-							var xValue = data.data[self.cell.state.x];
+							var xValue = self.$services.page.getValue(data.data, self.cell.state.x);
 							// now we need to pinpoint the correct record based on that information
 							var record = records.filter(function(x) {
-								return x[self.cell.state.x] == xValue && x[self.cell.state.z] == zValue;
+								return self.$services.page.getValue(x, self.cell.state.x) == xValue && self.$services.page.getValue(x, self.cell.state.z) == zValue;
 							})[0];
 							// build the standard tooltip from that
 							self.$services.dataUtils.buildStandardD3Tooltip(record, i, self.$refs.data.buildToolTip);	
@@ -150,13 +151,14 @@ nabu.page.views.data.Bar = Vue.extend({
 						
 						xValues.map(function(xValue) {
 							var single = {};
-							single[self.cell.state.x] = xValue;
+							self.$services.page.setValue(single, self.cell.state.x, xValue);
+							//single[self.cell.state.x] = xValue;
 							records.map(function(record) {
-								if (record[self.cell.state.x] == xValue) {
-									single[record[self.cell.state.z]] = record[self.cell.state.y];
+								if (self.$services.page.getValue(record, self.cell.state.x) == xValue) {
+									self.$services.page.setValue(single, self.$services.page.getValue(record, self.cell.state.z), self.$services.page.getValue(record, self.cell.state.y));
 								}
-								else if (!single[record[self.cell.state.z]]) {
-									single[record[self.cell.state.z]] = 0;
+								else if (!self.$services.page.getValue(single, self.$services.page.getValue(record, self.cell.state.z))) {
+									self.$services.page.setValue(single, self.$services.page.getValue(record, self.cell.state.z), 0);
 								}
 							});
 							data.push(single);
@@ -172,7 +174,7 @@ nabu.page.views.data.Bar = Vue.extend({
 							.data(function(d) { return d; })
 							.enter().append("rect")
 								.attr("class", "bar bar-" + self.cell.id)
-								.attr("x", function(d, i) { return self.cell.state.x ? x(d.data[self.cell.state.x]) : x(i); })
+								.attr("x", function(d, i) { return self.cell.state.x ? x(self.$services.page.getValue(d.data, self.cell.state.x)) : x(i); })
 								.attr("y", function(d) { return y(d[1]); })
 								.attr("height", function(d) { return Math.max(0, y(d[0]) - y(d[1])); })
 								.attr("width", x.bandwidth());
@@ -222,7 +224,7 @@ nabu.page.views.data.Bar = Vue.extend({
 						// group by z
 						var data = {};
 						records.map(function(record) {
-							var zValue = record[self.cell.state.z];
+							var zValue = self.$services.page.getValue(record, self.cell.state.z);
 							if (!data[zValue]) {
 								data[zValue] = [];
 							}
@@ -234,15 +236,15 @@ nabu.page.views.data.Bar = Vue.extend({
 							.selectAll("g")
 							.data(records)
 							.enter().append("g")
-							.attr("transform", function(d) { return "translate(" + x(d[self.cell.state.x]) + ",0)"; })
+							.attr("transform", function(d) { return "translate(" + x(self.$services.page.getValue(d, self.cell.state.x)) + ",0)"; })
 							.selectAll("rect")
 							//.data(function(d) { return zValues.map(function(key) { return {key: key, value: d[self.cell.state.y], data:d}; }); });
 							.data(function(d) { return zValues.map(function(key) { 
 								var record = data[key].filter(function(record) {
-									return record[self.cell.state.z] == key
-										&& record[self.cell.state.x] == d[self.cell.state.x];
+									return self.$services.page.getValue(record, self.cell.state.z) == key
+										&& self.$services.page.getValue(record, self.cell.state.x) == self.$services.page.getValue(d, self.cell.state.x);
 								})[0];
-								return {key: key, value: record ? record[self.cell.state.y] : 0, data:record}; 
+								return {key: key, value: record ? self.$services.page.getValue(record, self.cell.state.y) : 0, data:record}; 
 							}); })
 							.enter().append("rect")
 							.attr("class", "bar bar-" + self.cell.id)
@@ -354,10 +356,10 @@ nabu.page.views.data.Bar = Vue.extend({
 						.attr("ry", "5")
 						.attr("fill", this.fromColor)
 						.attr("class", "bar bar-" + self.cell.id)
-						.attr("x", function(d, i) { return self.cell.state.x ? x(d[self.cell.state.x]) : x(i) })
-						.attr("y", function(d) { return y(d[self.cell.state.y]); })
+						.attr("x", function(d, i) { return self.cell.state.x ? x(self.$services.page.getValue(d, self.cell.state.x)) : x(i) })
+						.attr("y", function(d) { return y(self.$services.page.getValue(d, self.cell.state.y)); })
 						.attr("width", x.bandwidth())
-						.attr("height", function(d) { return Math.max(0, height - y(d[self.cell.state.y])); });
+						.attr("height", function(d) { return Math.max(0, height - y(self.$services.page.getValue(d, self.cell.state.y))); });
 				}
 				
 				// standard tooltip logic

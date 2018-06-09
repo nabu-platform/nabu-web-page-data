@@ -3,8 +3,8 @@ if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
-nabu.page.views.data.Table = Vue.extend({
-	template: "#data-table",
+nabu.page.views.data.TableList = Vue.extend({
+	template: "#data-table-list",
 	props: {
 		page: {
 			type: Object,
@@ -56,3 +56,4 @@ nabu.page.views.data.Table = Vue.extend({
 		}
 	}
 });
+

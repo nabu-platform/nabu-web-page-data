@@ -24,7 +24,13 @@ Vue.component("data-common", {
 		},
 		records: {
 			type: Array,
-			required: true
+			required: false,
+			default: function() { return [] }
+		},
+		selected: {
+			type: Array,
+			required: false,
+			default: function() { return [] }
 		},
 		value: {
 			required: true
@@ -35,6 +41,11 @@ Vue.component("data-common", {
 			default: false
 		},
 		multiselect: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		inactive: {
 			type: Boolean,
 			required: false,
 			default: false
@@ -51,34 +62,36 @@ Vue.component("data-common", {
 			ready: false,
 			subscriptions: [],
 			lastTriggered: null,
-			selected: [],
 			query: null,
 			// the current order by
-			orderBy: []
+			orderBy: [],
+			refreshTimer: null
 		}	
 	},
 	created: function() {
-		// merge the configured orderby into the actual
-		nabu.utils.arrays.merge(this.orderBy, this.cell.state.orderBy);
-		
-		if (this.cell.state.array) {
-			this.loadArray();
-		}
-		else {
+		this.normalize(this.cell.state);
+		if (!this.inactive) {
+			// merge the configured orderby into the actual
+			nabu.utils.arrays.merge(this.orderBy, this.cell.state.orderBy);
+			
+			if (this.cell.state.array) {
+				this.loadArray();
+			}
+			else {
+				var self = this;
+				this.load().then(function() {
+					self.$emit("input", true);
+				});
+			}
+			
 			var self = this;
-			this.load().then(function() {
-				self.$emit("input", true);
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			this.cell.state.refreshOn.map(function(x) {
+				self.subscriptions.push(pageInstance.subscribe(x, function() {
+					self.load();
+				}));
 			});
 		}
-		
-		this.normalize(this.cell.state);
-		var self = this;
-		var pageInstance = self.$services.page.getPageInstance(self.page, self);
-		this.cell.state.refreshOn.map(function(x) {
-			self.subscriptions.push(pageInstance.subscribe(x, function() {
-				self.load();
-			}));
-		});
 	},
 	beforeDestroy: function() {
 		this.subscriptions.map(function(x) {
@@ -87,7 +100,7 @@ Vue.component("data-common", {
 	},
 	ready: function() {
 		this.ready = true;
-		if (this.cell.state.array) {
+		if (this.cell.state.array || this.inactive) {
 			this.$emit("input", true);
 		}
 	},
@@ -117,16 +130,13 @@ Vue.component("data-common", {
 		definition: function() {
 			var properties = {};
 			if (this.operation) {
-				var schema = this.operation.responses["200"].schema;
-				var definition = this.$services.swagger.definition(schema["$ref"]);
+				var definition = this.$services.swagger.resolve(this.operation.responses["200"].schema);
+				//var definition = this.$services.swagger.definition(schema["$ref"]);
 				if (definition.properties) {
 					var self = this;
 					Object.keys(definition.properties).map(function(field) {
 						if (definition.properties[field].type == "array") {
 							var items = definition.properties[field].items;
-							if (items["$ref"]) {
-								items = self.$services.swagger.definition(items["$ref"]);
-							}
 							if (items.properties) {
 								nabu.utils.objects.merge(properties, items.properties);
 							}
@@ -186,7 +196,7 @@ Vue.component("data-common", {
 			};
 		},
 		keys: function() {
-			var keys = Object.keys(this.definition);
+			var keys = this.$services.page.getSimpleKeysFor({properties:this.definition});
 			var self = this;
 			keys.map(function(key) {
 				if (!self.cell.state.result[key]) {
@@ -205,7 +215,19 @@ Vue.component("data-common", {
 			return this.operation && this.operation.parameters.filter(function(x) {
 				return x.name == "orderBy";
 			}).length > 0;
+		},
+		pageable: function() {
+			// the operation must have an input parameter called "orderBy"
+			return this.operation && this.operation.parameters.filter(function(x) {
+				return x.name == "limit";
+			}).length > 0;
 		}
+	},
+	beforeDestroy: function() {
+		if (this.refreshTimer) {
+			clearTimeout(this.refreshTimer);
+			this.refreshTimer = null;
+		}	
 	},
 	methods: {
 		getDataOperations: function(value) {
@@ -441,6 +463,9 @@ Vue.component("data-common", {
 			/*if (!state.transform) {
 				Vue.set(state, "transform", null);
 			}*/
+			if (!state.autoRefresh) {
+				Vue.set(state, "autoRefresh", null);
+			}
 			if (!state.orderBy) {
 				Vue.set(state, "orderBy", []);
 			}
@@ -599,8 +624,8 @@ Vue.component("data-common", {
 					}
 					this.load();
 				}
-				// do a frontend sort
-				else if (this.cell.state.array) {
+				// do a frontend sort (can't do it if paged)
+				else if (this.cell.state.array || !this.pageable) {
 					var newOrderBy = [];
 					var multiplier = 1;
 					if (this.orderBy.indexOf(key) >= 0) {
@@ -665,18 +690,25 @@ Vue.component("data-common", {
 			Vue.set(this.cell.state, "array", array);
 			Vue.set(this.cell, "bindings", {});
 			Vue.set(this.cell, "result", {});
-			// we clear out the fields, they are most likely useless with another operation
-			this.cell.state.fields.splice(0, this.cell.state.fields.length);
-			// instead we add entries for all the fields in the return value
-			this.keys.map(function(key) {
-				self.cell.state.fields.push({
-					label: key,
-					fragments: [{
-						type: "data",
-						key: key
-					}]
+			var self = this;
+			if (array) {
+				this.$confirm({
+					message: "(Re)generate fields?"
+				}).then(function() {
+					// we clear out the fields, they are most likely useless with another operation
+					self.cell.state.fields.splice(0, self.cell.state.fields.length);
+					// instead we add entries for all the fields in the return value
+					self.keys.map(function(key) {
+						self.cell.state.fields.push({
+							label: key,
+							fragments: [{
+								type: "data",
+								key: key
+							}]
+						});
+					});
 				});
-			});
+			}
 			this.loadArray();
 		},
 		loadArray: function() {
@@ -686,16 +718,19 @@ Vue.component("data-common", {
 					this.records.splice(0, this.records.length);
 					nabu.utils.arrays.merge(this.records, current);
 				}
-				if (this.orderBy && this.orderBy.length) {
-					var field = this.cell.state.orderBy[0];
-					var index = field.indexOf(" desc");
-					var multiplier = 1;
-					if (index >= 0) {
-						multiplier = -1;
-						field = field.substring(0, index);
-					}
-					this.internalSort(field, multiplier);
+				this.doInternalSort();
+			}
+		},
+		doInternalSort: function() {
+			if (this.orderBy && this.orderBy.length) {
+				var field = this.cell.state.orderBy[0];
+				var index = field.indexOf(" desc");
+				var multiplier = 1;
+				if (index >= 0) {
+					multiplier = -1;
+					field = field.substring(0, index);
 				}
+				this.internalSort(field, multiplier);
 			}
 		},
 		updateOperation: function(operationId) {
@@ -717,18 +752,24 @@ Vue.component("data-common", {
 				
 				Vue.set(this.cell, "result", {});
 				
-				// we clear out the fields, they are most likely useless with another operation
-				this.cell.state.fields.splice(0, this.cell.state.fields.length);
-				// instead we add entries for all the fields in the return value
-				this.keys.map(function(key) {
-					self.cell.state.fields.push({
-						label: key,
-						fragments: [{
-							type: "data",
-							key: key
-						}]
-					});
-				});
+				if (operationId) {
+					this.$confirm({
+						message: "(Re)generate fields?"
+					}).then(function() {
+						// we clear out the fields, they are most likely useless with another operation
+						self.cell.state.fields.splice(0, self.cell.state.fields.length);
+						// instead we add entries for all the fields in the return value
+						self.keys.map(function(key) {
+							self.cell.state.fields.push({
+								label: key,
+								fragments: [{
+									type: "data",
+									key: key
+								}]
+							});
+						});
+					})
+				}
 				// if there are no parameters required, do an initial load
 				if (!operation.parameters.filter(function(x) { return x.required }).length) {
 					this.load();
@@ -797,6 +838,10 @@ Vue.component("data-common", {
 			}
 		},
 		load: function(page) {
+			if (this.refreshTimer) {
+				clearTimeout(this.refreshTimer);
+				this.refreshTimer = null;
+			}
 			var promise = this.$services.q.defer();
 			if (this.cell.state.operation) {
 				var self = this;
@@ -835,7 +880,15 @@ Vue.component("data-common", {
 						if (list.page) {
 							nabu.utils.objects.merge(self.paging, list.page);
 						}
+						else {
+							self.doInternalSort();
+						}
 						self.last = new Date();
+						if (self.cell.state.autoRefresh) {
+							self.refreshTimer = setTimeout(function() {
+								self.load(page);
+							}, self.cell.state.autoRefresh);
+						}
 						promise.resolve();
 					}, function(error) {
 						promise.resolve(error);

@@ -58,9 +58,11 @@ nabu.services.VueService(Vue.extend({
 			}
 		},
 		removeStandardD3Tooltip: function() {
-			var element = document.body.querySelector(".d3-tooltip");
-			if (element) {
-				element.parentNode.removeChild(element);
+			var elements = document.body.querySelectorAll(".d3-tooltip");
+			if (elements.length) {
+				for (var i = elements.length - 1; i >= 0; i--) {
+					elements[i].parentNode.removeChild(elements[i]);
+				}
 			}
 		},
 		extractValues: function(cell, records) {
@@ -68,15 +70,16 @@ nabu.services.VueService(Vue.extend({
 			var xValues = [];
 			var yValues = [];
 			var minY = 0;
+			var self = this;
 			records.map(function(record, i) {
 				if (cell.state.z) {
-					var z = record[cell.state.z];
+					var z = self.$services.page.getValue(record, cell.state.z);
 					if (zValues.indexOf(z) < 0) {
 						zValues.push(z);
 					}
 				}
 				if (cell.state.x) {
-					var x = record[cell.state.x];
+					var x = self.$services.page.getValue(record, cell.state.x);
 					if (xValues.indexOf(x) < 0) {
 						xValues.push(x);
 						yValues.push(0);
@@ -85,12 +88,12 @@ nabu.services.VueService(Vue.extend({
 				else {
 					xValues.push(i);
 				}
-				var y = record[cell.state.y];
+				var y = self.$services.page.getValue(record, cell.state.y);
 				if (minY == null || y < minY) {
 					minY = y;
 				}
 				if (cell.state.x) {
-					yValues[xValues.indexOf(record[cell.state.x])] += y;
+					yValues[xValues.indexOf(self.$services.page.getValue(record, cell.state.x))] += y;
 				}
 				else {
 					yValues.push(y);

@@ -9,6 +9,22 @@ window.addEventListener("load", function() {
 		});
 		
 		$services.router.register({
+			alias: "data-table-list",
+			enter: function(parameters) {
+				return new nabu.page.views.data.TableList({propsData:parameters});
+			}
+		});
+		
+		// should be possible but no immediate usecase for it
+		// it is exposed as a list handler for forms, that should be enough for now
+		/*$services.router.register({
+			alias: "data-multi-select",
+			enter: function(parameters) {
+				return new nabu.page.views.data.MultiSelect({propsData:parameters});
+			}
+		});*/
+		
+		$services.router.register({
 			alias: "data-donut",
 			enter: function(parameters) {
 				return new nabu.page.views.data.Donut({propsData:parameters});
@@ -34,6 +50,14 @@ window.addEventListener("load", function() {
 			enter: function(parameters) {
 				return new nabu.page.views.data.Card({propsData:parameters});
 			}
+		});
+		
+		// form list providers
+		nabu.page.provide("page-form-list-input", { 
+			component: "data-multi-select", 
+			configure: "data-multi-select-configure", 
+			name: "multi-select",
+			namespace: "nabu.page"
 		});
 	
 		return $services.$register({

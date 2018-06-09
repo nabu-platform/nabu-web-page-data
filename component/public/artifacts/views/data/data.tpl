@@ -6,12 +6,17 @@
 					<n-form-combo label="Operation" :value="cell.state.operation" 
 						:filter="getDataOperations"
 						@input="updateOperation"
-						v-if="!cell.state.array"/>
+						v-if="!cell.state.array && !cell.state.collect"/>
 					<n-form-combo label="Array" :value="cell.state.array"
 						:filter="function(value) { return $services.page.getAllArrays(page, cell.id) }"
-						v-if="!cell.state.operation"
+						v-if="!cell.state.operation && !cell.state.collect"
 						@input="updateArray"/>
+					<n-form-combo label="Collect" :value="cell.state.collect"
+						:filter="function(value) { return $services.page.getAllArrays(page, cell.id) }"
+						v-if="false && !cell.state.operation && !cell.state.array"
+						@input="updateCollect"/>
 					<n-form-text v-model="cell.state.title" label="Title"/>
+					<n-form-text v-if="cell.state.operation" v-model="cell.state.autoRefresh" label="Auto-refresh"/>
 					<n-form-text v-model="cell.state.class" label="Class"/>
 					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()"/>
 					<n-form-switch v-if="multiselect" v-model="cell.state.multiselect" label="Allow Multiselect"/>
@@ -110,7 +115,8 @@
 		</n-sidebar>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
 		
-		<component v-if="cell.state.filterType" :is="cell.state.filterType.component" 
+		<component v-if="cell.state.filterType && !inactive" 
+			:is="cell.state.filterType.component" 
 			class="cell-actions"
 			:page="page"
 			:cell="cell"

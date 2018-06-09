@@ -4,6 +4,8 @@
 				:edit="edit"
 				ref="data"
 				:records="records"
+				:selected="selected"
+				:inactive="inactive"
 				v-model="loaded"
 				@updatedEvents="$emit('updatedEvents')"
 				@close="$emit('close')"
@@ -24,6 +26,7 @@
 					<tr v-for="record in records" @click="$refs.data.select(record)" :class="$refs.data.getRecordStyles(record)" :custom-style="cell.state.styles.length > 0">
 						<td :class="$services.page.getDynamicClasses(field.styles, {record:record})" v-for="field in cell.state.fields">
 							<page-field :field="field" :data="record" 
+								v-if="!field.hidden || !$services.page.isCondition(field.hidden, {record:record})"
 								:should-style="false" 
 								:label="false"
 								@updated="$refs.data.update(record)"
