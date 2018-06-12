@@ -39,7 +39,7 @@
 					</div>
 					<div v-for="i in Object.keys(cell.state.refreshOn)" class="list-row">
 						<n-form-combo v-model="cell.state.refreshOn[i]"
-							:filter="function(value) { return $services.page.instances[page.name].getAvailableEvents() }"/>
+							:filter="getRefreshEvents"/>
 						<button @click="cell.state.refreshOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
 					</div>
 					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>

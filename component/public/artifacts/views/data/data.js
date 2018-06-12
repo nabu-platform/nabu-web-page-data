@@ -311,6 +311,9 @@ Vue.component("data-common", {
 			}
 			return html;
 		},
+		getRefreshEvents: function(value) {
+			return this.$services.page.getPageInstance(this.page, this).getAvailableEvents();
+		},
 		getRecordStyles: function(record) {
 			var styles = [{'selected': this.selected.indexOf(record) >= 0}];
 			nabu.utils.arrays.merge(styles, this.$services.page.getDynamicClasses(this.cell.state.styles, {record:record}));
