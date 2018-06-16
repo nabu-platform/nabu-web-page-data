@@ -5,32 +5,22 @@ if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
 nabu.page.views.data.Bar = Vue.extend({
 	template: "#data-bar",
-	props: {
-		page: {
-			type: Object,
-			required: true
-		},
-		parameters: {
-			type: Object,
-			required: false
-		},
-		cell: {
-			type: Object,
-			required: true
-		},
-		edit: {
-			type: Boolean,
-			required: true
-		}
+	mixins: [nabu.page.views.data.DataCommon],
+	created: function() {
+		this.create();
+		this.normalizeCustom(this.cell.state);
+	},
+	activate: function(done) {
+		var self = this;
+		this.activate(function() {
+			done();
+			self.draw();
+		});
 	},
 	data: function() {
 		return {
-			records: [],
-			loaded: false
+			configuring: false
 		}
-	},
-	created: function() {
-		this.normalize(this.cell.state);
 	},
 	computed: {
 		fromColor: function() {
@@ -41,8 +31,8 @@ nabu.page.views.data.Bar = Vue.extend({
 		}
 	},
 	methods: {
-		getEvents: function() {
-			return this.$refs.data ? this.$refs.data.getEvents() : {};
+		configure: function() {
+			this.configuring = true;	
 		},
 		// based heavily on: https://bl.ocks.org/mbostock/3886208
 		draw: function() {
@@ -141,7 +131,7 @@ nabu.page.views.data.Bar = Vue.extend({
 								return self.$services.page.getValue(x, self.cell.state.x) == xValue && self.$services.page.getValue(x, self.cell.state.z) == zValue;
 							})[0];
 							// build the standard tooltip from that
-							self.$services.dataUtils.buildStandardD3Tooltip(record, i, self.$refs.data.buildToolTip);	
+							self.$services.dataUtils.buildStandardD3Tooltip(record, i, self.buildToolTip);	
 						};
 						// we need to transform the data, we receive M records
 						// where each record has one combination of x,y,z
@@ -218,7 +208,7 @@ nabu.page.views.data.Bar = Vue.extend({
 					// side-by-side: https://bl.ocks.org/mbostock/3887051
 					else {
 						htmlBuilder = function (data, i) {
-							self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.$refs.data.buildToolTip);	
+							self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.buildToolTip);	
 						}
 						
 						// group by z
@@ -315,7 +305,7 @@ nabu.page.views.data.Bar = Vue.extend({
 				}
 				else {
 					htmlBuilder = function (data, i) {
-						self.$services.dataUtils.buildStandardD3Tooltip(data, i, self.$refs.data.buildToolTip);	
+						self.$services.dataUtils.buildStandardD3Tooltip(data, i, self.buildToolTip);	
 					}
 					var xAxis = g.append("g")
 						.attr("class", "axis axis--x")
@@ -375,7 +365,7 @@ nabu.page.views.data.Bar = Vue.extend({
 				d3.selectAll(".bar-" + self.cell.id).call(toolTip);
 			}
 		},
-		normalize: function(state) {
+		normalizeCustom: function(state) {
 			if (!state.x) {
 				Vue.set(state, "x", null);
 			}
@@ -421,13 +411,6 @@ nabu.page.views.data.Bar = Vue.extend({
 			if (!state.groupType) {
 				Vue.set(state, "groupType", null);
 			}
-		},
-		// standard methods!
-		configure: function() {
-			this.$refs.data.configuring = true;	
-		},
-		refresh: function() {
-			this.$refs.data.load();
 		}
 	},
 	watch: {
@@ -441,9 +424,6 @@ nabu.page.views.data.Bar = Vue.extend({
 				this.draw();
 			},
 			deep: true
-		},
-		loaded: function() {
-			this.draw();		
 		}
 	}
 });

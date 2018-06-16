@@ -5,40 +5,21 @@ if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
 nabu.page.views.data.Card = Vue.extend({
 	template: "#data-card",
-	props: {
-		page: {
-			type: Object,
-			required: true
-		},
-		parameters: {
-			type: Object,
-			required: false
-		},
-		cell: {
-			type: Object,
-			required: true
-		},
-		edit: {
-			type: Boolean,
-			required: true
-		}
-	},
+	mixins: [nabu.page.views.data.DataCommon],
 	data: function() {
 		return {
-			records: [],
-			loaded: false
-		}	
+			configuring: false
+		}
+	},
+	created: function() {
+		this.create();
+	},
+	activate: function(done) {
+		this.activate(done);
 	},
 	methods: {
-		// standard methods!
 		configure: function() {
-			this.$refs.data.configuring = true;	
-		},
-		refresh: function() {
-			this.$refs.data.load();
-		},
-		getEvents: function() {
-			return this.$refs.data ? this.$refs.data.getEvents() : {};
+			this.configuring = true;	
 		}
 	}
 });

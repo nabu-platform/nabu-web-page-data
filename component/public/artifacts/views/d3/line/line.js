@@ -5,32 +5,22 @@ if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
 nabu.page.views.data.Line = Vue.extend({
 	template: "#data-line",
-	props: {
-		page: {
-			type: Object,
-			required: true
-		},
-		parameters: {
-			type: Object,
-			required: false
-		},
-		cell: {
-			type: Object,
-			required: true
-		},
-		edit: {
-			type: Boolean,
-			required: true
-		}
+	mixins: [nabu.page.views.data.DataCommon],
+	created: function() {
+		this.create();
+		this.normalizeCustom(this.cell.state);
+	},
+	activate: function(done) {
+		var self = this;
+		this.activate(function() {
+			done();
+			self.draw();
+		});
 	},
 	data: function() {
 		return {
-			records: [],
-			loaded: false
+			configuring: false
 		}
-	},
-	created: function() {
-		this.normalize(this.cell.state);
 	},
 	beforeDestroy: function() {
 		this.$services.page.destroy(this);
@@ -47,8 +37,8 @@ nabu.page.views.data.Line = Vue.extend({
 		}
 	},
 	methods: {
-		getEvents: function() {
-			return this.$refs.data ? this.$refs.data.getEvents() : {};
+		configure: function() {
+			this.configuring = true;	
 		},
 		// http://projects.delimited.io/experiments/multi-series/multi-line-full.html
 		draw: function() {
@@ -72,7 +62,7 @@ nabu.page.views.data.Line = Vue.extend({
 					height = this.$el.offsetHeight - (self.cell.state.title ? 80 : 30);
 					
 				// subtract for actions
-				if (self.$refs.data.globalActions.length) {
+				if (self.globalActions.length) {
 					height -= 75;
 				}
 				
@@ -192,7 +182,7 @@ nabu.page.views.data.Line = Vue.extend({
 				}
 				
 				var htmlBuilder = function (data, i) {
-					self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.$refs.data.buildToolTip);	
+					self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.buildToolTip);	
 				};
 				
 				var series = svg.selectAll(".series")
@@ -255,7 +245,7 @@ nabu.page.views.data.Line = Vue.extend({
 		getInterpolation: function() {
 			return [d3.curveLinear,d3.curveStepBefore,d3.curveStepAfter,d3.curveBasis,d3.curveBasisOpen, d3.curveBasisClosed, d3.curveBundle,d3.curveCardinal,d3.curveCardinal,d3.curveCardinalOpen,d3.curveCardinalClosed,d3.curveNatural];
 		},
-		normalize: function(state) {
+		normalizeCustom: function(state) {
 			if (!state.x) {
 				Vue.set(state, "x", null);
 			}
@@ -298,13 +288,6 @@ nabu.page.views.data.Line = Vue.extend({
 			if (!state.pointRadius) {
 				Vue.set(state, "pointRadius", 0);
 			}
-		},
-		// standard methods!
-		configure: function() {
-			this.$refs.data.configuring = true;	
-		},
-		refresh: function() {
-			this.$refs.data.load();
 		}
 	},
 	watch: {

@@ -3,8 +3,7 @@ if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
-Vue.component("data-common-header", {
-	template: "#data-common-header",
+nabu.page.views.data.DataCommon = Vue.extend({
 	props: {
 		page: {
 			type: Object,
@@ -32,9 +31,6 @@ Vue.component("data-common-header", {
 			required: false,
 			default: function() { return [] }
 		},
-		value: {
-			required: true
-		},
 		updatable: {
 			type: Boolean,
 			required: false,
@@ -49,102 +45,8 @@ Vue.component("data-common-header", {
 			type: Boolean,
 			required: false,
 			default: false
-		}
-	}
-});
-Vue.component("data-common-footer", {
-	template: "#data-common-footer",
-	props: {
-		page: {
-			type: Object,
-			required: true
 		},
-		parameters: {
-			type: Object,
-			required: false
-		},
-		cell: {
-			type: Object,
-			required: true
-		},
-		edit: {
-			type: Boolean,
-			required: true
-		},
-		records: {
-			type: Array,
-			required: false,
-			default: function() { return [] }
-		},
-		selected: {
-			type: Array,
-			required: false,
-			default: function() { return [] }
-		},
-		value: {
-			required: true
-		},
-		updatable: {
-			type: Boolean,
-			required: false,
-			default: false
-		},
-		multiselect: {
-			type: Boolean,
-			required: false,
-			default: false
-		},
-		inactive: {
-			type: Boolean,
-			required: false,
-			default: false
-		}
-	}
-});
-
-Vue.component("data-common", {
-	template: "#data-common",
-	props: {
-		page: {
-			type: Object,
-			required: true
-		},
-		parameters: {
-			type: Object,
-			required: false
-		},
-		cell: {
-			type: Object,
-			required: true
-		},
-		edit: {
-			type: Boolean,
-			required: true
-		},
-		records: {
-			type: Array,
-			required: false,
-			default: function() { return [] }
-		},
-		selected: {
-			type: Array,
-			required: false,
-			default: function() { return [] }
-		},
-		value: {
-			required: true
-		},
-		updatable: {
-			type: Boolean,
-			required: false,
-			default: false
-		},
-		multiselect: {
-			type: Boolean,
-			required: false,
-			default: false
-		},
-		inactive: {
+		showEmpty: {
 			type: Boolean,
 			required: false,
 			default: false
@@ -153,7 +55,6 @@ Vue.component("data-common", {
 	data: function() {
 		return {
 			paging: {},
-			configuring: false,
 			actionHovering: false,
 			last: null,
 			showFilter: false,
@@ -167,31 +68,6 @@ Vue.component("data-common", {
 			refreshTimer: null
 		}	
 	},
-	created: function() {
-		this.normalize(this.cell.state);
-		if (!this.inactive) {
-			// merge the configured orderby into the actual
-			nabu.utils.arrays.merge(this.orderBy, this.cell.state.orderBy);
-			
-			if (this.cell.state.array) {
-				this.loadArray();
-			}
-			else {
-				var self = this;
-				this.load().then(function() {
-					self.$emit("input", true);
-				});
-			}
-			
-			var self = this;
-			var pageInstance = self.$services.page.getPageInstance(self.page, self);
-			this.cell.state.refreshOn.map(function(x) {
-				self.subscriptions.push(pageInstance.subscribe(x, function() {
-					self.load();
-				}));
-			});
-		}
-	},
 	beforeDestroy: function() {
 		this.subscriptions.map(function(x) {
 			x();
@@ -200,7 +76,7 @@ Vue.component("data-common", {
 	ready: function() {
 		this.ready = true;
 		if (this.cell.state.array || this.inactive) {
-			this.$emit("input", true);
+			//this.$emit("input", true);
 		}
 	},
 	computed: {
@@ -228,7 +104,7 @@ Vue.component("data-common", {
 		},
 		definition: function() {
 			var properties = {};
-			if (this.operation) {
+			if (this.operation && this.operation.responses["200"]) {
 				var definition = this.$services.swagger.resolve(this.operation.responses["200"].schema);
 				//var definition = this.$services.swagger.definition(schema["$ref"]);
 				if (definition.properties) {
@@ -329,6 +205,37 @@ Vue.component("data-common", {
 		}	
 	},
 	methods: {
+		create: function() {
+			this.normalize(this.cell.state);
+		},
+		activate: function(done) {
+			if (!this.inactive) {
+				// merge the configured orderby into the actual
+				nabu.utils.arrays.merge(this.orderBy, this.cell.state.orderBy);
+				
+				if (this.cell.state.array) {
+					this.loadArray();
+					done();
+				}
+				else {
+					var self = this;
+					this.load().then(function() {
+						done();
+					});
+				}
+				
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				this.cell.state.refreshOn.map(function(x) {
+					self.subscriptions.push(pageInstance.subscribe(x, function() {
+						self.load();
+					}));
+				});
+			}
+			else {
+				done();
+			}
+		},
 		getDataOperations: function(value) {
 			return this.$services.dataUtils.getDataOperations(value).map(function(x) { return x.id });	
 		},
@@ -434,9 +341,6 @@ Vue.component("data-common", {
 			});
 		},
 		// standard methods!
-		configure: function() {
-			this.configuring = true;	
-		},
 		refresh: function() {
 			this.load();
 		},
@@ -837,17 +741,21 @@ Vue.component("data-common", {
 		},
 		updateOperation: function(operationId) {
 			if (this.cell.state["operation"] != operationId) {
-				var operation = this.$services.swagger.operations[operationId];
 				Vue.set(this.cell.state, "operation", operationId);
 				var bindings = {};
-				var self = this;
-				if (operation.parameters) {
-					operation.parameters.map(function(parameter) {
-						bindings[parameter.name] = self.cell.bindings && self.cell.bindings[parameter.name]
-							? self.cell.bindings[parameter.name]
-							: null;
-					});
+				
+				if (operationId) {
+					var operation = this.$services.swagger.operations[operationId];
+					var self = this;
+					if (operation.parameters) {
+						operation.parameters.map(function(parameter) {
+							bindings[parameter.name] = self.cell.bindings && self.cell.bindings[parameter.name]
+								? self.cell.bindings[parameter.name]
+								: null;
+						});
+					}
 				}
+				
 				// TODO: is it OK that we simply remove all bindings?
 				// is the table the only one who sets bindings here?
 				Vue.set(this.cell, "bindings", bindings);
@@ -873,7 +781,7 @@ Vue.component("data-common", {
 					})
 				}
 				// if there are no parameters required, do an initial load
-				if (!operation.parameters.filter(function(x) { return x.required }).length) {
+				if (operationId && !operation.parameters.filter(function(x) { return x.required }).length) {
 					this.load();
 				}
 			}
@@ -1005,6 +913,68 @@ Vue.component("data-common", {
 				promise.resolve("No operation found");
 			}
 			return promise;
+		}
+	}
+});
+
+Vue.component("data-common-header", {
+	template: "#data-common-header",
+	mixins:[nabu.page.views.data.DataCommon],
+	props: {
+		configuring: {
+			type: Boolean,
+			required: true
+		}
+	}
+});
+
+Vue.component("data-common-footer", {
+	template: "#data-common-footer",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		parameters: {
+			type: Object,
+			required: false
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: true
+		},
+		records: {
+			type: Array,
+			required: false,
+			default: function() { return [] }
+		},
+		selected: {
+			type: Array,
+			required: false,
+			default: function() { return [] }
+		},
+		updatable: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		multiselect: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		inactive: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		globalActions: {
+			type: Array,
+			required: false
 		}
 	}
 });

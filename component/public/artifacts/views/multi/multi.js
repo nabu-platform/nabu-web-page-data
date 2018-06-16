@@ -10,39 +10,9 @@ Vue.component("data-multi-select-configure", {
 // need id field to prevent doubles
 // need (optional) value field to extract information
 nabu.page.views.data.MultiSelect = Vue.component("data-multi-select", {
+	mixins: [nabu.page.views.data.DataCommon],
 	template: "#data-multi-select",
 	props: {
-		page: {
-			type: Object,
-			required: true
-		},
-		parameters: {
-			type: Object,
-			required: false
-		},
-		cell: {
-			type: Object,
-			required: true
-		},
-		edit: {
-			type: Boolean,
-			required: true
-		},
-		records: {
-			type: Array,
-			required: false,
-			default: function() { return [] }
-		},
-		selected: {
-			type: Array,
-			required: false,
-			default: function() { return [] }
-		},
-		inactive: {
-			type: Boolean,
-			required: false,
-			default: false
-		},
 		field: {
 			type: Object,
 			required: false
@@ -53,43 +23,48 @@ nabu.page.views.data.MultiSelect = Vue.component("data-multi-select", {
 	},
 	data: function() {
 		return {
-			loaded: false,
+			configuring: false,
 			sourceSelected: [],
 			targetSelected: [],
 			targetRecords: []
 		}	
 	},
 	created: function() {
-		if (!this.cell.state.childCell) {
-			Vue.set(this.cell.state, "childCell", nabu.utils.objects.clone(this.cell));
-			this.cell.state.childCell.state = {};
+		var self = this;
+		if (!self.cell.state.childCell) {
+			Vue.set(self.cell.state, "childCell", JSON.parse(JSON.stringify(self.cell)));
+			self.cell.state.childCell.state = {};
 		}
 		this.normalize(this.cell.state.childCell.state);
+		// we want (for all intents and purposes) that the data configuration works upon the child cell, not the cell itself
+		//this.cell = this.cell.state.childCell;
+		
+		//this.create();
+		self.normalizeCustom(self.cell.state);
+	},
+	activate: function(done) {
+		this.activate(function() {
+			done();
+		});
 	},
 	methods: {
 		// standard methods!
 		configure: function() {
-			this.$refs.data.configuring = true;	
-		},
-		refresh: function() {
-			this.$refs.data.load();
-		},
-		getEvents: function() {
-			return this.$refs.data ? this.$refs.data.getEvents() : {};
+			this.configuring = true;
 		},
 		getDisplayOptions: function() {
 			return ["data-table", "data-table-list"];
 		},
-		normalize: function(state) {
+		normalizeCustom: function(state) {
 			// always set multiselect
 			if (!state.multiselect) {
 				Vue.set(state, "multiselect", true);
 			}
 			if (!state.valueField) {
-				Vue.set(state, "valueField", true);
+				Vue.set(state, "valueField", null);
 			}
 			if (!state.idField) {
-				Vue.set(state, "idField", true);
+				Vue.set(state, "idField", null);
 			}
 			if (!state.displayType) {
 				Vue.set(state, "displayType", null);

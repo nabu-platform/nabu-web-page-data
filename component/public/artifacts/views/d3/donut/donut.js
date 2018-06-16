@@ -5,32 +5,22 @@ if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
 nabu.page.views.data.Donut = Vue.extend({
 	template: "#data-donut",
-	props: {
-		page: {
-			type: Object,
-			required: true
-		},
-		parameters: {
-			type: Object,
-			required: false
-		},
-		cell: {
-			type: Object,
-			required: true
-		},
-		edit: {
-			type: Boolean,
-			required: true
-		}
+	mixins: [nabu.page.views.data.DataCommon],
+	created: function() {
+		this.create();
+		this.normalizeCustom(this.cell.state);
+	},
+	activate: function(done) {
+		var self = this;
+		this.activate(function() {
+			done();
+			self.draw();
+		});
 	},
 	data: function() {
 		return {
-			records: [],
-			loaded: false
+			configuring: false
 		}
-	},
-	created: function() {
-		this.normalize(this.cell.state);
 	},
 	computed: {
 		fromColor: function() {
@@ -44,8 +34,8 @@ nabu.page.views.data.Donut = Vue.extend({
 		}
 	},
 	methods: {
-		getEvents: function() {
-			return this.$refs.data ? this.$refs.data.getEvents() : {};
+		configure: function() {
+			this.configuring = true;	
 		},
 		// based heavily on: https://bl.ocks.org/mbhall88/b2504f8f3e384de4ff2b9dfa60f325e2
 		draw: function() {
@@ -106,21 +96,21 @@ nabu.page.views.data.Donut = Vue.extend({
 				var inlineToolTipHTML = function(d) {
 					var html = "";
 					var counter = 0;
-					for (var index in self.$refs.data.keys) {
-						var key = self.$refs.data.keys[index];
-						if (!self.$refs.data.isHidden(key)) {
+					for (var index in self.keys) {
+						var key = self.keys[index];
+						if (!self.isHidden(key)) {
 							html += "<tspan x='0'" + (counter++ == 0 ? "" : " dy='1.2rem' ") 
 								+ "class='property'><tspan class='key'>" 
 								+ (self.cell.state.result[key].label ? self.cell.state.result[key].label : key) 
 								+ ": </tspan><tspan class='value'>" 
-								+ self.$refs.data.interpret(key, d.data[key]) + "</tspan></tspan>";
+								+ self.interpret(key, d.data[key]) + "</tspan></tspan>";
 						}
 					}
 					return html;
 				}
 				
 				var buildToolTip = function(d) {
-					return self.$refs.data.buildToolTip(d.data);
+					return self.buildToolTip(d.data);
 				};
 				
 				var toolTip = function(selection) {
@@ -227,7 +217,7 @@ nabu.page.views.data.Donut = Vue.extend({
 				svg.selectAll(".labelName text, .slices path").call(toolTip);
 			}
 		},
-		normalize: function(state) {
+		normalizeCustom: function(state) {
 			if (!state.value) {
 				Vue.set(state, "value", null);
 			}
@@ -252,13 +242,6 @@ nabu.page.views.data.Donut = Vue.extend({
 			if (!state.labelFormat) {
 				Vue.set(state, "labelFormat", {});
 			}
-		},
-		// standard methods!
-		configure: function() {
-			this.$refs.data.configuring = true;	
-		},
-		refresh: function() {
-			this.$refs.data.load();
 		}
 	},
 	watch: {

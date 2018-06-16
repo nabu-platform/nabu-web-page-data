@@ -158,7 +158,7 @@
 </template>
 <template id="data-common-header">
 	<div class="data-common-header">
-		<n-sidebar @close="configuring = false" v-if="configuring" class="settings">
+		<n-sidebar @close="$emit('close')" v-if="configuring" class="settings">
 			<n-form class="layout2">
 				<n-collapsible title="Dashboard Settings">
 					<n-form-combo label="Operation" :value="cell.state.operation" 
