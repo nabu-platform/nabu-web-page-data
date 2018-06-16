@@ -113,12 +113,18 @@ nabu.page.views.data.Line = Vue.extend({
 					.domain([minY, maxY])
 					.nice();
 	
+				var axisBottom = d3.axisBottom(x).tickFormat(function(d) {
+					return self.$services.formatter.format(d, self.cell.state.xFormat);	
+				});
+				
+				// the following if is incorrect
+				if (this.cell.state.xTicks) {
+					axisBottom.ticks(this.cell.state.xTicks);
+				}
 				var xAxis = g.append("g")
 					.attr("class", "axis")
 					.attr("transform", "translate(0," + height + ")")
-					.call(d3.axisBottom(x).tickFormat(function(d) {
-						return self.$services.formatter.format(d, self.cell.state.xFormat);	
-					}));
+					.call(axisBottom);
 					
 				// if you want to rotate the labels on the x axis, make it so scotty
 				if (this.cell.state.rotateX) {
@@ -127,7 +133,7 @@ nabu.page.views.data.Line = Vue.extend({
 						.style("text-anchor", "end")
 						.attr("transform", "rotate(-" + this.cell.state.rotateX + ")");
 				}
-					
+				
 				var yAxis = g.append("g")
 					.attr("class", "axis")
 					.call(d3.axisLeft(y).tickFormat(function(d) {

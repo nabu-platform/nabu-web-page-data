@@ -16,7 +16,7 @@
 				<n-form-combo label="Id Field" :filter="getValueFields" v-model="cell.state.idField"/>
 			</n-collapsible>
 			<div class="data-multi-select-content">
-				<div v-route-render="{alias: cell.state.displayType, parameters: { cell:cell.state.childCell, page:page, edit:edit, parameters:parameters,selected:sourceSelected }}" 
+				<div v-route-render="{alias: cell.state.displayType, parameters: { showEmpty:true,cell:cell.state.childCell, page:page, edit:edit, parameters:parameters,selected:sourceSelected }}" 
 					v-if="cell.state.displayType"
 					class="source"/>
 				<div class="data-multi-select-actions">
@@ -24,7 +24,7 @@
 					<button @click="removeAll"><span class="fa fa-chevron-left"></span></button>
 					<button v-if="edit" @click="configure()"><span class="fa fa-cog"></span></button>
 				</div>
-				<div v-route-render="{alias: cell.state.displayType, parameters: { cell:cell.state.childCell, page:page, edit:edit, parameters:parameters,selected:targetSelected, records:targetRecords, inactive:true }}" 
+				<div v-route-render="{alias: cell.state.displayType, parameters: { showEmpty:true,cell:cell.state.childCell, page:page, edit:edit, parameters:parameters,selected:targetSelected, records:targetRecords, inactive:true }}" 
 					v-if="cell.state.displayType"
 					class="target"/>
 			</div>

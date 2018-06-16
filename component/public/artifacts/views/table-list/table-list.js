@@ -36,6 +36,11 @@ nabu.page.views.data.TableList = Vue.extend({
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		showEmpty: {
+			type: Boolean,
+			required: false,
+			default: false
 		}
 	},
 	data: function() {

@@ -183,7 +183,7 @@ nabu.page.views.data.Bar = Vue.extend({
 							.attr("class", "axis")
 							.attr("transform", "translate(0," + height + ")")
 							.call(d3.axisBottom(x).tickFormat(function(d) {
-								return self.$services.formatter.format(d, self.cell.state.xFormat);	
+								return self.$services.formatter.format(d, self.cell.state.xFormat);
 							}));
 						
 						// if you want to rotate the labels on the x axis, make it so scotty

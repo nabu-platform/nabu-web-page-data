@@ -11,7 +11,7 @@
 				@close="$emit('close')"
 				:multiselect="true"
 				:updatable="true">
-			<table class="classic data" cellspacing="0" cellpadding="0" :class="$refs.data.dataClass" v-if="loaded && (edit || records.length)">
+			<table class="classic data" cellspacing="0" cellpadding="0" :class="$refs.data.dataClass" v-if="loaded && (edit || showEmpty || records.length)">
 				<thead>
 					<tr>
 						<th @click="$refs.data.sort($refs.data.getSortKey(field))"
@@ -43,7 +43,7 @@
 				</tbody>
 			</table>
 			<n-paging :value="$refs.data.paging.current" :total="$refs.data.paging.total" :load="$refs.data.load" :initialize="false" v-if="loaded"/>
-			<div v-if="loaded && !records.length" class="no-data">%{No data available}</div>
+			<div v-if="loaded && !records.length && !showEmpty" class="no-data">%{No data available}</div>
 		</data-common>
 	</div>
 </template>

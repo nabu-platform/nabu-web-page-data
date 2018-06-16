@@ -187,6 +187,9 @@ nabu.page.views.data.Donut = Vue.extend({
 						var value = "";
 						if (self.cell.state.label) {
 							value = d.data[self.cell.state.label];
+							if (self.cell.state.labelFormat) {
+								value = self.$services.formatter.format(value, self.cell.state.labelFormat);
+							}
 						}
 						else {
 							value = d.data[self.cell.state.value];
@@ -245,6 +248,9 @@ nabu.page.views.data.Donut = Vue.extend({
 			}
 			if (!state.detail) {
 				Vue.set(state, "detail", 'popup');
+			}
+			if (!state.labelFormat) {
+				Vue.set(state, "labelFormat", {});
 			}
 		},
 		// standard methods!

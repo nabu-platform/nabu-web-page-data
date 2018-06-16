@@ -14,7 +14,7 @@
 			<n-collapsible slot="settings" title="Field widths">
 				<n-form-text :label="'Width for: ' + (field.label ? field.label : field.key)" :value="field.width" v-for="field in cell.state.fields" @input="function(newValue) { $window.Vue.set(field, 'width', newValue) }"/>
 			</n-collapsible>
-			<ul class="table-list classic data" cellspacing="0" cellpadding="0" :class="$refs.data.dataClass" v-if="loaded && (edit || records.length)">
+			<ul class="table-list classic data" cellspacing="0" cellpadding="0" :class="$refs.data.dataClass" v-if="loaded && (edit || showEmpty || records.length)">
 				<li class="row title">
 					<span @click="$refs.data.sort($refs.data.getSortKey(field))" v-for="field in cell.state.fields" :style="{'flex-grow': field.width != null ? field.width : 1}">
 						<span>{{ field.label }}</span>
@@ -42,7 +42,7 @@
 				</li>
 			</ul>
 			<n-paging :value="$refs.data.paging.current" :total="$refs.data.paging.total" :load="$refs.data.load" :initialize="false" v-if="loaded"/>
-			<div v-if="loaded && !records.length" class="no-data">%{No data available}</div>
+			<div v-if="loaded && !records.length && !showEmpty" class="no-data">%{No data available}</div>
 		</data-common>
 	</div>
 </template>

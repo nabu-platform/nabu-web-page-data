@@ -3,6 +3,105 @@ if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
+Vue.component("data-common-header", {
+	template: "#data-common-header",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		parameters: {
+			type: Object,
+			required: false
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: true
+		},
+		records: {
+			type: Array,
+			required: false,
+			default: function() { return [] }
+		},
+		selected: {
+			type: Array,
+			required: false,
+			default: function() { return [] }
+		},
+		value: {
+			required: true
+		},
+		updatable: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		multiselect: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		inactive: {
+			type: Boolean,
+			required: false,
+			default: false
+		}
+	}
+});
+Vue.component("data-common-footer", {
+	template: "#data-common-footer",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		parameters: {
+			type: Object,
+			required: false
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: true
+		},
+		records: {
+			type: Array,
+			required: false,
+			default: function() { return [] }
+		},
+		selected: {
+			type: Array,
+			required: false,
+			default: function() { return [] }
+		},
+		value: {
+			required: true
+		},
+		updatable: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		multiselect: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		inactive: {
+			type: Boolean,
+			required: false,
+			default: false
+		}
+	}
+});
+
 Vue.component("data-common", {
 	template: "#data-common",
 	props: {
@@ -110,12 +209,12 @@ Vue.component("data-common", {
 		},
 		actions: function() {
 			return this.cell.state.actions.filter(function(x) {
-				return !x.global && x.icon;
+				return !x.global;
 			});
 		},
 		globalActions: function() {
 			return this.cell.state.actions.filter(function(x) {
-				return x.global && x.label;
+				return x.global;
 			});
 		},
 		dataClass: function() {

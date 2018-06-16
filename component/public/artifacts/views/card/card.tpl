@@ -5,7 +5,7 @@
 				v-model="loaded"
 				@updatedEvents="$emit('updatedEvents')"
 				:updatable="true">
-			<div class="data-card-list">
+			<div class="data-card-list" :class="$refs.data.dataClass" v-if="loaded && (edit || records.length)">
 				<dl class="data-card" v-for="record in records" :class="$services.page.getDynamicClasses(cell.state.styles, {record:record})">
 					<page-field :field="field" :data="record" :should-style="false" 
 						class="data-card-field" :class="$services.page.getDynamicClasses(field.styles, {record:record})" v-for="field in cell.state.fields"
@@ -18,7 +18,6 @@
 						<button v-if="!action.condition || $refs.data.isCondition(action.condition, {record:record})" 
 							v-for="action in $refs.data.actions" 
 							@click="$refs.data.trigger(action, record)"
-							class="inline"
 							:class="[action.class, {'has-icon': action.icon}]"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{action.label}}</label></button>
 					</div>
 				</dl>
