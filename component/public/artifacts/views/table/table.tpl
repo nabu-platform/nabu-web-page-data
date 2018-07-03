@@ -15,7 +15,8 @@
 			<thead>
 				<tr>
 					<th @click="sort(getSortKey(field))"
-							v-for="field in cell.state.fields"><span>{{ field.label }}</span>
+							v-for="field in cell.state.fields"
+							v-if="!isAllFieldHidden(field)"><span>{{ field.label }}</span>
 						<span class="fa fa-sort-up" v-if="orderBy.indexOf(getSortKey(field)) >= 0"></span>
 						<span class="fa fa-sort-down" v-if="orderBy.indexOf(getSortKey(field) + ' desc') >= 0"></span>
 					</th>
@@ -24,9 +25,9 @@
 			</thead>
 			<tbody>
 				<tr v-for="record in records" @click="select(record)" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0">
-					<td :class="$services.page.getDynamicClasses(field.styles, {record:record})" v-for="field in cell.state.fields">
+					<td :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields" v-if="!isAllFieldHidden(field)">
 						<page-field :field="field" :data="record" 
-							v-if="!field.hidden || !$services.page.isCondition(field.hidden, {record:record})"
+							v-if="!isFieldHidden(field, record)"
 							:should-style="false" 
 							:label="false"
 							@updated="update(record)"
@@ -34,7 +35,7 @@
 							:cell="cell"/>
 					</td>
 					<td class="actions" v-if="actions.length" @mouseover="actionHovering = true" @mouseout="actionHovering = false">
-						<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record})" 
+						<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
 							v-for="action in actions" 
 							@click="trigger(action, record)"
 							:class="[action.class, {'has-icon': action.icon}, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{action.label}}</label></button>

@@ -3,6 +3,10 @@ if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
+// because we split up the header, footer and they all extend common
+// the first load() is triggered by the main body
+// however any loads triggered through searching come from the header!
+// could really use a refactor...
 nabu.page.views.data.DataCommon = Vue.extend({
 	props: {
 		page: {
@@ -89,9 +93,14 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			});
 		},
 		globalActions: function() {
-			return this.cell.state.actions.filter(function(x) {
-				return x.global;
+			var self = this;
+			var globalActions = this.cell.state.actions.filter(function(x) {
+				if (!x.global) {
+					return false;
+				}
+				return !x.condition || self.$services.page.isCondition(x.condition, {records:self.records}, self);
 			});
+			return globalActions;
 		},
 		dataClass: function() {
 			return this.cell.state.class ? this.cell.state.class : [];        
@@ -205,14 +214,27 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}	
 	},
 	methods: {
+		isFieldHidden: function(field, record) {
+			return !!field.hidden && this.$services.page.isCondition(field.hidden, {record:record}, this);
+		},
+		isAllFieldHidden: function(field) {
+			if (!field.hidden) {
+				return false;
+			}
+			for (var i = 0; i < this.records.length; i++) {
+				if (!this.isFieldHidden(field, this.records[i])) {
+					return false;
+				}
+			}
+			return true;
+		},
 		create: function() {
 			this.normalize(this.cell.state);
+			// merge the configured orderby into the actual
+			nabu.utils.arrays.merge(this.orderBy, this.cell.state.orderBy);
 		},
 		activate: function(done) {
 			if (!this.inactive) {
-				// merge the configured orderby into the actual
-				nabu.utils.arrays.merge(this.orderBy, this.cell.state.orderBy);
-				
 				if (this.cell.state.array) {
 					this.loadArray();
 					done();
@@ -252,6 +274,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			return null;
 		},
 		getEvents: function() {
+			console.log("getting events for", this.cell.state.operation, this.operation);
 			var self = this;
 			var result = {};
 			if (this.operation) {
@@ -272,6 +295,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 				
 				this.cell.state.actions.map(function(action) {
+					console.log("action", action.name, self.cell.on, action.global && !action.useSelection);
 					result[action.name] = action.global && !action.useSelection
 						//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
 						? (self.cell.on ? self.cell.on : {})
@@ -322,7 +346,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		},
 		getRecordStyles: function(record) {
 			var styles = [{'selected': this.selected.indexOf(record) >= 0}];
-			nabu.utils.arrays.merge(styles, this.$services.page.getDynamicClasses(this.cell.state.styles, {record:record}));
+			nabu.utils.arrays.merge(styles, this.$services.page.getDynamicClasses(this.cell.state.styles, {record:record}, this));
 			return styles;
 		},
 		addRecordStyle: function() {
@@ -456,7 +480,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 			}
 		},
-		getFormOperations: function() {
+		getFormOperations: function(name) {
 			var self = this;
 			return this.$services.page.getOperations(function(operation) {
 				// must be a put or post
@@ -485,7 +509,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				Vue.set(state, "title", null);
 			}
 			if (!state.limit) {
-				Vue.set(state, "limit", 20);
+				Vue.set(state, "limit", 10);
 			}
 			// actions you can perform on a single row
 			if (!state.actions) {
@@ -556,7 +580,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				if (styles) {
 					var self = this;
 					return styles.filter(function(style) {
-						return self.isCondition(style.condition, record);
+						return self.isCondition(style.condition, record, self);
 					}).map(function(style) {
 						return style.class;
 					});
@@ -729,7 +753,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		},
 		doInternalSort: function() {
 			if (this.orderBy && this.orderBy.length) {
-				var field = this.cell.state.orderBy[0];
+				var field = this.orderBy[0];
 				var index = field.indexOf(" desc");
 				var multiplier = 1;
 				if (index >= 0) {
@@ -856,9 +880,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			if (this.cell.state.operation) {
 				var self = this;
 				var parameters = {};
-				if (this.orderable && this.orderBy.length) {
-					parameters.orderBy = this.orderBy;
-				}
 				
 				// we put a best effort limit & offset on there, but the operation might not support it
 				// at this point the parameter is simply ignored
@@ -879,6 +900,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				this.cell.state.filters.map(function(filter) {
 					parameters[filter.name] = filter.type == 'fixed' ? filter.value : self.filters[filter.name];	
 				});
+				
+				if (this.orderable && this.orderBy.length) {
+					parameters.orderBy = this.orderBy;
+				}
+				
 				try {
 					this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
 						self.records.splice(0, self.records.length);
@@ -925,56 +951,19 @@ Vue.component("data-common-header", {
 			type: Boolean,
 			required: true
 		}
+	},
+	created: function() {
+		this.create();
 	}
 });
 
 Vue.component("data-common-footer", {
 	template: "#data-common-footer",
-	props: {
-		page: {
-			type: Object,
-			required: true
-		},
-		parameters: {
-			type: Object,
-			required: false
-		},
-		cell: {
-			type: Object,
-			required: true
-		},
-		edit: {
-			type: Boolean,
-			required: true
-		},
-		records: {
-			type: Array,
-			required: false,
-			default: function() { return [] }
-		},
-		selected: {
-			type: Array,
-			required: false,
-			default: function() { return [] }
-		},
-		updatable: {
-			type: Boolean,
-			required: false,
-			default: false
-		},
-		multiselect: {
-			type: Boolean,
-			required: false,
-			default: false
-		},
-		inactive: {
-			type: Boolean,
-			required: false,
-			default: false
-		},
+	mixins:[nabu.page.views.data.DataCommon],
+	/*props: {
 		globalActions: {
 			type: Array,
 			required: false
 		}
-	}
+	}*/
 });

@@ -131,7 +131,7 @@
 		<div class="content"><slot></slot></div>
 		<div class="global-actions" v-if="globalActions.length">
 			<component
-				v-if="!action.condition || $services.page.isCondition(action.condition, state)"
+				v-if="!action.condition || $services.page.isCondition(action.condition, state, $self)"
 				v-for="action in globalActions"
 				:is="action.type == 'link' ? 'a' : 'button'"
 				:disabled="action.useSelection && !lastTriggered"
@@ -146,7 +146,6 @@
 	<div class="data-common-footer">
 		<div class="global-actions" v-if="globalActions.length">
 			<component
-				v-if="!action.condition || $services.page.isCondition(action.condition, state)"
 				v-for="action in globalActions"
 				:is="action.type == 'link' ? 'a' : 'button'"
 				:disabled="action.useSelection && !lastTriggered"

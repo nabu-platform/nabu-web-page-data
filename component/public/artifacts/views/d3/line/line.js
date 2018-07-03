@@ -292,18 +292,13 @@ nabu.page.views.data.Line = Vue.extend({
 	},
 	watch: {
 		records: function(newValue) {
-			if (this.loaded) {
-				this.draw();
-			}
+			this.draw();
 		},
 		cell: {
 			handler: function() {
 				this.draw();
 			},
 			deep: true
-		},
-		loaded: function(newValue) {
-			this.draw();
 		}
 	}
 });

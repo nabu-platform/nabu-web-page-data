@@ -415,9 +415,7 @@ nabu.page.views.data.Bar = Vue.extend({
 	},
 	watch: {
 		records: function(newValue) {
-			if (this.loaded) {
-				this.draw();
-			}
+			this.draw();
 		},
 		cell: {
 			handler: function() {

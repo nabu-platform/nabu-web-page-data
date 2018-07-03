@@ -246,12 +246,7 @@ nabu.page.views.data.Donut = Vue.extend({
 	},
 	watch: {
 		records: function(newValue) {
-			if (this.loaded) {
-				this.draw();
-			}
-		},
-		loaded: function() {
-			this.draw();		
+			this.draw();
 		}
 	}
 });
