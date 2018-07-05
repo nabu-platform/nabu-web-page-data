@@ -17,7 +17,7 @@
 		
 		<ul class="table-list classic data" cellspacing="0" cellpadding="0" :class="dataClass" v-if="edit || showEmpty || records.length">
 			<li class="row title">
-				<span @click="sort(getSortKey(field))" v-for="field in cell.state.fields" :style="{'flex-grow': field.width != null ? field.width : 1}"
+				<span @click="sort(getSortKey(field))" v-for="field in cell.state.fields" :style="{'flex-grow': (field.width != null ? field.width : '1')}"
 						v-if="!isAllFieldHidden(field)">
 					<span>{{ field.label }}</span>
 					<span class="fa fa-sort-up" v-if="orderBy.indexOf(getSortKey(field)) >= 0"></span>
@@ -30,7 +30,7 @@
 					v-if="!isFieldHidden(field, record)"
 					:should-style="false" 
 					:label="false"
-					:style="{'flex-grow': field.width != null ? field.width : 1}"
+					:style="{'flex-grow': (field.width != null ? field.width : '1')}"
 					@updated="update(record)"
 					:page="page"
 					:class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" 

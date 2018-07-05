@@ -274,7 +274,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			return null;
 		},
 		getEvents: function() {
-			console.log("getting events for", this.cell.state.operation, this.operation);
 			var self = this;
 			var result = {};
 			if (this.operation) {
@@ -295,7 +294,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 				
 				this.cell.state.actions.map(function(action) {
-					console.log("action", action.name, self.cell.on, action.global && !action.useSelection);
 					result[action.name] = action.global && !action.useSelection
 						//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
 						? (self.cell.on ? self.cell.on : {})
