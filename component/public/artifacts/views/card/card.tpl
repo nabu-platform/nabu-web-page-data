@@ -5,7 +5,8 @@
 				@updatedEvents="$emit('updatedEvents')"
 				:configuring="configuring"
 				@close="$emit('close'); configuring=false"
-				:updatable="true">
+				:updatable="true"
+				:paging="paging">
 			<n-form-checkbox v-model="cell.state.showLabels" label="Show Labels" slot="main-settings"/>
 		</data-common-header>
 				

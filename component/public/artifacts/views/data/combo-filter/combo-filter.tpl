@@ -20,7 +20,7 @@
 				:page="page"
 				:cell="cell"
 				@input="function(newValue) { setFilter(activeFilter, newValue) }"/>
-			<button class="primary" v-if="showRefresh" ><span class="fa fa-sync" @click="$emit('refresh')"></span></button>
+			<button class="primary" v-if="showRefresh" @click="$emit('refresh')"><span class="fa fa-sync"></span></button>
 		</div>
 	</div>
 </template>

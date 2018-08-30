@@ -114,7 +114,7 @@
 			</n-form>
 		</n-sidebar>
 		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
-		
+
 		<component v-if="cell.state.filterType && !inactive" 
 			:is="cell.state.filterType.component" 
 			class="cell-actions"
@@ -124,7 +124,7 @@
 			:filters="cell.state.filters"
 			:formatters="cell.state.formatters"
 			:orderable="orderable"
-			@refresh="load(0)"
+			@refresh="$emit('refresh')"
 			@filter="setFilter"
 			@sort="sort"/>
 			
@@ -281,7 +281,7 @@
 			:filters="cell.state.filters"
 			:formatters="cell.state.formatters"
 			:orderable="orderable"
-			@refresh="load(0)"
+			@refresh="$emit('refresh')"
 			@filter="setFilter"
 			@sort="sort"/>
 	</div>

@@ -83,6 +83,12 @@ nabu.page.views.data.Bar = Vue.extend({
 				}
 				
 				
+				for (var i = 0; i < xValues.length; i++) {
+					if (i % 12 != 0) {
+						xValues[i] = null;
+					}
+				}
+				
 				height = Math.max(0, height);
 					
 				svg.attr('width', width + margin.left + margin.right)

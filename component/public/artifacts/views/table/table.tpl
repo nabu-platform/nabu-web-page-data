@@ -9,7 +9,9 @@
 			@close="$emit('close'); configuring=false"
 			:multiselect="true"
 			:configuring="configuring"
-			:updatable="true"/>
+			:updatable="true"
+			:paging="paging"
+			@refresh="refresh"/>
 			
 		<table class="classic data" cellspacing="0" cellpadding="0" :class="dataClass" v-if="edit || showEmpty || records.length">
 			<thead>

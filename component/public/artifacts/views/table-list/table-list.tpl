@@ -9,7 +9,9 @@
 				@close="$emit('close'); configuring=false"
 				:multiselect="true"
 				:configuring="configuring"
-				:updatable="true">
+				:updatable="true"
+				:paging="paging"
+				@refresh="refresh">
 			<n-collapsible slot="settings" title="Field widths">
 				<n-form-text :label="'Width for: ' + (field.label ? field.label : field.key)" :value="field.width" v-for="field in cell.state.fields" @input="function(newValue) { $window.Vue.set(field, 'width', newValue) }"/>
 			</n-collapsible>

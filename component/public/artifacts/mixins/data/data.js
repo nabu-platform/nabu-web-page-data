@@ -54,11 +54,15 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			type: Boolean,
 			required: false,
 			default: false
+		},
+		paging: {
+			type: Object,
+			required: false,
+			default: function() { return {} }
 		}
 	},
 	data: function() {
 		return {
-			paging: {},
 			actionHovering: false,
 			last: null,
 			showFilter: false,
@@ -89,7 +93,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		},
 		actions: function() {
 			return this.cell.state.actions.filter(function(x) {
-				return !x.global;
+				return !x.global && (x.label || x.icon);
 			});
 		},
 		globalActions: function() {
@@ -292,7 +296,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				if (!found) {
 					definition = null;
 				}
-				
 				this.cell.state.actions.map(function(action) {
 					result[action.name] = action.global && !action.useSelection
 						//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
@@ -445,6 +448,12 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				action = this.cell.state.actions.filter(function(x) {
 					return !x.icon && !x.label && !x.global;
 				})[0];
+				if (action.condition) {
+					// we do want to change the event, just with a null value
+					if (!this.$services.page.isCondition(action.condition, {record:data}, this)) {
+						data = null;
+					}
+				}
 			}
 			if (action) {
 				var self = this;

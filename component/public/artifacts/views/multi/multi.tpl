@@ -9,7 +9,8 @@
 				:multiselect="true"
 				:configuring="configuring"
 				ref="data"
-				:updatable="true">
+				:updatable="true"
+				:paging="paging">
 			<n-collapsible title="Multi select settings" slot="settings">
 				<n-form-combo label="Display Type" :filter="getDisplayOptions" v-model="cell.state.displayType"/>
 				<n-form-combo label="Value Field" :filter="getValueFields" v-model="cell.state.valueField"/>

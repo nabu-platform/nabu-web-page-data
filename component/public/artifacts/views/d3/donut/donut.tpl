@@ -4,7 +4,8 @@
 				:records="records"
 				@updatedEvents="$emit('updatedEvents')"
 				:configuring="configuring"
-				@close="$emit('close'); configuring=false">
+				@close="$emit('close'); configuring=false"
+				:paging="paging">
 			<n-form-section slot="main-settings">
 				<n-form-text v-model="cell.state.unit" label="Unit" :timeout="600" @input="draw" />
 				<n-form-text v-model="cell.state.fromColor" type="color" label="From Color" :timeout="600" @input="draw" />
