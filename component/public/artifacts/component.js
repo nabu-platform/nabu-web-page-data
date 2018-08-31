@@ -32,6 +32,13 @@ window.addEventListener("load", function() {
 		});
 		
 		$services.router.register({
+			alias: "data-gauge",
+			enter: function(parameters) {
+				return new nabu.page.views.data.Gauge({propsData:parameters});
+			}
+		});
+		
+		$services.router.register({
 			alias: "data-bar",
 			enter: function(parameters) {
 				return new nabu.page.views.data.Bar({propsData:parameters});

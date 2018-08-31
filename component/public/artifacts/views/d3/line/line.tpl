@@ -14,6 +14,9 @@
 				<page-formatted-configure v-if="cell.state.x" :fragment="cell.state.xFormat"/>
 				<n-form-text v-model="cell.state.xInterval" type="number" label="X Label Interval" @input="draw" :timeout="600"/>
 				<n-form-combo v-model="cell.state.y" @input="draw" :required="true" label="Y Field" :filter="function() { return keys }"/>
+				<n-form-switch v-model="cell.state.drawGridX" label="Draw Grid X"/>
+				<n-form-switch v-model="cell.state.drawGridY" label="Draw Grid Y"/>
+				<n-form-text type="range" :minimum="0" :maximum="10" v-model="cell.state.areaOpacity" label="Area opacity" @input="draw" :timeout="600"/>
 				<page-formatted-configure v-if="cell.state.y" :fragment="cell.state.yFormat"/>
 				<n-form-combo v-model="cell.state.z" @input="draw" label="Z Field" :filter="function() { return keys }"/>
 				<n-form-text type="range" v-model="cell.state.rotateX" :minimum="0" :maximum="90" label="Rotation X Label" :timeout="600" @input="draw"/>
@@ -25,8 +28,10 @@
 				<n-form-text v-model="cell.state.pointRadius" v-if="!cell.state.drawMouseLine" type="range" :minimum="0" :maximum="10" label="Point Radius" @input="draw" :timeout="600"/>
 				<n-form-switch v-model="cell.state.drawMouseLine" v-if="!cell.state.pointRadius || cell.state.pointRadius <= 0" label="Draw line at mouse position" @input="draw"/>
 				<n-form-text type="range" v-model="cell.state.strokeWidth" label="Line thickness" :minimum="1" :maximum="10"/>
-				<n-form-combo v-if="false" v-model="cell.state.interpolation" label="Interpolation" @input="draw" 
-					:filter="getInterpolation"/>
+				<n-form-combo v-model="cell.state.interpolation" label="Interpolation" @input="draw" 
+					:filter="getInterpolationName"/>
+				<n-form-switch v-model="cell.state.zoomX" label="Zoom X" @input="draw"/>
+				<n-form-switch v-model="cell.state.zoomY" label="Zoom Y" @input="draw"/>
 			</n-form-section>
 		</data-common-header>
 		<svg ref="svg"></svg>

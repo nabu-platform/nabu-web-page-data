@@ -71,6 +71,11 @@ nabu.page.views.data.Donut = Vue.extend({
 					height = this.$el.offsetHeight - (self.cell.state.title ? 50 : 0),
 					radius = Math.min(width, height) / 2;
 					
+				// subtract for actions
+				if (self.globalActions.length) {
+					height -= 75;
+				}
+					
 				svg.attr('width', width + margin.left + margin.right)
 					.attr('height', height + margin.top + margin.bottom);
 					
@@ -200,7 +205,7 @@ nabu.page.views.data.Donut = Vue.extend({
 						return (midAngle(d)) < Math.PI ? 'start' : 'end';
 					});
 					
-// add lines connecting labels to slice. A polyline creates straight lines connecting several points
+				// add lines connecting labels to slice. A polyline creates straight lines connecting several points
 				var polyline = svg.select('.lines')
 					.datum(records).selectAll('polyline')
 					.data(pie)

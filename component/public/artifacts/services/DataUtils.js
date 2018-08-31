@@ -56,6 +56,7 @@ nabu.services.VueService(Vue.extend({
 					div.innerHTML = builder(data);
 				}
 			}
+			return div;
 		},
 		removeStandardD3Tooltip: function() {
 			var elements = document.body.querySelectorAll(".d3-tooltip");

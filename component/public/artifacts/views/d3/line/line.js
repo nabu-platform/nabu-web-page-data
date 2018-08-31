@@ -3,6 +3,12 @@ if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
+// features to add:
+// - a limit line, for example suppose the y values are between 0 and 100 and you want a reference to be drawn at 60, you could set a limit line there
+// 		- perhaps also allow an average limit line
+// - can do a "stacked" line chart (best seen in full area opacity)
+// 		- for each line, sum the values of all the previous lines as well (e.g. to show total profit)
+
 nabu.page.views.data.Line = Vue.extend({
 	template: "#data-line",
 	mixins: [nabu.page.views.data.DataCommon],
@@ -19,7 +25,11 @@ nabu.page.views.data.Line = Vue.extend({
 	},
 	data: function() {
 		return {
-			configuring: false
+			configuring: false,
+			// the current zoom level
+			zoom: 1,
+			zoomXOffset: 0,
+			zoomYOffset: 0
 		}
 	},
 	beforeDestroy: function() {
@@ -50,12 +60,6 @@ nabu.page.views.data.Line = Vue.extend({
 				});
 				var margin = {top: 20, right: 55, bottom: 30, left: 40};
 					
-				var x = d3.scaleBand()
-					.rangeRound([0, width]);
-				
-				var y = d3.scaleLinear()
-					.rangeRound([height, 0]);
-				
 				var svg = d3.select(this.$refs.svg),
 					width = this.$el.offsetWidth - margin.right - margin.left,
 					// reserve some space for title etc
@@ -88,7 +92,6 @@ nabu.page.views.data.Line = Vue.extend({
 				}
 				svg.attr('width', width + margin.left + margin.right)
 					.attr('height', height + margin.top + margin.bottom);
-					
 				
 				var g = svg.append("g")
 					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -101,17 +104,19 @@ nabu.page.views.data.Line = Vue.extend({
 					}
 				}
 				
+				// band = spread the values evenly over the available space so the gap between 0 and 10 is as big as the one between 10 and 10000
 				var x = d3.scaleBand()
 					.rangeRound([0, width])
 					.padding(0.1)
 					.domain(xValues)
-					.align(0.1);
-					
+					.align(0);
+				
+				// linear = spread the values as per their actual value, so the gap between 0 and 10 would be much smaller than the one between 10 and 10000	
 				var y = d3.scaleLinear()
 					.rangeRound([height, 0])
 					.domain([minY, maxY])
 					.nice();
-	
+					
 				var axisBottom = d3.axisBottom(x).tickFormat(function(d, index) {
 					if (self.cell.state.xInterval && index % self.cell.state.xInterval != 0) {
 						// if it is the last one, we want to make sure there is enough space with the previous one
@@ -127,7 +132,7 @@ nabu.page.views.data.Line = Vue.extend({
 					axisBottom.ticks(this.cell.state.xTicks);
 				}
 				var xAxis = g.append("g")
-					.attr("class", "axis")
+					.attr("class", "axis x-axis")
 					.attr("transform", "translate(0," + height + ")")
 					.call(axisBottom);
 					
@@ -139,11 +144,13 @@ nabu.page.views.data.Line = Vue.extend({
 						.attr("transform", "rotate(-" + this.cell.state.rotateX + ")");
 				}
 				
+				var axisLeft = d3.axisLeft(y).tickFormat(function(d) {
+					return self.$services.formatter.format(d, self.cell.state.yFormat);	
+				});
+				
 				var yAxis = g.append("g")
-					.attr("class", "axis")
-					.call(d3.axisLeft(y).tickFormat(function(d) {
-						return self.$services.formatter.format(d, self.cell.state.yFormat);	
-					}))
+					.attr("class", "axis y-axis")
+					.call(axisLeft)
 					.append("text")
 					.attr("class", "y-axis-label")
 					.attr("fill", "#333")
@@ -156,16 +163,21 @@ nabu.page.views.data.Line = Vue.extend({
 					yAxis.text(this.cell.state.yLabel);
 				}
 				
-				var line = d3.line()
-					.x(function (d) { return x(d.label) + x.bandwidth() / 2; })
+				var line = d3.line();
+				
+				if (self.cell.state.interpolation) {
+					var algo = this.getInterpolation().filter(function(x) { return x.name == self.cell.state.interpolation })[0];
+					if (algo) {
+						line.curve(algo.algo);
+					}
+				}
+				
+				// the addition is probably to center the value in the middle of the bandwidth
+				line.x(function (d) { return x(d.label) }) //  + x.bandwidth() / 2;
 					.y(function (d) { return y(d.value); });
 					
-				if (self.cell.state.interpolation) {
-					line.curve(self.cell.state.interpolation);
-				}
-					
 				var color = d3.scaleLinear()
-					.domain([0, zValues.length ? zValues.length : 1])
+					.domain([0, zValues.length ? zValues.length - 1 : 1])
 					.range([this.fromColor, this.toColor])
 					.interpolate(d3.interpolateHcl);
 					
@@ -200,29 +212,44 @@ nabu.page.views.data.Line = Vue.extend({
 					self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.buildToolTip);	
 				};
 				
+				this.drawGrid(svg, width, height, margin, x, y);
+				
 				var series = svg.selectAll(".series")
 					.data(seriesData)
 					.enter().append("g")
-					.attr("class", "series");
+					.attr("class", "series")
+					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 				
 				var strokeWidth = this.cell.state.strokeWidth;
 				if (!strokeWidth) {
-					strokeWidth = 1;
+					strokeWidth = 3;
 				}
+				var colorPicker = function (d) { return color(zValues.length ? zValues.indexOf(d.name) : 0); }
 				series.append("path")
-					.attr("class", "line")
+					.attr("class", function(d, index) { return "line line-" + index})
 					.attr("d", function (d) { return line(d.values); })
-					.style("stroke", function (d) { return color(zValues.length ? zValues.indexOf(d.name) : 0); })
+					.style("stroke", colorPicker)
 					.style("stroke-width", strokeWidth + "px")
-					.style("fill", "none")
-					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+					.style("fill", "none");
+				
+				if (self.cell.state.areaOpacity) {
+					var area = d3.area()
+						.x(function(d) { return x(d.label)  })
+						.y0(height)
+						.y1(function(d) { return y(d.value); });
+					series.append("path")
+				       .attr("class", "area")
+				       .attr("d", function (d) { return area(d.values); })
+				       .style("fill", colorPicker)
+				       .style("opacity", parseInt(self.cell.state.areaOpacity) / 10);
+				}
 				
 				if (self.cell.state.pointRadius) {
 					series.selectAll(".point")
 						.data(function (d) { return d.values; })
 						.enter().append("circle")
 						.attr("class", "point")
-						.attr("cx", function (d) { return x(d.label) + x.bandwidth()/2; })
+						.attr("cx", function (d) { return x(d.label); })
 						.attr("cy", function (d) { return y(d.value); })
 						.attr("r", self.cell.state.pointRadius + "px")
 						//.style("fill", function (d) { return color(zValues.length ? zValues.indexOf(d.name) : 0); })
@@ -237,7 +264,8 @@ nabu.page.views.data.Line = Vue.extend({
 				}
 				
 				if (this.cell.state.legend && zValues.length) {
-					var legend = g.append("g")
+					var legend = svg.append("g")
+						.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 						.attr("font-family", "sans-serif")
 						.attr("font-size", 10)
 						.attr("text-anchor", "end")
@@ -272,17 +300,110 @@ nabu.page.views.data.Line = Vue.extend({
 						zValues
 					);
 				}
+				
+				// zoom
+				if (this.cell.state.zoomX || this.cell.state.zoomY) {
+					var extent = [[margin.left, margin.top], [width - margin.right, height - margin.top]];
+					
+					var zoomed = function() {
+						// only works on linear scales, not scaleBand (it uses invert)
+						// xAxis.call(axisBottom.scale(d3.event.transform.rescaleX(x)));
+						// we don't want to zoom in the y-axis, also doesn't seem to work...?
+		  				//yAxis.call(axisLeft.scale(d3.event.transform.rescaleY(y)));
+		  				
+		  				
+						var t = d3.event.transform;
+						self.zoom = t.k;
+						self.zoomXOffset = t.x;
+						self.zoomYOffset = t.y;
+						
+						if (self.cell.state.zoomX) {
+							x.range([0, width + margin.left].map(function(d) {
+								return t.applyX(d);
+							}));
+							svg.selectAll(".x-axis").call(axisBottom);
+						}
+						if (self.cell.state.zoomY) {
+							y.range([height, 0].map(function(d) {
+								return t.applyY(d);
+							}));
+							svg.selectAll(".y-axis").call(axisLeft);
+						}
+						
+						// for bar charts
+						//svg.selectAll(".bars rect").attr("x", d => x(d.name)).attr("width", x.bandwidth());
+						
+						// the transform x & y are correct for translating into the position that your mouse is
+						// the scale we call always (?) returns an x & y of 0 so if you use that x & y, you always zoom at (0,0) independent of the mouse
+						
+						var scale = d3.zoomIdentity.scale(t.k);
+						// we can't go smaller than the original
+						if (scale.k < 1) {
+							scale.k = 1;
+						}
+						// by default the scale toString() method does this: translate(scale.x, scale.y) scale(scale.k)
+						// as per the documentation, a scale() with one parameter scales evenly in all directions
+						// we want directional scaling, so we stringify it ourselves
+						var scaleX = self.cell.state.zoomX ? scale.k : 1;
+						var scaleY = self.cell.state.zoomY ? scale.k : 1;
+						
+						var translateX = self.cell.state.zoomX ? t.x : 0;
+						var translateY = self.cell.state.zoomY ? t.y : 0;
+						
+						svg.selectAll(".line")
+							.attr("transform", "translate(" + translateX + "," + translateY + ") scale(" + scaleX + "," + scaleY + ")");
+						svg.selectAll(".area")
+							.attr("transform", "translate(" + translateX + "," + translateY + ") scale(" + scaleX + "," + scaleY + ")");
+							
+						svg.selectAll(".grid-y")
+							.attr("transform", "translate(" + margin.left + "," + (translateY + margin.top) + ") scale(" + scaleX + "," + scaleY + ")");
+							
+						// we added a small correction to the x translation
+						// it is not perfect but for some reason the x axis starts off with a smaller tick for 0 (space between origin and 0 and smaller than 0 and next value) and at first this is in sync with the grid x axis
+						// once you starts zooming however, this discrepency is "fixed" in the original x axis but because we zoom the grid lines differently, they are not adjusted correctly
+						// this is an approximation and not entirely accurate...
+						svg.selectAll(".grid-x")
+							.attr("transform", "translate(" + (margin.left + (3 * scale.k)) + "," + (height + margin.top) + ") scale(" + scaleX + "," + scaleY + ")");
+							
+					}
+					svg.call(d3.zoom()
+						.scaleExtent([1, 8])
+						.translateExtent(extent)
+						.extent(extent)
+						.on("zoom", zoomed));
+				}
 			}
 		},
 		getInterpolation: function() {
-			return [d3.curveLinear,d3.curveStepBefore,d3.curveStepAfter,d3.curveBasis,d3.curveBasisOpen, d3.curveBasisClosed, d3.curveBundle,d3.curveCardinal,d3.curveCardinal,d3.curveCardinalOpen,d3.curveCardinalClosed,d3.curveNatural];
+			return [
+				{name:"linear", algo: d3.curveLinear},
+				{name:"curveStep", algo: d3.curveStep},
+				{name:"curveStepBefore", algo: d3.curveStepBefore},
+				{name:"curveStepAfter", algo: d3.curveStepAfter},
+				{name:"curveBasis", algo: d3.curveBasis},
+				{name:"curveBasisOpen", algo: d3.curveBasisOpen},
+				{name:"curveBasisClosed", algo: d3.curveBasisClosed}, 
+				{name:"curveBundle", algo: d3.curveBundle},
+				{name:"curveCardinal", algo: d3.curveCardinal},
+				{name:"curveCardinalOpen", algo: d3.curveCardinalOpen},
+				{name:"curveCardinalCloed", algo: d3.curveCardinalClosed},
+				{name:"curveNatural", algo: d3.curveNatural},
+				{name:"curveMonotoneX", algo: d3.curveMonotoneX},
+				{name:"curveCatmullRom", algo: d3.curveCatmullRom}
+			];
+		},
+		getInterpolationName: function() {
+			return this.getInterpolation().map(function(x) { return x.name });
 		},
 		normalizeCustom: function(state) {
 			if (!state.x) {
 				Vue.set(state, "x", null);
 			}
+			if (!state.areaOpacity) {
+				Vue.set(state, "areaOpacity", 0);			
+			}
 			if (!state.strokeWidth) {
-				state.strokeWidth = 1;
+				state.strokeWidth = 3;
 			}
 			if (!state.xFormat) {
 				Vue.set(state, "xFormat", {});
@@ -303,10 +424,10 @@ nabu.page.views.data.Line = Vue.extend({
 				Vue.set(state, "yLabel", null);
 			}
 			if (!state.fromColor) {
-				Vue.set(state, "fromColor", null);
+				Vue.set(state, "fromColor", "#99c7fd");
 			}
 			if (!state.toColor) {
-				Vue.set(state, "toColor", null);
+				Vue.set(state, "toColor", "#f09980");
 			}
 			if (!state.legend) {
 				Vue.set(state, "legend", false);
@@ -332,7 +453,7 @@ nabu.page.views.data.Line = Vue.extend({
 			
 			mouseG.append("path") // this is the black vertical line to follow mouse
 				.attr("class", "mouse-line")
-				.style("stroke", "black")
+				.style("stroke", "#666")
 				.style("stroke-width", "1px")
 				.style("opacity", "0");
 			
@@ -349,12 +470,27 @@ nabu.page.views.data.Line = Vue.extend({
 				.style("stroke", function(d) {
 					return color(zValues.length ? zValues.indexOf(d.name) : 0);
 				})
+				.attr("class", "highlight-circle")
 				.style("fill", "none")
-				.style("stroke-width", "1px")
+				.style("stroke-width", "2px")
 				.style("opacity", "0");
 			
+			mousePerLine.append("rect")
+				// positions on top
+				//.attr("transform", "translate(-15,-10)");
+				// positions to the right
+				.attr("class", "highlight-rectangle")
+				.style("fill", "white")
+				.style("opacity", "0")
+				.attr("transform", "translate(12,-7)");
+			
 			mousePerLine.append("text")
-				.attr("transform", "translate(10,3)");
+				// positions on top
+				//.attr("transform", "translate(-15,-10)");
+				// positions to the right
+				.attr("class", "inline-information highlight-text")
+				.attr("transform", "translate(15,3)");
+				
 			
 			mouseG.append('svg:rect') // append a rect to catch mouse movements on canvas
 				.attr('width', width) // can't catch mouse events on a g element
@@ -364,37 +500,46 @@ nabu.page.views.data.Line = Vue.extend({
 				.on('mouseout', function() { // on mouse out hide line, circles and text
 					d3.select(self.$el).select(".mouse-line")
 						.style("opacity", "0");
-					d3.select(self.$el).selectAll(".mouse-per-line circle")
+					d3.select(self.$el).selectAll(".highlight-circle")
 						.style("opacity", "0");
-					d3.select(self.$el).selectAll(".mouse-per-line text")
+					d3.select(self.$el).selectAll(".highlight-text")
+						.style("opacity", "0");
+					d3.select(self.$el).selectAll(".highlight-rectangle")
 						.style("opacity", "0");
 				})
 				.on('mouseover', function() { // on mouse in show line, circles and text
 					d3.select(self.$el).select(".mouse-line")
 						.style("opacity", "1");
-					d3.select(self.$el).selectAll(".mouse-per-line circle")
+					d3.select(self.$el).selectAll(".highlight-circle")
 						.style("opacity", "1");
-					d3.select(self.$el).selectAll(".mouse-per-line text")
+					d3.select(self.$el).selectAll(".highlight-text")
+						.style("opacity", "1");
+					d3.select(self.$el).selectAll(".highlight-rectangle")
 						.style("opacity", "1");
 				})
 				.on('mousemove', function() { // mouse moving over canvas
 					var mouse = d3.mouse(this);
 					d3.select(self.$el).select(".mouse-line")
 						.attr("d", function() {
-						var d = "M" + mouse[0] + "," + height;
-						d += " " + mouse[0] + "," + 0;
-						return d;
-					});
-			
+							var d = "M" + mouse[0] + "," + height;
+							d += " " + mouse[0] + "," + 0;
+							return d;
+						});
+					// correct for the margin (slightly lazy correction...)
+					mouse[0] -= margin.left;
+					
 					d3.select(self.$el).selectAll(".mouse-per-line")
 						.attr("transform", function(d, i) {
-							var xDate = x.invert ? x.invert(mouse[0]) : self.getXFor(x, mouse[0]),
-							bisect = d3.bisector(function(d) { return d.date; }).right;
-							idx = bisect(d.values, xDate);
-					
+							// perhaps interesting if x is also linear instead of band?
+							// with the band scale we can determine the index with the getindexfor function
+							//var xDate = x.invert(mouse[0]),
+							//bisect = d3.bisector(function(d) { return d.date; }).right;
+							//idx = bisect(d.values, xDate);
+							
+							// total length == width?
 							var beginning = 0,
-							end = lines[i].getTotalLength(),
-							target = null;
+								end = lines[i].getTotalLength(),
+								target = null;
 					
 							while (true){
 								target = Math.floor((beginning + end) / 2);
@@ -402,27 +547,98 @@ nabu.page.views.data.Line = Vue.extend({
 								if ((target === end || target === beginning) && pos.x !== mouse[0]) {
 									break;
 								}
-								if (pos.x > mouse[0])      end = target;
-								else if (pos.x < mouse[0]) beginning = target;
-								else break; //position found
+								if (pos.x > mouse[0]) {
+									end = target;
+								}
+								else if (pos.x < mouse[0]) {
+									beginning = target;
+								}
+								//position found
+								else {
+									break;
+								}
 							}
 					
-							d3.select(this).select('text')
+							var index = self.getIndexFor(margin, x, mouse[0]);
+							index = Math.min(index, d.values.length - 1);
+							
+							
+							var div = document.createElement("div");
+							self.buildToolTip(d.values[index]).$mount().$appendTo(div);
+							var text = div.innerHTML.replace(/<[^>]+>/g, "");
+							
+							d3.select(this).select('.highlight-text')
+								.style("font-weight", "bold")
 								.style("fill", function(d) {
 									return color(zValues.length ? zValues.indexOf(d.name) : 0);
 								})
 								.style("font-size", "0.7rem")
-								.text(y.invert(pos.y).toFixed(2));
+								//.text(y.invert(pos.y).toFixed(2));
+								//.text(d.values[index].value + " (" + d.values[index].label + ")")
+								.text(text);
+							
+							var box = d3.select(this).select('.highlight-text').node().getBBox();
+							
+							d3.select(this).select(".highlight-rectangle")
+								.attr("width", box.width + 6)
+								.attr("height", box.height)
+								.style("fill", "#fff")
+								.style("stroke-width", "1px")
+								.style("stroke", function(d) {
+									return color(zValues.length ? zValues.indexOf(d.name) : 0);
+								})
 							
 							// no need to take the margin into effect here, we are using the x position which is relative to the mouseG
-							return "translate(" + mouse[0] + "," + pos.y +")";
+							//return "translate(" + mouse[0] + "," + (pos.y  + Math.abs(self.zoomYOffset)) +")";
+							// this works great...without zoom
+							//return "translate(" + mouse[0] + "," + pos.y +")";
+							return "translate(" + (mouse[0] + margin.left) + "," + y(d.values[index].value) +")";
 						});
 					});
 		},
 		// for scale bands (where the ticks are distributed evenly over the available space) we can calculate the inverse this way
-		getXFor: function(x, position) {
-			var index = Math.floor(position / x.step());
+		getXFor: function(margin, x, position) {
+			var index = this.getIndexFor(margin, x, position);
 			return x.domain()[index];
+		},
+		getIndexFor: function(margin, x, position) {
+			// the step size is correct for the given zoom level
+			var stepSize = x.step();
+			// however if we are zoomed in, there is (likely) a part invisible to the left, we need to account for those values
+			// the offset is negative in this case
+			return Math.floor((position + (margin.left * this.zoom) + Math.abs(this.zoomXOffset)) / stepSize);
+		},
+		drawGrid: function(svg, width, height, margin, x, y) {
+			if (this.cell.state.drawGridX) {
+				svg.append("g")
+					.attr("transform", "translate(" + margin.left + "," + (margin.top + height) + ")")
+					.attr("class", "grid grid-x")
+					.call(d3.axisBottom(x)
+						//.ticks(5)
+						.tickSize(-height)
+						.tickFormat("")
+					)
+			}
+			
+			if (this.cell.state.drawGridY) {
+				// add the Y gridlines
+				svg.append("g")			
+					.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+					.attr("class", "grid grid-y")
+					.call(d3.axisLeft(y)
+						//.ticks(10)
+						.tickSize(-width)
+						.tickFormat("")
+					);
+			}
+				
+			// change the color of the grid
+			d3.select(this.$refs.svg).selectAll(".grid line")
+				.style("stroke", "#eaeaea");
+				
+			// remove the outer most line which acts as the "base" of the axis
+			d3.select(this.$refs.svg).selectAll(".grid path")
+				.style("opacity", "0");
 		}
 	},
 	watch: {
