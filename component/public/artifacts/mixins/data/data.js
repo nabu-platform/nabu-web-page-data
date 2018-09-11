@@ -59,6 +59,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			type: Object,
 			required: false,
 			default: function() { return {} }
+		},
+		filters: {
+			type: Object,
+			required: false,
+			default: function() { return {} }
 		}
 	},
 	data: function() {
@@ -66,7 +71,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			actionHovering: false,
 			last: null,
 			showFilter: false,
-			filters: {},
 			ready: false,
 			subscriptions: [],
 			lastTriggered: null,
@@ -88,6 +92,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}
 	},
 	computed: {
+		self: function() {
+			return this;
+		},
 		filterable: function() {
 			return this.cell.state.filters.length;  
 		},
@@ -137,7 +144,10 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				var variable = this.cell.state.array.substring(0, this.cell.state.array.indexOf("."));
 				var rest = this.cell.state.array.substring(this.cell.state.array.indexOf(".") + 1);
 				if (available[variable]) {
-					nabu.utils.objects.merge(properties, this.$services.page.getChildDefinition(available[variable], rest).items.properties);
+					var childDefinition = this.$services.page.getChildDefinition(available[variable], rest);
+					if (childDefinition) {
+						nabu.utils.objects.merge(properties, childDefinition.items.properties);
+					}
 				}
 			}
 			return properties;
@@ -318,13 +328,14 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			}
 			var self = this;
 			var component = Vue.extend({
-				template: "<page-fields class='data-field' :cell='cell' :label='true' :page='page' :data='record' :should-style='true' :edit='edit'/>",
+				template: "<page-fields class='data-field' :cell='cell' :label='label' :page='page' :data='record' :should-style='true' :edit='edit'/>",
 				data: function() {
 					return {
 						cell: self.cell,
 						page: self.page,
 						record: d,
-						edit: self.edit
+						edit: self.edit,
+						label: self.cell.state.showFieldLabels
 					}
 				}
 			});
@@ -750,7 +761,10 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		},
 		loadArray: function() {
 			if (this.cell.state.array) {
-				var current = this.$services.page.getPageInstance(this.page, this).get(this.cell.state.array);
+				var current = this.$services.page.getValue(this.localState, this.cell.state.array);
+				if (current == null) {
+					current = this.$services.page.getPageInstance(this.page, this).get(this.cell.state.array);
+				}
 				if (current) {
 					this.records.splice(0, this.records.length);
 					nabu.utils.arrays.merge(this.records, current);
@@ -878,6 +892,19 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 			}
 		},
+		getFilterState: function() {
+			var state = {};
+			if (this.cell.state.filters) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				this.cell.state.filters.map(function(filter) {
+					if (self.cell.bindings[filter.name]) {
+						state[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name]);
+					}
+				})
+			}
+			return state;
+		},
 		load: function(page) {
 			if (this.refreshTimer) {
 				clearTimeout(this.refreshTimer);
@@ -905,13 +932,15 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					}
 				});
 				this.cell.state.filters.map(function(filter) {
-					parameters[filter.name] = filter.type == 'fixed' ? filter.value : self.filters[filter.name];	
+					parameters[filter.name] = filter.type == 'fixed' ? filter.value : self.filters[filter.name];
+					if (parameters[filter.name] == null && self.cell.bindings[filter.name]) {
+						parameters[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name]);
+					}
 				});
 				
 				if (this.orderable && this.orderBy.length) {
 					parameters.orderBy = this.orderBy;
 				}
-				
 				try {
 					this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
 						self.records.splice(0, self.records.length);
@@ -923,7 +952,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 						if (list.page) {
 							nabu.utils.objects.merge(self.paging, list.page);
 						}
-						else {
+						else if (!self.orderable) {
 							self.doInternalSort();
 						}
 						self.last = new Date();
@@ -938,7 +967,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					});
 				}
 				catch(error) {
-					console.warn("Could not run", this.cell.state.operation, error);
+					console.error("Could not run", this.cell.state.operation, error);
 					promise.resolve(error);
 				}
 			}

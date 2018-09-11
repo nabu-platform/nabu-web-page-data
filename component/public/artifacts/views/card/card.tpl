@@ -6,6 +6,7 @@
 				:configuring="configuring"
 				@close="$emit('close'); configuring=false"
 				:updatable="true"
+				:filters="filters"
 				:paging="paging">
 			<n-form-checkbox v-model="cell.state.showLabels" label="Show Labels" slot="main-settings"/>
 		</data-common-header>

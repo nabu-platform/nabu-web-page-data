@@ -8,9 +8,18 @@
 	}
 }
 .d3-tooltip {
-	padding: 1rem;
-	background-color: #feffc0;
+	padding: 0.5rem 0.7rem;
+	background-color: #f7f8e0;
+	color: #333;
 	dl {
+		margin: 0;
+		.page-field {
+			&+.page-field {
+				margin-top: 0.3rem;
+			}
+			display: flex;
+			justify-content: space-between;
+		}
 		dt {
 			display: inline-block;
 			font-weight: bold;
@@ -18,15 +27,18 @@
 				content: ': ';
 			}
 			margin-right: 0.3rem;
+			font-size: 0.6rem;
+			text-transform: uppercase;
 		}
 		dd {
 			margin-left: 0.3rem;
 			display: inline-block;
+			font-size: 0.6rem;
+			text-transform: uppercase;
 		}
 	}
 	border: $border;
 	border-radius: 5px;
-	font-size: 0.8rem;
 }
 .data-donut {
 	.content {

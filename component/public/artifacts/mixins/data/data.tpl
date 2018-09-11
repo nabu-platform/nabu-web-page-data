@@ -124,10 +124,10 @@
 			:filters="cell.state.filters"
 			:formatters="cell.state.formatters"
 			:orderable="orderable"
+			:state="getFilterState()"
 			@refresh="$emit('refresh')"
 			@filter="setFilter"
 			@sort="sort"/>
-			
 		<div class="content"><slot></slot></div>
 		<div class="global-actions" v-if="globalActions.length">
 			<component
@@ -270,7 +270,7 @@
 				<slot name="settings"></slot>
 			</n-form>
 		</n-sidebar>
-		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
+		<h2 v-if="cell.state.title">{{$services.page.interpret(cell.state.title, self)}}</h2>
 		
 		<component v-if="cell.state.filterType && !inactive" 
 			:is="cell.state.filterType.component" 
@@ -281,6 +281,7 @@
 			:filters="cell.state.filters"
 			:formatters="cell.state.formatters"
 			:orderable="orderable"
+			:state="getFilterState()"
 			@refresh="$emit('refresh')"
 			@filter="setFilter"
 			@sort="sort"/>

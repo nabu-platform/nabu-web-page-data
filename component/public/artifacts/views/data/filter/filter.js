@@ -20,12 +20,16 @@ Vue.component("data-filter-default", {
 		filters: {
 			type: Array,
 			required: true
+		},
+		state: {
+			type: Object,
+			required: false,
+			default: function() { return {} }
 		}
 	},
 	data: function() {
 		return {
-			showFilter: false,
-			state: {}
+			showFilter: false
 		}
 	},
 	methods: {

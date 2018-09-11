@@ -5,14 +5,17 @@
 				@updatedEvents="$emit('updatedEvents')"
 				:configuring="configuring"
 				@close="$emit('close'); configuring=false"
+				:filters="filters"
 				:paging="paging">
 			<n-form-section slot="main-settings">
+				<n-form-switch v-model="cell.state.showFieldLabels" label="Show field labels" @input="draw"/>
 				<n-form-text v-model="cell.state.unit" label="Unit" :timeout="600" @input="draw" />
 				<n-form-text v-model="cell.state.fromColor" type="color" :label="cell.state.z ? 'From Color' : 'Color'" :timeout="600" @input="draw" />
 				<n-form-text v-model="cell.state.toColor" v-if="cell.state.z" type="color" label="To Color" :timeout="600" @input="draw" />
 				<n-form-combo v-model="cell.state.x" @input="draw" label="X Field" :filter="function() { return keys }"/>
 				<page-formatted-configure v-if="cell.state.x" :fragment="cell.state.xFormat"/>
-				<n-form-text v-model="cell.state.xInterval" type="number" label="X Label Interval" @input="draw" :timeout="600"/>
+				<n-form-text v-model="cell.state.xTicks" type="number" label="X Label Amount" @input="draw" :timeout="600" v-if="!cell.state.xInterval"/>
+				<n-form-text v-model="cell.state.xInterval" type="number" label="X Label Interval" @input="draw" :timeout="600" v-if="!cell.state.xTicks"/>
 				<n-form-combo v-model="cell.state.y" @input="draw" :required="true" label="Y Field" :filter="function() { return keys }"/>
 				<n-form-switch v-model="cell.state.drawGridX" label="Draw Grid X"/>
 				<n-form-switch v-model="cell.state.drawGridY" label="Draw Grid Y"/>

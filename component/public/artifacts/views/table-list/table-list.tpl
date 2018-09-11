@@ -11,12 +11,12 @@
 				:configuring="configuring"
 				:updatable="true"
 				:paging="paging"
+				:filters="filters"
 				@refresh="refresh">
 			<n-collapsible slot="settings" title="Field widths">
 				<n-form-text :label="'Width for: ' + (field.label ? field.label : field.key)" :value="field.width" v-for="field in cell.state.fields" @input="function(newValue) { $window.Vue.set(field, 'width', newValue) }"/>
 			</n-collapsible>
 		</data-common-header>
-		
 		<ul class="table-list classic data" cellspacing="0" cellpadding="0" :class="dataClass" v-if="edit || showEmpty || records.length">
 			<li class="row title">
 				<span @click="sort(getSortKey(field))" v-for="field in cell.state.fields" :style="{'flex-grow': (field.width != null ? field.width : '1')}"

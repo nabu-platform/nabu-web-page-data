@@ -82,13 +82,6 @@ nabu.page.views.data.Bar = Vue.extend({
 					height -= longest * 14 * (Math.min(50, this.cell.state.rotateX) / 100);
 				}
 				
-				
-				for (var i = 0; i < xValues.length; i++) {
-					if (i % 12 != 0) {
-						xValues[i] = null;
-					}
-				}
-				
 				height = Math.max(0, height);
 					
 				svg.attr('width', width + margin.left + margin.right)
@@ -110,6 +103,17 @@ nabu.page.views.data.Bar = Vue.extend({
 					.domain([minY, maxY])
 					.nice();
 				
+				
+				var axisBottom = d3.axisBottom(x).tickFormat(function(d, index) {
+					if (self.cell.state.xInterval && index % self.cell.state.xInterval != 0) {
+						// if it is the last one, we want to make sure there is enough space with the previous one
+						if (index < xValues.length - 1 || index % self.cell.state.xInterval < 3) {
+							return "";
+						}
+					}
+					return self.$services.formatter.format(d, self.cell.state.xFormat);	
+				});
+				
 				var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 				
 				var htmlBuilder = null;
@@ -117,7 +121,7 @@ nabu.page.views.data.Bar = Vue.extend({
 				if (zValues.length) {
 					
 					var z = d3.scaleLinear()
-						.domain([0, zValues.length])
+						.domain([0, zValues.length - 1])
 						.range([this.fromColor, this.toColor])
 						.interpolate(d3.interpolateHcl);
 						
@@ -178,9 +182,7 @@ nabu.page.views.data.Bar = Vue.extend({
 						var xAxis = g.append("g")
 							.attr("class", "axis")
 							.attr("transform", "translate(0," + height + ")")
-							.call(d3.axisBottom(x).tickFormat(function(d) {
-								return self.$services.formatter.format(d, self.cell.state.xFormat);
-							}));
+							.call(axisBottom);
 						
 						// if you want to rotate the labels on the x axis, make it so scotty
 						if (this.cell.state.rotateX) {
@@ -231,31 +233,31 @@ nabu.page.views.data.Bar = Vue.extend({
 						g.append("g")
 							.selectAll("g")
 							.data(records)
-							.enter().append("g")
-							.attr("transform", function(d) { return "translate(" + x(self.$services.page.getValue(d, self.cell.state.x)) + ",0)"; })
-							.selectAll("rect")
-							//.data(function(d) { return zValues.map(function(key) { return {key: key, value: d[self.cell.state.y], data:d}; }); });
-							.data(function(d) { return zValues.map(function(key) { 
-								var record = data[key].filter(function(record) {
-									return self.$services.page.getValue(record, self.cell.state.z) == key
-										&& self.$services.page.getValue(record, self.cell.state.x) == self.$services.page.getValue(d, self.cell.state.x);
-								})[0];
-								return {key: key, value: record ? self.$services.page.getValue(record, self.cell.state.y) : 0, data:record}; 
-							}); })
-							.enter().append("rect")
-							.attr("class", "bar bar-" + self.cell.id)
-							.attr("x", function(d) { return xSub(d.key); })
-							.attr("y", function(d) { return y(d.value); })
-							.attr("width", xSub.bandwidth())
-							.attr("height", function(d) { return Math.max(0, height - y(d.value)); })
-							.attr("fill", function(d) { return z(zValues.indexOf(d.key)); });
-						
+							.enter()
+								.append("g")
+								.attr("transform", function(d) { return "translate(" + x(self.$services.page.getValue(d, self.cell.state.x)) + ",0)"; })
+								.selectAll("rect")
+								//.data(function(d) { return zValues.map(function(key) { return {key: key, value: d[self.cell.state.y], data:d}; }); });
+								.data(function(d) { return zValues.map(function(key) { 
+									var record = data[key].filter(function(record) {
+										return self.$services.page.getValue(record, self.cell.state.z) == key
+											&& self.$services.page.getValue(record, self.cell.state.x) == self.$services.page.getValue(d, self.cell.state.x);
+									})[0];
+									return {key: key, value: record ? self.$services.page.getValue(record, self.cell.state.y) : 0, data:record}; 
+								}); })
+								.enter()
+									.append("rect")
+									.attr("class", "bar bar-" + self.cell.id)
+									.attr("x", function(d) { return xSub(d.key); })
+									.attr("y", function(d) { return y(d.value); })
+									.attr("width", xSub.bandwidth())
+									.attr("height", function(d) { return Math.max(0, height - y(d.value)); })
+									.attr("fill", function(d) { return z(zValues.indexOf(d.key)); });
+							
 						var xAxis = g.append("g")
 							.attr("class", "axis")
 							.attr("transform", "translate(0," + height + ")")
-							.call(d3.axisBottom(x).tickFormat(function(d) {
-								return self.$services.formatter.format(d, self.cell.state.xFormat);	
-							}));
+							.call(axisBottom);
 						
 						// if you want to rotate the labels on the x axis, make it so scotty
 						if (this.cell.state.rotateX) {
@@ -316,9 +318,7 @@ nabu.page.views.data.Bar = Vue.extend({
 					var xAxis = g.append("g")
 						.attr("class", "axis axis--x")
 						.attr("transform", "translate(0," + height + ")")
-						.call(d3.axisBottom(x).tickFormat(function(d) {
-							return self.$services.formatter.format(d, self.cell.state.xFormat);	
-						}));
+						.call(axisBottom);
 						
 					// if you want to rotate the labels on the x axis, make it so scotty
 					if (this.cell.state.rotateX) {

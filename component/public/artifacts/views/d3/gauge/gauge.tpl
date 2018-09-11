@@ -5,6 +5,7 @@
 				@updatedEvents="$emit('updatedEvents')"
 				:configuring="configuring"
 				@close="$emit('close'); configuring=false"
+				:filters="filters"
 				:paging="paging">
 			<n-form-section slot="main-settings">
 				<n-form-text v-model="cell.state.valueColor" type="color" label="Value Color" :timeout="600" @input="draw" />

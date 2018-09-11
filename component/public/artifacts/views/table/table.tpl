@@ -11,6 +11,7 @@
 			:configuring="configuring"
 			:updatable="true"
 			:paging="paging"
+			:filters="filters"
 			@refresh="refresh"/>
 			
 		<table class="classic data" cellspacing="0" cellpadding="0" :class="dataClass" v-if="edit || showEmpty || records.length">

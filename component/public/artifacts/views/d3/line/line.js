@@ -8,6 +8,7 @@ if (!nabu.page.views.data) { nabu.page.views.data = {} }
 // 		- perhaps also allow an average limit line
 // - can do a "stacked" line chart (best seen in full area opacity)
 // 		- for each line, sum the values of all the previous lines as well (e.g. to show total profit)
+// - legend next to axis instead of on top: https://bl.ocks.org/wdickerson/bd654e61f536dcef3736f41e0ad87786
 
 nabu.page.views.data.Line = Vue.extend({
 	template: "#data-line",
@@ -58,7 +59,7 @@ nabu.page.views.data.Line = Vue.extend({
 				var records = this.records.filter(function(record) {
 					return typeof(record[self.cell.state.y]) != "undefined";
 				});
-				var margin = {top: 20, right: 55, bottom: 30, left: 40};
+				var margin = {top: 20, right: 55, bottom: 30, left: 50};
 					
 				var svg = d3.select(this.$refs.svg),
 					width = this.$el.offsetWidth - margin.right - margin.left,
@@ -96,14 +97,6 @@ nabu.page.views.data.Line = Vue.extend({
 				var g = svg.append("g")
 					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 				
-				if (this.cell.state.xInterval && false) {
-					for (var i = 0; i < xValues.length; i++) {
-						if (xValues[i] % this.cell.state.xInterval != 0) {
-							xValues[i] = 0;
-						}
-					}
-				}
-				
 				// band = spread the values evenly over the available space so the gap between 0 and 10 is as big as the one between 10 and 10000
 				var x = d3.scaleBand()
 					.rangeRound([0, width])
@@ -116,11 +109,16 @@ nabu.page.views.data.Line = Vue.extend({
 					.rangeRound([height, 0])
 					.domain([minY, maxY])
 					.nice();
-					
+
+				var xInterval = self.cell.state.xInterval;
+				// instead of an interval, we can define a max amount of ticks
+				if (xInterval == null && self.cell.state.xTicks) {
+					xInterval = Math.floor(xValues.length / self.cell.state.xTicks);
+				}
 				var axisBottom = d3.axisBottom(x).tickFormat(function(d, index) {
-					if (self.cell.state.xInterval && index % self.cell.state.xInterval != 0) {
+					if (xInterval && index % xInterval != 0) {
 						// if it is the last one, we want to make sure there is enough space with the previous one
-						if (index < xValues.length - 1 || index % self.cell.state.xInterval < 3) {
+						if (index < xValues.length - 1 || index % xInterval < 3) {
 							return "";
 						}
 					}
@@ -145,7 +143,14 @@ nabu.page.views.data.Line = Vue.extend({
 				}
 				
 				var axisLeft = d3.axisLeft(y).tickFormat(function(d) {
-					return self.$services.formatter.format(d, self.cell.state.yFormat);	
+					var result = self.$services.formatter.format(d, self.cell.state.yFormat);
+					if (typeof(result) == "number" && result >= 100000000) {
+						result = Math.round(result / 1000000) + "M";
+					}
+					if (typeof(result) == "number" && result >= 1000000) {
+						result = Math.round(result / 1000) + "k";
+					}
+					return result;
 				});
 				
 				var yAxis = g.append("g")
@@ -258,7 +263,7 @@ nabu.page.views.data.Line = Vue.extend({
 						.style("fill", "#fff")
 						.style("stroke", function (d) { return color(zValues.length ? zValues.indexOf(d.name) : 0); })
 						.style("stroke-width", "1px")
-						.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+						//.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 						.on("mouseover", htmlBuilder)
 						.on("mouseout",  self.$services.dataUtils.removeStandardD3Tooltip)
 				}
@@ -455,6 +460,7 @@ nabu.page.views.data.Line = Vue.extend({
 				.attr("class", "mouse-line")
 				.style("stroke", "#666")
 				.style("stroke-width", "1px")
+				.style("stroke-dasharray", "5,5")
 				.style("opacity", "0");
 			
 			var lines = self.$el.getElementsByClassName('line');
@@ -561,7 +567,6 @@ nabu.page.views.data.Line = Vue.extend({
 					
 							var index = self.getIndexFor(margin, x, mouse[0]);
 							index = Math.min(index, d.values.length - 1);
-							
 							
 							var div = document.createElement("div");
 							self.buildToolTip(d.values[index]).$mount().$appendTo(div);

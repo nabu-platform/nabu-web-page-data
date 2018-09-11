@@ -5,14 +5,16 @@ window.addEventListener("load", function() {
 			alias: "data-table",
 			enter: function(parameters) {
 				return new nabu.page.views.data.Table({propsData:parameters});
-			}
+			},
+			slow: true
 		});
 		
 		$services.router.register({
 			alias: "data-table-list",
 			enter: function(parameters) {
 				return new nabu.page.views.data.TableList({propsData:parameters});
-			}
+			},
+			slow: true
 		});
 		
 		// should be possible but no immediate usecase for it

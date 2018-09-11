@@ -20,12 +20,16 @@ Vue.component("data-combo-filter", {
 		filters: {
 			type: Array,
 			required: true
+		}, 
+		state: {
+			type: Object,
+			required: false,
+			default: function() { return {} }
 		}
 	},
 	data: function() {
 		return {
 			activeFilter: false,
-			state: {},
 			showLabels: false
 		}
 	},
