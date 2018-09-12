@@ -122,6 +122,17 @@ nabu.page.views.data.Line = Vue.extend({
 							return "";
 						}
 					}
+					else if (self.cell.state.xIntegerOnly) {
+						// only works on numbers
+						if (typeof(d) == "number") {
+							// if the value is an integer itself, show it
+							if (d != d.toFixed(1)) {
+								if (index > 0 && Math.floor(xValues[index - 1]) >= Math.floor(d)) {
+									return "";
+								}
+							}
+						}
+					}
 					return self.$services.formatter.format(d, self.cell.state.xFormat);	
 				});
 				

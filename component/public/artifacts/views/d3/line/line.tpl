@@ -14,8 +14,9 @@
 				<n-form-text v-model="cell.state.toColor" v-if="cell.state.z" type="color" label="To Color" :timeout="600" @input="draw" />
 				<n-form-combo v-model="cell.state.x" @input="draw" label="X Field" :filter="function() { return keys }"/>
 				<page-formatted-configure v-if="cell.state.x" :fragment="cell.state.xFormat"/>
-				<n-form-text v-model="cell.state.xTicks" type="number" label="X Label Amount" @input="draw" :timeout="600" v-if="!cell.state.xInterval"/>
-				<n-form-text v-model="cell.state.xInterval" type="number" label="X Label Interval" @input="draw" :timeout="600" v-if="!cell.state.xTicks"/>
+				<n-form-text v-model="cell.state.xTicks" type="number" label="X Label Amount" @input="draw" :timeout="600" v-if="!cell.state.xInterval && !cell.state.xIntegerOnly"/>
+				<n-form-text v-model="cell.state.xInterval" type="number" label="X Label Interval" @input="draw" :timeout="600" v-if="!cell.state.xTicks && !cell.state.xIntegerOnly"/>
+				<n-form-switch v-model="cell.state.xIntegerOnly" label="X Label Integer Numbers Only" v-if="!cell.state.xTicks && !cell.state.xInterval"/>
 				<n-form-combo v-model="cell.state.y" @input="draw" :required="true" label="Y Field" :filter="function() { return keys }"/>
 				<n-form-switch v-model="cell.state.drawGridX" label="Draw Grid X"/>
 				<n-form-switch v-model="cell.state.drawGridY" label="Draw Grid Y"/>
