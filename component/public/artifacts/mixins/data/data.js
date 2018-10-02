@@ -78,12 +78,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// the current order by
 			orderBy: [],
 			refreshTimer: null
-		}	
-	},
-	beforeDestroy: function() {
-		this.subscriptions.map(function(x) {
-			x();
-		});
+		}
 	},
 	ready: function() {
 		this.ready = true;
@@ -222,6 +217,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}
 	},
 	beforeDestroy: function() {
+		this.subscriptions.map(function(x) {
+			x();
+		});
 		if (this.refreshTimer) {
 			clearTimeout(this.refreshTimer);
 			this.refreshTimer = null;

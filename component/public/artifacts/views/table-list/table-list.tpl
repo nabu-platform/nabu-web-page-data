@@ -1,6 +1,6 @@
 <template id="data-table-list">
 	<div class="data-cell data-table-list">
-		<data-common-header :page="page" :parameters="parameters" :cell="cell" 
+		<data-common-header :page="page" :parameters="parameters" :cell="cell"
 				:edit="edit"
 				:records="records"
 				:selected="selected"

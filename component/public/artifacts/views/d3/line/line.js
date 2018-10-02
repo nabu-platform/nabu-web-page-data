@@ -59,7 +59,7 @@ nabu.page.views.data.Line = Vue.extend({
 				var records = this.records.filter(function(record) {
 					return typeof(record[self.cell.state.y]) != "undefined";
 				});
-				var margin = {top: 20, right: 55, bottom: 30, left: 50};
+				var margin = {top: this.cell.state.legendTop ? 30 : 20, right: 55, bottom: 30, left: 50};
 					
 				var svg = d3.select(this.$refs.svg),
 					width = this.$el.offsetWidth - margin.right - margin.left,
@@ -94,9 +94,6 @@ nabu.page.views.data.Line = Vue.extend({
 				svg.attr('width', width + margin.left + margin.right)
 					.attr('height', height + margin.top + margin.bottom);
 				
-				var g = svg.append("g")
-					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-				
 				// band = spread the values evenly over the available space so the gap between 0 and 10 is as big as the one between 10 and 10000
 				var x = d3.scaleBand()
 					.rangeRound([0, width])
@@ -110,6 +107,11 @@ nabu.page.views.data.Line = Vue.extend({
 					.domain([minY, maxY])
 					.nice();
 
+				this.drawGrid(svg, width, height, margin, x, y);
+				
+				var g = svg.append("g")
+					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+					
 				var xInterval = self.cell.state.xInterval;
 				// instead of an interval, we can define a max amount of ticks
 				if (xInterval == null && self.cell.state.xTicks) {
@@ -140,6 +142,7 @@ nabu.page.views.data.Line = Vue.extend({
 				if (this.cell.state.xTicks && false) {
 					axisBottom.ticks(this.cell.state.xTicks);
 				}
+				
 				var xAxis = g.append("g")
 					.attr("class", "axis x-axis")
 					.attr("transform", "translate(0," + height + ")")
@@ -228,8 +231,6 @@ nabu.page.views.data.Line = Vue.extend({
 					self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.buildToolTip);	
 				};
 				
-				this.drawGrid(svg, width, height, margin, x, y);
-				
 				var series = svg.selectAll(".series")
 					.data(seriesData)
 					.enter().append("g")
@@ -280,27 +281,80 @@ nabu.page.views.data.Line = Vue.extend({
 				}
 				
 				if (this.cell.state.legend && zValues.length) {
-					var legend = svg.append("g")
-						.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
-						.attr("font-family", "sans-serif")
-						.attr("font-size", 10)
-						.attr("text-anchor", "end")
-						.selectAll("g")
-						.data(zValues.slice().reverse())
-						.enter().append("g")
-						.attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+					if (!this.cell.state.legendTop) {
+						var legend = svg.append("g")
+							.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+							.attr("font-family", "sans-serif")
+							.attr("font-size", 10)
+							.attr("text-anchor", "end")
+							.selectAll("g")
+							.data(zValues.slice().reverse())
+							.enter()
+								.append("g")
+								.attr("class", "legend-entry")
+								.attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+								
+						legend.append("rect")
+							.attr("x", width - 19)
+							.attr("width", 19)
+							.attr("height", 19)
+							.attr("fill", function(d) { return color(zValues.indexOf(d)) });
+						
+						legend.append("text")
+							.attr("x", width - 24)
+							.attr("y", 9.5)
+							.attr("dy", "0.32em")
+							.text(function(d) { return d; });
+					}
+					else {
+						var legend = svg.append("g")
+							.attr("transform", "translate(" + margin.left + ", 0)")
+							.attr("font-family", "sans-serif")
+							.attr("font-size", 10)
+							.attr("text-anchor", "start")
+							.selectAll("g")
+							.data(zValues.slice())
+							.enter()
+								.append("g")
+								.attr("class", "legend-entry");
+
+						legend.append("rect")
+							.attr("width", 19)
+							.attr("height", 19)
+							.attr("fill", function(d) { return color(zValues.indexOf(d)) });
+						
+						legend.append("text")
+							.attr("dx", 25)
+							.attr("y", 9.5)
+							.attr("dy", "0.32em")
+							.text(function(d) { return d; });
+							
+						var totalWidth = 0;
+						svg.selectAll(".legend-entry")
+							.attr("transform", function(d, i, el) {
+								var result = "translate(" + totalWidth + ", 0)";
+								totalWidth += el.item(i).getBBox().width + 15;
+								return result;
+							});
+					}
 					
-					legend.append("rect")
-						.attr("x", width - 19)
-						.attr("width", 19)
-						.attr("height", 19)
-						.attr("fill", function(d) { return color(zValues.indexOf(d)) });
-					
-					legend.append("text")
-						.attr("x", width - 24)
-						.attr("y", 9.5)
-						.attr("dy", "0.32em")
-						.text(function(d) { return d; });
+					svg.selectAll(".legend-entry")
+						.on("click", function(d, i, el) {
+							if (el.item(i).classList.contains("hidden")) {
+								svg.select(".line-" + i)
+									.style("visibility", "visible")
+								svg.select(".mouse-per-line-" + i)
+									.style("visibility", "visible")
+								el.item(i).classList.remove("hidden");
+							}
+							else {
+								svg.select(".line-" + i)
+									.style("visibility", "hidden");
+								svg.select(".mouse-per-line-" + i)
+									.style("visibility", "hidden")
+								el.item(i).classList.add("hidden");
+							}
+						});
 				}
 				
 				if (this.cell.state.drawMouseLine) {
@@ -480,7 +534,7 @@ nabu.page.views.data.Line = Vue.extend({
 				.data(data)
 				.enter()
 				.append("g")
-				.attr("class", "mouse-per-line");
+				.attr("class", function(d, i) { return "mouse-per-line mouse-per-line-" + i });
 			
 			mousePerLine.append("circle")
 				.attr("r", 7)
