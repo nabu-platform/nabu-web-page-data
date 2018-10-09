@@ -44,6 +44,22 @@
 					</div>
 					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>
 				</n-collapsible>
+				<n-collapsible title="Download">
+					<div class="list-actions">
+						<button @click="addDownloadListener()">Add Download Listener</button>
+					</div>
+					<div v-if="cell.state.downloadOn">
+						<div v-for="i in Object.keys(cell.state.downloadOn)" class="list-row">
+							<n-form-combo v-model="cell.state.downloadOn[i].event"
+								:filter="getRefreshEvents"/>
+							<n-form-combo v-model="cell.state.downloadOn[i].contentType"
+								:filter="getContentTypes"
+								:formatter="function(x) { return x.type }"
+								:extracter="function(x) { return x.contentType }"/>
+							<button @click="cell.state.downloadOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
+						</div>
+					</div>
+				</n-collapsible>
 				<n-collapsible title="Mapping" class="mapping" v-if="Object.keys(inputParameters.properties).length">
 					<n-page-mapper :to="inputParameters" :from="availableParameters" 
 						v-model="cell.bindings"/>
@@ -148,7 +164,7 @@
 			<component
 				v-for="action in globalActions"
 				:is="action.type == 'link' ? 'a' : 'button'"
-				:disabled="action.useSelection && !lastTriggered"
+				:disabled="action.useSelection && !selected.length"
 				:class="[action.class, {'has-icon': action.icon}]"
 				href="javascript:void(0)"
 				v-action="function() { trigger(action) }"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{action.label}}</label></component>
@@ -200,6 +216,24 @@
 						<button @click="cell.state.refreshOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
 					</div>
 					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>
+				</n-collapsible>
+				<n-collapsible title="Download">
+					<div class="list-actions">
+						<button @click="addDownloadListener()">Add Download Listener</button>
+					</div>
+					<div v-if="cell.state.downloadOn">
+						<div v-for="i in Object.keys(cell.state.downloadOn)" class="list-row">
+							<n-form-combo v-model="cell.state.downloadOn[i].event"
+								:filter="getRefreshEvents"/>
+							<n-form-combo v-model="cell.state.downloadOn[i].contentType"
+								:filter="getContentTypes"
+								:formatter="function(x) { return x.type }"
+								:extracter="function(x) { return x.contentType }"/>
+							<n-form-text v-model="cell.state.downloadOn[i].fileName" placeholder="Filename"/>
+							<n-form-text v-model="cell.state.downloadOn[i].limit" placeholder="Limit"/>
+							<button @click="cell.state.downloadOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
+						</div>
+					</div>
 				</n-collapsible>
 				<n-collapsible title="Mapping" class="mapping" v-if="Object.keys(inputParameters.properties).length">
 					<n-page-mapper :to="inputParameters" :from="availableParameters" 

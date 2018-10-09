@@ -226,6 +226,32 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}	
 	},
 	methods: {
+		addDownloadListener: function() {
+			if (!this.cell.state.downloadOn) {
+				Vue.set(this.cell.state, "downloadOn", []);
+			}
+			this.cell.state.downloadOn.push({
+				event: null,
+				contentType: null,
+				limit: null,
+				fileName: null
+			});
+		},
+		getContentTypes: function() {
+			return [{
+				type: "xml",
+				contentType: "application/xml"
+			}, {
+				type: "json",
+				contentType: "application/json"
+			}, {
+				type: "csv",
+				contentType: "text/csv"
+			}, {
+				type: "xlsx",
+				contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+			}]
+		},
 		isFieldHidden: function(field, record) {
 			return !!field.hidden && this.$services.page.isCondition(field.hidden, {record:record}, this);
 		},
@@ -262,13 +288,50 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				this.cell.state.refreshOn.map(function(x) {
 					self.subscriptions.push(pageInstance.subscribe(x, function() {
-						self.load();
+						self.load(self.paging.current);
 					}));
 				});
+				if (this.cell.state.downloadOn) {
+					this.cell.state.downloadOn.map(function(x) {
+						self.subscriptions.push(pageInstance.subscribe(x.event, function() {
+							self.download(x);
+						}));
+					});
+				}
 			}
 			else {
 				done();
 			}
+		},
+		download: function(definition) {
+			var fileName = definition.fileName;
+			if (!fileName) {
+				var contentType = this.getContentTypes().filter(function(x) {
+					return x.contentType == definition.contentType;
+				})[0];
+				fileName = "unnamed";
+				if (contentType) {
+					fileName += "." + contentType.type;
+				}
+			}
+			var parameters = this.getRestParameters();
+			if (definition.limit == 0) {
+				delete parameters.limit;
+			}
+			else if (definition.limit != null) {
+				parameters.limit = definition.limit;
+			}
+			parameters = this.$services.swagger.parameters(this.cell.state.operation, parameters);
+			var url = parameters.url;
+			if (url.indexOf("?") < 0) {
+				url += "?";
+			}
+			else {
+				url += "&";
+			}
+			url += "header:Accept=" + definition.contentType;
+			url += "&header:Accept-Content-Disposition=attachment;filename=\"" + fileName + "\"";
+			window.location = url;
 		},
 		getDataOperations: function(value) {
 			return this.$services.dataUtils.getDataOperations(value).map(function(x) { return x.id });	
@@ -448,6 +511,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			}
 		},
 		trigger: function(action, data) {
+			console.log("triggering", action, data);
 			if (!action) {
 				this.lastTriggered = data;
 			}
@@ -457,7 +521,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				action = this.cell.state.actions.filter(function(x) {
 					return !x.icon && !x.label && !x.global;
 				})[0];
-				if (action.condition) {
+				if (action && action.condition) {
 					// we do want to change the event, just with a null value
 					if (!this.$services.page.isCondition(action.condition, {record:data}, this)) {
 						data = null;
@@ -903,6 +967,38 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			}
 			return state;
 		},
+		getRestParameters: function(page) {
+			var parameters = {};
+			var self = this;
+				
+			// we put a best effort limit & offset on there, but the operation might not support it
+			// at this point the parameter is simply ignored
+			var limit = this.cell.state.limit ? parseInt(this.cell.state.limit) : 20;
+			parameters.offset = (page ? page : 0) * limit;
+			parameters.limit = limit;
+			
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			// bind additional stuff from the page
+			Object.keys(this.cell.bindings).map(function(name) {
+				if (self.cell.bindings[name]) {
+					var value = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[name]);
+					if (value != null && typeof(value) != "undefined") {
+						parameters[name] = value;
+					}
+				}
+			});
+			this.cell.state.filters.map(function(filter) {
+				parameters[filter.name] = filter.type == 'fixed' ? filter.value : self.filters[filter.name];
+				if (parameters[filter.name] == null && self.cell.bindings[filter.name]) {
+					parameters[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name]);
+				}
+			});
+			
+			if (this.orderable && this.orderBy.length) {
+				parameters.orderBy = this.orderBy;
+			}
+			return parameters;
+		},
 		load: function(page) {
 			if (this.refreshTimer) {
 				clearTimeout(this.refreshTimer);
@@ -911,34 +1007,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			var promise = this.$services.q.defer();
 			if (this.cell.state.operation) {
 				var self = this;
-				var parameters = {};
-				
-				// we put a best effort limit & offset on there, but the operation might not support it
-				// at this point the parameter is simply ignored
-				var limit = this.cell.state.limit ? parseInt(this.cell.state.limit) : 20;
-				parameters.offset = (page ? page : 0) * limit;
-				parameters.limit = limit;
-				
-				var pageInstance = self.$services.page.getPageInstance(self.page, self);
-				// bind additional stuff from the page
-				Object.keys(this.cell.bindings).map(function(name) {
-					if (self.cell.bindings[name]) {
-						var value = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[name]);
-						if (value != null && typeof(value) != "undefined") {
-							parameters[name] = value;
-						}
-					}
-				});
-				this.cell.state.filters.map(function(filter) {
-					parameters[filter.name] = filter.type == 'fixed' ? filter.value : self.filters[filter.name];
-					if (parameters[filter.name] == null && self.cell.bindings[filter.name]) {
-						parameters[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name]);
-					}
-				});
-				
-				if (this.orderable && this.orderBy.length) {
-					parameters.orderBy = this.orderBy;
-				}
+				var parameters = this.getRestParameters(page);
 				try {
 					this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
 						self.records.splice(0, self.records.length);

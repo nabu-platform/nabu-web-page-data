@@ -1,0 +1,141 @@
+{
+	"namespace": "page", 
+	"name": "data", 
+	"resources": {
+		"page": {
+			"data": {
+				"mixins": {
+					"data": {
+						"data.js": {
+							"url": "mixins/data/data.js"
+						}, 
+						"data.tpl": {
+							"url": "mixins/data/data.tpl"
+						}
+					}
+				}, 
+				"services": {
+					"DataUtils.js": {
+						"url": "services/DataUtils.js"
+					}
+				}, 
+				"views": {
+					"table-list": {
+						"table-list.js": {
+							"url": "views/table-list/table-list.js"
+						}, 
+						"table-list.tpl": {
+							"url": "views/table-list/table-list.tpl"
+						}, 
+						"table-list.scss": {
+							"url": "views/table-list/table-list.scss"
+						}
+					}, 
+					"data": {
+						"combo-filter": {
+							"combo-filter.tpl": {
+								"url": "views/data/combo-filter/combo-filter.tpl"
+							}, 
+							"combo-filter.js": {
+								"url": "views/data/combo-filter/combo-filter.js"
+							}
+						}, 
+						"filter": {
+							"filter.tpl": {
+								"url": "views/data/filter/filter.tpl"
+							}, 
+							"filter.js": {
+								"url": "views/data/filter/filter.js"
+							}
+						}
+					}, 
+					"card": {
+						"card.tpl": {
+							"url": "views/card/card.tpl"
+						}, 
+						"card.js": {
+							"url": "views/card/card.js"
+						}, 
+						"card.sass": {
+							"url": "views/card/card.sass"
+						}
+					}, 
+					"table": {
+						"table.tpl": {
+							"url": "views/table/table.tpl"
+						}, 
+						"table.js": {
+							"url": "views/table/table.js"
+						}, 
+						"table.sass": {
+							"url": "views/table/table.sass"
+						}
+					}, 
+					"d3": {
+						"gauge": {
+							"gauge.tpl": {
+								"url": "views/d3/gauge/gauge.tpl"
+							}, 
+							"gauge.scss": {
+								"url": "views/d3/gauge/gauge.scss"
+							}, 
+							"gauge.js": {
+								"url": "views/d3/gauge/gauge.js"
+							}
+						}, 
+						"bar": {
+							"bar.tpl": {
+								"url": "views/d3/bar/bar.tpl"
+							}, 
+							"bar.js": {
+								"url": "views/d3/bar/bar.js"
+							}, 
+							"bar.sass": {
+								"url": "views/d3/bar/bar.sass"
+							}
+						}, 
+						"line": {
+							"line.scss": {
+								"url": "views/d3/line/line.scss"
+							}, 
+							"line.js": {
+								"url": "views/d3/line/line.js"
+							}, 
+							"line.tpl": {
+								"url": "views/d3/line/line.tpl"
+							}
+						}, 
+						"donut": {
+							"donut.js": {
+								"url": "views/d3/donut/donut.js"
+							}, 
+							"donut.sass": {
+								"url": "views/d3/donut/donut.sass"
+							}, 
+							"donut.tpl": {
+								"url": "views/d3/donut/donut.tpl"
+							}
+						}, 
+						"d3.v5.js": {
+							"url": "views/d3/d3.v5.js"
+						}
+					}, 
+					"multi": {
+						"multi.tpl": {
+							"url": "views/multi/multi.tpl"
+						}, 
+						"multi.js": {
+							"url": "views/multi/multi.js"
+						}, 
+						"multi.scss": {
+							"url": "views/multi/multi.scss"
+						}
+					}
+				}, 
+				"component.js": {
+					"url": "component.js"
+				}
+			}
+		}
+	}
+}
