@@ -59,7 +59,7 @@ nabu.page.views.data.Line = Vue.extend({
 				var records = this.records.filter(function(record) {
 					return typeof(record[self.cell.state.y]) != "undefined";
 				});
-				var margin = {top: this.cell.state.legendTop ? 30 : 20, right: 55, bottom: 30, left: 50};
+				var margin = {top: this.cell.state.legendPosition == "top" ? 30 : 20, right: 55, bottom: this.cell.state.legendPosition == "bottom" ? 40 : 30, left: 50};
 					
 				var svg = d3.select(this.$refs.svg),
 					width = this.$el.offsetWidth - margin.right - margin.left,
@@ -94,12 +94,21 @@ nabu.page.views.data.Line = Vue.extend({
 				svg.attr('width', width + margin.left + margin.right)
 					.attr('height', height + margin.top + margin.bottom);
 				
-				// band = spread the values evenly over the available space so the gap between 0 and 10 is as big as the one between 10 and 10000
-				var x = d3.scaleBand()
-					.rangeRound([0, width])
-					.padding(0.1)
-					.domain(xValues)
-					.align(0);
+				var isDate = this.cell.state.x && this.definition[this.cell.state.x].format.indexOf("date") == 0;
+				
+				if (!isDate) {
+					// band = spread the values evenly over the available space so the gap between 0 and 10 is as big as the one between 10 and 10000
+					var x = d3.scaleBand()
+						.rangeRound([0, width])
+						.padding(0.1)
+						.domain(xValues)
+						.align(0);
+				}
+				else {
+					var x = d3.scaleTime()
+						.rangeRound([0, width])
+						.domain(d3.extent(xValues, function(d) { return d; }));
+				}
 				
 				// linear = spread the values as per their actual value, so the gap between 0 and 10 would be much smaller than the one between 10 and 10000	
 				var y = d3.scaleLinear()
@@ -117,26 +126,34 @@ nabu.page.views.data.Line = Vue.extend({
 				if (xInterval == null && self.cell.state.xTicks) {
 					xInterval = Math.floor(xValues.length / self.cell.state.xTicks);
 				}
-				var axisBottom = d3.axisBottom(x).tickFormat(function(d, index) {
-					if (xInterval && index % xInterval != 0) {
-						// if it is the last one, we want to make sure there is enough space with the previous one
-						if (index < xValues.length - 1 || index % xInterval < 3) {
-							return "";
+				
+				if (!isDate) {
+					var axisBottom = d3.axisBottom(x).tickFormat(function(d, index) {
+						if (xInterval && index % xInterval != 0) {
+							// if it is the last one, we want to make sure there is enough space with the previous one
+							if (index < xValues.length - 1 || index % xInterval < 3) {
+								return "";
+							}
 						}
-					}
-					else if (self.cell.state.xIntegerOnly) {
-						// only works on numbers
-						if (typeof(d) == "number") {
-							// if the value is an integer itself, show it
-							if (d != d.toFixed(1)) {
-								if (index > 0 && Math.floor(xValues[index - 1]) >= Math.floor(d)) {
-									return "";
+						else if (self.cell.state.xIntegerOnly) {
+							// only works on numbers
+							if (typeof(d) == "number") {
+								// if the value is an integer itself, show it
+								if (d != d.toFixed(1)) {
+									if (index > 0 && Math.floor(xValues[index - 1]) >= Math.floor(d)) {
+										return "";
+									}
 								}
 							}
 						}
-					}
-					return self.$services.formatter.format(d, self.cell.state.xFormat);	
-				});
+						return self.$services.formatter.format(d, self.cell.state.xFormat);	
+					});
+				}
+				else {
+					var axisBottom = d3.axisBottom(x).tickFormat(function(d, index) {
+						return self.$services.formatter.format(d, self.cell.state.xFormat);	
+					});
+				}
 				
 				// the following if is incorrect
 				if (this.cell.state.xTicks && false) {
@@ -281,7 +298,7 @@ nabu.page.views.data.Line = Vue.extend({
 				}
 				
 				if (this.cell.state.legend && zValues.length) {
-					if (!this.cell.state.legendTop) {
+					if (!this.cell.state.legendPosition || this.cell.state.legendPosition == "right") {
 						var legend = svg.append("g")
 							.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 							.attr("font-family", "sans-serif")
@@ -308,7 +325,7 @@ nabu.page.views.data.Line = Vue.extend({
 					}
 					else {
 						var legend = svg.append("g")
-							.attr("transform", "translate(" + margin.left + ", 0)")
+							.attr("transform", "translate(" + margin.left + ", " + (this.cell.state.legendPosition == "top" ? "0" : height + margin.top + 30) + ")")
 							.attr("font-family", "sans-serif")
 							.attr("font-size", 10)
 							.attr("text-anchor", "start")
@@ -527,6 +544,9 @@ nabu.page.views.data.Line = Vue.extend({
 				.style("stroke-width", "1px")
 				.style("stroke-dasharray", "5,5")
 				.style("opacity", "0");
+				
+			mouseG.append("text")
+				.attr("class", "line-x-value");
 			
 			var lines = self.$el.getElementsByClassName('line');
 			
@@ -577,6 +597,8 @@ nabu.page.views.data.Line = Vue.extend({
 						.style("opacity", "0");
 					d3.select(self.$el).selectAll(".highlight-rectangle")
 						.style("opacity", "0");
+					d3.select(self.$el).selectAll(".line-x-value")
+						.style("opacity", "0");
 				})
 				.on('mouseover', function() { // on mouse in show line, circles and text
 					d3.select(self.$el).select(".mouse-line")
@@ -587,6 +609,8 @@ nabu.page.views.data.Line = Vue.extend({
 						.style("opacity", "1");
 					d3.select(self.$el).selectAll(".highlight-rectangle")
 						.style("opacity", "1");
+					d3.select(self.$el).selectAll(".line-x-value")
+						.style("opacity", "1");
 				})
 				.on('mousemove', function() { // mouse moving over canvas
 					var mouse = d3.mouse(this);
@@ -596,6 +620,15 @@ nabu.page.views.data.Line = Vue.extend({
 							d += " " + mouse[0] + "," + 0;
 							return d;
 						});
+					d3.select(self.$el).select(".line-x-value")
+						.attr("transform", function() {
+							return "translate(" + (mouse[0] + 10) + ",0)";
+						})
+						.text(function() {
+							var value = x.invert ? x.invert(mouse[0]) : x.domain()[self.getIndexFor(margin, x, mouse[0])];
+							return self.cell.state.xFormat ? self.$services.formatter.format(value, self.cell.state.xFormat) : value;
+						});
+						
 					// correct for the margin (slightly lazy correction...)
 					mouse[0] -= margin.left;
 					
@@ -630,12 +663,33 @@ nabu.page.views.data.Line = Vue.extend({
 								}
 							}
 					
-							var index = self.getIndexFor(margin, x, mouse[0]);
-							index = Math.min(index, d.values.length - 1);
+							if (x.invert) {
+								var value = x.invert(mouse[0] + margin.left);
+								var index = -1;
+								for (var i = 0; i < d.values.length; i++) {
+									// the x axis is ordered in time, so the first time we are above the x value, that is the index
+									if (i < d.values.length - 1 && value.getTime() < (d.values[i].label.getTime() + (d.values[i+1].label.getTime()-d.values[i].label.getTime())/2)) {
+										index = i;
+										break;
+									}
+									else if (i == d.values.length - 1) {
+										index = i;
+										break;
+									}
+								}
+							}
+							else {
+								var index = self.getIndexFor(margin, x, mouse[0]);
+								index = Math.min(index, d.values.length - 1);
+							}
 							
 							var div = document.createElement("div");
-							self.buildToolTip(d.values[index]).$mount().$appendTo(div);
+							self.buildToolTip(d.values[index].data).$mount().$appendTo(div);
 							var text = div.innerHTML.replace(/<[^>]+>/g, "");
+							
+							if (index < 0) {
+								index = 0;
+							}
 							
 							d3.select(this).select('.highlight-text')
 								.style("font-weight", "bold")
@@ -662,13 +716,14 @@ nabu.page.views.data.Line = Vue.extend({
 							//return "translate(" + mouse[0] + "," + (pos.y  + Math.abs(self.zoomYOffset)) +")";
 							// this works great...without zoom
 							//return "translate(" + mouse[0] + "," + pos.y +")";
-							return "translate(" + (mouse[0] + margin.left) + "," + y(d.values[index].value) +")";
+							//return "translate(" + (mouse[0] + margin.left) + "," + y(d.values[index].value) +")";
+							return "translate(" + (x(d.values[index].label)) + "," + y(d.values[index].value) +")";
 						});
 					});
 		},
 		// for scale bands (where the ticks are distributed evenly over the available space) we can calculate the inverse this way
 		getXFor: function(margin, x, position) {
-			var index = this.getIndexFor(margin, x, position);
+			var index = x.invert ? x.invert(position) : this.getIndexFor(margin, x, position);
 			return x.domain()[index];
 		},
 		getIndexFor: function(margin, x, position) {

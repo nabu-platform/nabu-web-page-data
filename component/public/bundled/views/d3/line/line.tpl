@@ -27,7 +27,7 @@
 				<n-form-text v-model="cell.state.yLabel" label="Y-Axis Label" :timeout="600" @input="draw" />
 				<n-form-text v-if="false" v-model="cell.state.xTicks" label="# X-axis ticks" :timeout="600" @input="draw" />
 				<n-form-switch v-model="cell.state.legend" label="Legend" @input="draw"/>
-				<n-form-switch v-model="cell.state.legendTop" label="Legend at the top?" v-if="cell.state.legend" @input="draw"/>
+				<n-form-combo v-model="cell.state.legendPosition" label="Position of legend" v-if="cell.state.legend" :items="['top', 'bottom', 'right']" @input="draw"/>
 				<n-form-combo v-model="cell.state.sortBy" @input="draw" label="Sort By" :items="['x', 'y']"/>
 				<n-form-switch v-model="cell.state.reverseSortBy" v-if="cell.state.orderBy" label="Reverse Sort By" @input="draw"/>
 				<n-form-text v-model="cell.state.pointRadius" v-if="!cell.state.drawMouseLine" type="range" :minimum="0" :maximum="10" label="Point Radius" @input="draw" :timeout="600"/>
