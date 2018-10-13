@@ -298,6 +298,9 @@ nabu.page.views.data.Line = Vue.extend({
 				}
 				
 				if (this.cell.state.legend && zValues.length) {
+					var zFormatter = function(d) {
+						return self.cell.state.zFormat ? self.$services.formatter.format(d, self.cell.state.zFormat) : d;
+					}
 					if (!this.cell.state.legendPosition || this.cell.state.legendPosition == "right") {
 						var legend = svg.append("g")
 							.attr("transform", "translate(" + margin.left + "," + margin.top + ")")
@@ -321,7 +324,7 @@ nabu.page.views.data.Line = Vue.extend({
 							.attr("x", width - 24)
 							.attr("y", 9.5)
 							.attr("dy", "0.32em")
-							.text(function(d) { return d; });
+							.text(zFormatter);
 					}
 					else {
 						var legend = svg.append("g")
@@ -344,7 +347,7 @@ nabu.page.views.data.Line = Vue.extend({
 							.attr("dx", 25)
 							.attr("y", 9.5)
 							.attr("dy", "0.32em")
-							.text(function(d) { return d; });
+							.text(zFormatter);
 							
 						var totalWidth = 0;
 						svg.selectAll(".legend-entry")
@@ -494,6 +497,9 @@ nabu.page.views.data.Line = Vue.extend({
 			}
 			if (!state.xFormat) {
 				Vue.set(state, "xFormat", {});
+			}
+			if (!state.zFormat) {
+				Vue.set(state, "zFormat", {});
 			}
 			if (!state.y) {
 				Vue.set(state, "y", null);

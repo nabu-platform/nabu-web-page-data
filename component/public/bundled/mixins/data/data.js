@@ -77,7 +77,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			query: null,
 			// the current order by
 			orderBy: [],
-			refreshTimer: null
+			refreshTimer: null,
+			loadTimer: null
 		}
 	},
 	ready: function() {
@@ -452,7 +453,15 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					pageInstance.emit(action.name, null);
 				}
 			})
-			this.load();
+			// we delay the reload in case of multiple filters firing
+			this.delayedLoad();
+		},
+		delayedLoad: function() {
+			if (this.loadTimer) {
+				clearTimeout(this.loadTimer);
+				this.loadTimer = null;
+			}
+			this.loadTimer = setTimeout(this.load, 100);
 		},
 		setComboFilter: function(value, label) {
 			this.setFilter(this.cell.state.filters.filter(function(x) { return x.label == label })[0], value);

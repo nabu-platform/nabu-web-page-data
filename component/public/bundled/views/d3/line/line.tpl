@@ -13,16 +13,17 @@
 				<n-form-text v-model="cell.state.fromColor" type="color" :label="cell.state.z ? 'From Color' : 'Color'" :timeout="600" @input="draw" />
 				<n-form-text v-model="cell.state.toColor" v-if="cell.state.z" type="color" label="To Color" :timeout="600" @input="draw" />
 				<n-form-combo v-model="cell.state.x" @input="draw" label="X Field" :filter="function() { return keys }"/>
-				<page-formatted-configure v-if="cell.state.x" :fragment="cell.state.xFormat"/>
+				<page-formatted-configure v-if="cell.state.x" :fragment="cell.state.xFormat" :page="page" :cell="cell"/>
 				<n-form-text v-model="cell.state.xTicks" type="number" label="X Label Amount" @input="draw" :timeout="600" v-if="!cell.state.xInterval && !cell.state.xIntegerOnly"/>
 				<n-form-text v-model="cell.state.xInterval" type="number" label="X Label Interval" @input="draw" :timeout="600" v-if="!cell.state.xTicks && !cell.state.xIntegerOnly"/>
 				<n-form-switch v-model="cell.state.xIntegerOnly" label="X Label Integer Numbers Only" v-if="!cell.state.xTicks && !cell.state.xInterval"/>
 				<n-form-combo v-model="cell.state.y" @input="draw" :required="true" label="Y Field" :filter="function() { return keys }"/>
+				<page-formatted-configure v-if="cell.state.y" :fragment="cell.state.yFormat" :page="page" :cell="cell"/>
 				<n-form-switch v-model="cell.state.drawGridX" label="Draw Grid X"/>
 				<n-form-switch v-model="cell.state.drawGridY" label="Draw Grid Y"/>
 				<n-form-text type="range" :minimum="0" :maximum="10" v-model="cell.state.areaOpacity" label="Area opacity" @input="draw" :timeout="600"/>
-				<page-formatted-configure v-if="cell.state.y" :fragment="cell.state.yFormat"/>
 				<n-form-combo v-model="cell.state.z" @input="draw" label="Z Field" :filter="function() { return keys }"/>
+				<page-formatted-configure v-if="cell.state.z" :fragment="cell.state.zFormat" :page="page" :cell="cell"/>
 				<n-form-text type="range" v-model="cell.state.rotateX" :minimum="0" :maximum="90" label="Rotation X Label" :timeout="600" @input="draw"/>
 				<n-form-text v-model="cell.state.yLabel" label="Y-Axis Label" :timeout="600" @input="draw" />
 				<n-form-text v-if="false" v-model="cell.state.xTicks" label="# X-axis ticks" :timeout="600" @input="draw" />
