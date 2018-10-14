@@ -10,7 +10,7 @@ if (!nabu.page.views.data) { nabu.page.views.data = {} }
 // 		- for each line, sum the values of all the previous lines as well (e.g. to show total profit)
 // - legend next to axis instead of on top: https://bl.ocks.org/wdickerson/bd654e61f536dcef3736f41e0ad87786
 
-nabu.page.views.data.Line = Vue.extend({
+nabu.page.views.data.Line = Vue.component("data-line", {
 	template: "#data-line",
 	mixins: [nabu.page.views.data.DataCommon],
 	created: function() {
@@ -30,7 +30,9 @@ nabu.page.views.data.Line = Vue.extend({
 			// the current zoom level
 			zoom: 1,
 			zoomXOffset: 0,
-			zoomYOffset: 0
+			zoomYOffset: 0,
+			svg: null,
+			hidden: []
 		}
 	},
 	beforeDestroy: function() {
@@ -61,11 +63,13 @@ nabu.page.views.data.Line = Vue.extend({
 				});
 				var margin = {top: this.cell.state.legendPosition == "top" ? 30 : 20, right: 55, bottom: this.cell.state.legendPosition == "bottom" ? 40 : 30, left: 50};
 					
-				var svg = d3.select(this.$refs.svg),
+				this.svg = d3.select(this.$refs.svg),
 					width = this.$el.offsetWidth - margin.right - margin.left,
 					// reserve some space for title etc
 					height = this.$el.offsetHeight - (self.cell.state.title ? 80 : 30);
 					
+				var svg = this.svg;
+				
 				// subtract for actions
 				if (self.globalActions.length) {
 					height -= 75;
@@ -77,6 +81,15 @@ nabu.page.views.data.Line = Vue.extend({
 				var zValues = result.zValues;
 				var minY = result.minY;
 				var maxY = result.maxY;
+				
+				var pageInstance = this.$services.page.getPageInstance(this.page, this);
+				
+				pageInstance.$emit("svg:predraw", {
+					source: this,
+					z: zValues,
+					x: xValues,
+					y: yValues
+				});
 				
 				// copy from bar.js to determine height based on angle of labels
 				if (this.cell.state.rotateX) {
@@ -213,10 +226,14 @@ nabu.page.views.data.Line = Vue.extend({
 					.y(function (d) { return y(d.value); });
 					
 				var color = d3.scaleLinear()
-					.domain([0, zValues.length ? zValues.length - 1 : 1])
+					.domain([0, Math.max(1, zValues.length - 1)])
 					.range([this.fromColor, this.toColor])
 					.interpolate(d3.interpolateHcl);
 					
+				if (this.cell.state.colorScheme) {
+					color = function(i) { return d3[self.cell.state.colorScheme][i] };
+				}
+				
 				var seriesData;
 				if (zValues.length) {
 					seriesData = zValues.map(function (name) {
@@ -377,6 +394,27 @@ nabu.page.views.data.Line = Vue.extend({
 						});
 				}
 				
+				var toggle = function(zValue) {
+					var zIndex = zValues.indexOf(zValue);
+					if (zIndex >= 0) {
+						var index = self.hidden.indexOf(zValue);
+						if (index >= 0) {
+							svg.select(".line-" + zIndex)
+								.style("visibility", "visible")
+							svg.select(".mouse-per-line-" + zIndex)
+								.style("visibility", "visible")
+							self.hidden.splice(index, 1);
+						}
+						else {
+							svg.select(".line-" + zIndex)
+								.style("visibility", "hidden");
+							svg.select(".mouse-per-line-" + zIndex)
+								.style("visibility", "hidden")
+							self.hidden.push(zValue);
+						}
+					}
+				}
+				
 				if (this.cell.state.drawMouseLine) {
 					this.drawLineAtMouse(
 						svg,
@@ -462,6 +500,15 @@ nabu.page.views.data.Line = Vue.extend({
 						.extent(extent)
 						.on("zoom", zoomed));
 				}
+				
+				pageInstance.$emit("svg:drawn", {
+					source: this,
+					color: color, 
+					z: zValues,
+					x: xValues,
+					y: yValues,
+					toggle: toggle
+				});
 			}
 		},
 		getInterpolation: function() {

@@ -10,8 +10,9 @@
 			<n-form-section slot="main-settings">
 				<n-form-switch v-model="cell.state.showFieldLabels" label="Show field labels" @input="draw"/>
 				<n-form-text v-model="cell.state.unit" label="Unit" :timeout="600" @input="draw" />
-				<n-form-text v-model="cell.state.fromColor" type="color" :label="cell.state.z ? 'From Color' : 'Color'" :timeout="600" @input="draw" />
-				<n-form-text v-model="cell.state.toColor" v-if="cell.state.z" type="color" label="To Color" :timeout="600" @input="draw" />
+				<n-form-combo v-model="cell.state.colorScheme" label="colorScheme" :items="['schemeSet2', 'schemeCategory10', 'schemeDark2']" @input="draw"/>
+				<n-form-text v-model="cell.state.fromColor" v-if="!cell.state.colorScheme" type="color" :label="cell.state.z ? 'From Color' : 'Color'" :timeout="600" @input="draw" />
+				<n-form-text v-model="cell.state.toColor && !cell.state.colorScheme" v-if="cell.state.z" type="color" label="To Color" :timeout="600" @input="draw" />
 				<n-form-combo v-model="cell.state.x" @input="draw" label="X Field" :filter="function() { return keys }"/>
 				<page-formatted-configure v-if="cell.state.x" :fragment="cell.state.xFormat" :page="page" :cell="cell"/>
 				<n-form-text v-model="cell.state.xTicks" type="number" label="X Label Amount" @input="draw" :timeout="600" v-if="!cell.state.xInterval && !cell.state.xIntegerOnly"/>
