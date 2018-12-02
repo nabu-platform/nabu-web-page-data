@@ -520,7 +520,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			}
 		},
 		trigger: function(action, data) {
-			console.log("triggering", action, data);
 			if (!action) {
 				this.lastTriggered = data;
 			}

@@ -24,7 +24,7 @@ nabu.services.VueService(Vue.extend({
 					// must have _a_ response
 					&& operation.responses["200"];
 				// we also need at least _a_ complex array in the results
-				if (isAllowed) {
+				if (isAllowed && operation.responses["200"] != null && operation.responses["200"].schema != null) {
 					var schema = operation.responses["200"].schema;
 					var definition = self.$services.swagger.definition(schema["$ref"]);
 					isAllowed = false;
@@ -70,7 +70,7 @@ nabu.services.VueService(Vue.extend({
 			var zValues = [];
 			var xValues = [];
 			var yValues = [];
-			var minY = 0;
+			var minY = Number.MAX_VALUE;
 			var self = this;
 			records.map(function(record, i) {
 				if (cell.state.z) {

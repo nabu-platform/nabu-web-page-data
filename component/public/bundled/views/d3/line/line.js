@@ -82,6 +82,10 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 				var minY = result.minY;
 				var maxY = result.maxY;
 				
+				if (minY > 0 && !!this.cell.state.zeroYAxis) {
+					minY = 0;
+				}
+				
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				
 				pageInstance.$emit("svg:predraw", {
@@ -106,7 +110,7 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 				}
 				svg.attr('width', width + margin.left + margin.right)
 					.attr('height', height + margin.top + margin.bottom);
-				
+				console.log("definition is", this.definition);
 				var isDate = this.cell.state.x && this.definition[this.cell.state.x].format.indexOf("date") == 0;
 				
 				if (!isDate) {
@@ -230,6 +234,7 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 					.range([this.fromColor, this.toColor])
 					.interpolate(d3.interpolateHcl);
 					
+				// https://github.com/d3/d3-scale-chromatic
 				if (this.cell.state.colorScheme) {
 					color = function(i) { return d3[self.cell.state.colorScheme][i] };
 				}
@@ -415,6 +420,15 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 					}
 				}
 				
+				// reinforce the hidden on redraw
+				this.hidden.map(function(x) {
+					var zIndex = zValues.indexOf(x);
+					svg.select(".line-" + zIndex)
+						.style("visibility", "hidden");
+					svg.select(".mouse-per-line-" + zIndex)
+						.style("visibility", "hidden")
+				});
+				
 				if (this.cell.state.drawMouseLine) {
 					this.drawLineAtMouse(
 						svg,
@@ -507,7 +521,8 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 					z: zValues,
 					x: xValues,
 					y: yValues,
-					toggle: toggle
+					toggle: toggle,
+					hidden: this.hidden
 				});
 			}
 		},

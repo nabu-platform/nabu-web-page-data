@@ -20,6 +20,7 @@
 				<n-form-switch v-model="cell.state.xIntegerOnly" label="X Label Integer Numbers Only" v-if="!cell.state.xTicks && !cell.state.xInterval"/>
 				<n-form-combo v-model="cell.state.y" @input="draw" :required="true" label="Y Field" :filter="function() { return keys }"/>
 				<page-formatted-configure v-if="cell.state.y" :fragment="cell.state.yFormat" :page="page" :cell="cell"/>
+				<n-form-switch v-model="cell.state.zeroYAxis" @input="draw" :required="false" label="Zero the y value axis"/>
 				<n-form-switch v-model="cell.state.drawGridX" label="Draw Grid X"/>
 				<n-form-switch v-model="cell.state.drawGridY" label="Draw Grid Y"/>
 				<n-form-text type="range" :minimum="0" :maximum="10" v-model="cell.state.areaOpacity" label="Area opacity" @input="draw" :timeout="600"/>
