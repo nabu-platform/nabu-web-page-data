@@ -103,7 +103,6 @@ nabu.page.views.data.Bar = Vue.extend({
 					.domain([minY, maxY])
 					.nice();
 				
-				
 				var axisBottom = d3.axisBottom(x).tickFormat(function(d, index) {
 					if (self.cell.state.xInterval && index % self.cell.state.xInterval != 0) {
 						// if it is the last one, we want to make sure there is enough space with the previous one
@@ -154,15 +153,29 @@ nabu.page.views.data.Bar = Vue.extend({
 							self.$services.page.setValue(single, self.cell.state.x, xValue);
 							//single[self.cell.state.x] = xValue;
 							records.map(function(record) {
-								if (self.$services.page.getValue(record, self.cell.state.x) == xValue) {
+								var recordX = self.$services.page.getValue(record, self.cell.state.x)
+								if (recordX == xValue || (recordX instanceof Date && xValue instanceof Date && recordX.getTime() == xValue.getTime())) {
 									self.$services.page.setValue(single, self.$services.page.getValue(record, self.cell.state.z), self.$services.page.getValue(record, self.cell.state.y));
 								}
-								else if (!self.$services.page.getValue(single, self.$services.page.getValue(record, self.cell.state.z))) {
+								else if (self.$services.page.getValue(single, self.$services.page.getValue(record, self.cell.state.z)) == null) {
 									self.$services.page.setValue(single, self.$services.page.getValue(record, self.cell.state.z), 0);
 								}
 							});
 							data.push(single);
-						})
+						});
+						var minGroupY = Number.MAX_VALUE, maxGroupY = 0;
+						data.map(function(x) {
+							var sum = zValues.reduce(function(sum, zValue) {
+								return sum + x[zValue];
+							}, 0);
+							if (sum < minGroupY) {
+								minGroupY = sum;
+							}
+							if (sum > maxGroupY) {
+								maxGroupY = sum;
+							}
+						});
+						y.domain([0, maxGroupY]);
 						
 						g.append("g")
 							.selectAll("g")
@@ -176,7 +189,7 @@ nabu.page.views.data.Bar = Vue.extend({
 								.attr("class", "bar bar-" + self.cell.id)
 								.attr("x", function(d, i) { return self.cell.state.x ? x(self.$services.page.getValue(d.data, self.cell.state.x)) : x(i); })
 								.attr("y", function(d) { return y(d[1]); })
-								.attr("height", function(d) { return Math.max(0, y(d[0]) - y(d[1])); })
+								.attr("height", function(d) { console.log("d", d, y(d[0]), y(d[1])); return Math.max(0, y(d[0]) - y(d[1])); })
 								.attr("width", x.bandwidth());
 						
 						var xAxis = g.append("g")
@@ -289,6 +302,10 @@ nabu.page.views.data.Bar = Vue.extend({
 					}
 					
 					if (this.cell.state.legend) {
+						var zFormatter = function(d) {
+							return self.cell.state.zFormat ? self.$services.formatter.format(d, self.cell.state.zFormat) : d;
+						}
+						
 						var legend = g.append("g")
 							.attr("font-family", "sans-serif")
 							.attr("font-size", 10)
@@ -308,7 +325,8 @@ nabu.page.views.data.Bar = Vue.extend({
 							.attr("x", width - 24)
 							.attr("y", 9.5)
 							.attr("dy", "0.32em")
-							.text(function(d) { return d; });
+							//.text(function(d) { return d; });
+							.text(zFormatter);
 					}
 				}
 				else {
@@ -377,6 +395,9 @@ nabu.page.views.data.Bar = Vue.extend({
 			}
 			if (!state.xFormat) {
 				Vue.set(state, "xFormat", {});
+			}
+			if (!state.zFormat) {
+				Vue.set(state, "zFormat", {});
 			}
 			if (!state.y) {
 				Vue.set(state, "y", null);

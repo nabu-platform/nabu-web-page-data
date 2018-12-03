@@ -70,6 +70,8 @@ nabu.services.VueService(Vue.extend({
 			var zValues = [];
 			var xValues = [];
 			var yValues = [];
+			// we use getTime() for dates
+			var xDateValues = [];
 			var minY = Number.MAX_VALUE;
 			var self = this;
 			records.map(function(record, i) {
@@ -81,7 +83,12 @@ nabu.services.VueService(Vue.extend({
 				}
 				if (cell.state.x) {
 					var x = self.$services.page.getValue(record, cell.state.x);
-					if (xValues.indexOf(x) < 0) {
+					if (x instanceof Date && xDateValues.indexOf(x.getTime()) < 0) {
+						xValues.push(x);
+						yValues.push(0);
+						xDateValues.push(x.getTime());
+					}
+					else if (!(x instanceof Date) && xValues.indexOf(x) < 0) {
 						xValues.push(x);
 						yValues.push(0);
 					}
