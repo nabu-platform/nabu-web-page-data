@@ -27,7 +27,7 @@
 				</span>
 				<span v-if="actions.length" class="actions"></span>
 			</li>
-			<li class="row" v-for="record in records" @click="select(record)" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0">
+			<li class="row" v-for="record in records" @click="select(record)" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0" :key="record.id ? record.id : records.indexOf(record)">
 				<page-field :field="field" :data="record" 
 					v-if="!isFieldHidden(field, record)"
 					:should-style="false" 

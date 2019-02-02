@@ -23,6 +23,7 @@
 				<n-form-switch v-model="cell.state.legend" label="Legend" @input="draw"/>
 				<n-form-combo v-model="cell.state.sortBy" @input="draw" label="Sort By" :items="['x', 'y']"/>
 				<n-form-switch v-model="cell.state.reverseSortBy" v-if="cell.state.orderBy" label="Reverse Sort By" @input="draw"/>
+				<n-form-text v-model="cell.state.maxBarWidth" label="Max Bar Width" type="number"/>
 			</n-form-section>
 		</data-common-header>
 		<svg ref="svg"></svg>

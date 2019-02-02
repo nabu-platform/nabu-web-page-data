@@ -68,6 +68,14 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 					// reserve some space for title etc
 					height = this.$el.offsetHeight - (self.cell.state.title ? 80 : 30);
 					
+				if (this.cell.state.legendPosition == "bottom") {
+					height -= 50;
+				}
+				
+				if (this.cell.state.filterType != null && this.cell.state.filterType.component == "data-combo-filter") {
+					height -= 70;
+				}
+					
 				var svg = this.svg;
 				
 				// subtract for actions

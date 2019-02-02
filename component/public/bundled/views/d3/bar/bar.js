@@ -52,6 +52,8 @@ nabu.page.views.data.Bar = Vue.extend({
 				var minY = result.minY;
 				var maxY = result.maxY;
 				
+				console.log("max is", minY, maxY);
+				
 				// we don't calculate the min y value here, for stacked bars this could be a concatenated value
 				// that means the "lowest" is the sum of many
 				// instead we want the absolute lowest
@@ -100,7 +102,8 @@ nabu.page.views.data.Bar = Vue.extend({
     				
 				var y = d3.scaleLinear()
 					.rangeRound([height, 0])
-					.domain([minY, maxY])
+					// add a little bit of extra room to the top
+					.domain([0, maxY + (maxY * 0.1)])
 					.nice();
 				
 				var axisBottom = d3.axisBottom(x).tickFormat(function(d, index) {
@@ -137,7 +140,13 @@ nabu.page.views.data.Bar = Vue.extend({
 							var xValue = self.$services.page.getValue(data.data, self.cell.state.x);
 							// now we need to pinpoint the correct record based on that information
 							var record = records.filter(function(x) {
-								return self.$services.page.getValue(x, self.cell.state.x) == xValue && self.$services.page.getValue(x, self.cell.state.z) == zValue;
+								var potentialX = self.$services.page.getValue(x, self.cell.state.x);
+								if (potentialX instanceof Date && xValue instanceof Date) {
+									return potentialX.getTime() == xValue.getTime() && self.$services.page.getValue(x, self.cell.state.z) == zValue; 
+								}
+								else {
+									return potentialX == xValue && self.$services.page.getValue(x, self.cell.state.z) == zValue;
+								}
 							})[0];
 							// build the standard tooltip from that
 							self.$services.dataUtils.buildStandardD3Tooltip(record, i, self.buildToolTip);	
@@ -175,7 +184,18 @@ nabu.page.views.data.Bar = Vue.extend({
 								maxGroupY = sum;
 							}
 						});
-						y.domain([0, maxGroupY]);
+						y.domain([0, maxGroupY + (maxGroupY * 0.1)]);
+						
+						var xShift = 0;
+						var barWidth = x.bandwidth();
+						if (this.cell.state.maxBarWidth) {
+							var max = parseInt(this.cell.state.maxBarWidth);
+							// if we need to make the bars smaller, we need to shift a little bit
+							if (barWidth > max) {
+								xShift = (barWidth - max) / 2;
+								barWidth = max;
+							}
+						}
 						
 						g.append("g")
 							.selectAll("g")
@@ -187,10 +207,10 @@ nabu.page.views.data.Bar = Vue.extend({
 							.data(function(d) { return d; })
 							.enter().append("rect")
 								.attr("class", "bar bar-" + self.cell.id)
-								.attr("x", function(d, i) { return self.cell.state.x ? x(self.$services.page.getValue(d.data, self.cell.state.x)) : x(i); })
-								.attr("y", function(d) { return y(d[1]); })
-								.attr("height", function(d) { console.log("d", d, y(d[0]), y(d[1])); return Math.max(0, y(d[0]) - y(d[1])); })
-								.attr("width", x.bandwidth());
+								.attr("x", function(d, i) { return xShift + (self.cell.state.x ? x(self.$services.page.getValue(d.data, self.cell.state.x)) : x(i)); })
+								.attr("y", function(d) { return y(d[1]) })
+								.attr("height", function(d) { return Math.max(0, y(d[0]) - y(d[1])) })
+								.attr("width", barWidth );
 						
 						var xAxis = g.append("g")
 							.attr("class", "axis")
@@ -241,8 +261,24 @@ nabu.page.views.data.Bar = Vue.extend({
 							}
 							data[zValue].push(record);
 						});
+						
+						var xShift = 0;
+						var barWidth = x.bandwidth() / zValues.length;
+						if (this.cell.state.maxBarWidth) {
+							var max = parseInt(this.cell.state.maxBarWidth);
+							// if we need to make the bars smaller, we need to shift a little bit
+							if (barWidth > max) {
+								// for reasons that are unclear, 1.5 is a better approximation than 2 which would be the logical choice (equal left over space on either side)
+								// this is measured against the x axis tick
+								xShift = ((barWidth - max) / 1.5);
+								barWidth = max;
+							}
+						}
+						
+						console.log("height is", height);
 
-						xSub.domain(zValues).rangeRound([0, x.bandwidth()]);
+						//xSub.domain(zValues).rangeRound([0, x.bandwidth()]);
+						xSub.domain(zValues).rangeRound([xShift, barWidth * zValues.length]);
 						g.append("g")
 							.selectAll("g")
 							.data(records)
@@ -261,7 +297,7 @@ nabu.page.views.data.Bar = Vue.extend({
 								.enter()
 									.append("rect")
 									.attr("class", "bar bar-" + self.cell.id)
-									.attr("x", function(d) { return xSub(d.key); })
+									.attr("x", function(d) { return xSub(d.key) + xShift; })
 									.attr("y", function(d) { return y(d.value); })
 									.attr("width", xSub.bandwidth())
 									.attr("height", function(d) { return Math.max(0, height - y(d.value)); })
@@ -386,7 +422,7 @@ nabu.page.views.data.Bar = Vue.extend({
 				// made specific by the cell.id
 				// so three different mechanisms for targetting for three different components, not good :|
 				// this is the worst of the three
-				d3.selectAll(".bar-" + self.cell.id).call(toolTip);
+				svg.selectAll(".bar-" + self.cell.id).call(toolTip);
 			}
 		},
 		normalizeCustom: function(state) {

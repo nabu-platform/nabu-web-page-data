@@ -183,11 +183,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			return result;
 		},
 		formAvailableParameters: function() {
-			return {
-				record: {
-					properties: this.definition
-				}
+			var result = this.$services.page.getAvailableParameters(this.page, this.cell, true);
+			result.record = {
+				properties: this.definition
 			};
+			return result;
 		},
 		keys: function() {
 			var keys = this.$services.page.getSimpleKeysFor({properties:this.definition});
@@ -402,18 +402,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 			});
 			return new component();
-			var html = "";
-			var counter = 0;
-			for (var index in this.keys) {
-				var key = this.keys[index];
-				if (!this.isHidden(key)) {
-					html += "<div class='property'><span class='key'>" 
-						+ (this.cell.state.result[key].label ? this.cell.state.result[key].label : key) 
-						+ "</span><span class='value'>" 
-						+ this.interpret(key, d[key], d) + "</span></div>";
-				}
-			}
-			return html;
 		},
 		getRefreshEvents: function(value) {
 			return this.$services.page.getPageInstance(this.page, this).getAvailableEvents();
@@ -560,6 +548,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 						}
 						else if (action.close) {
 							self.$emit("close");
+						}
+						else if (action.delete) {
+							self.records.splice(self.records.indexOf(data), 1);
 						}
 					});
 				}
@@ -904,9 +895,15 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		update: function(record) {
 			var parameters = {};
 			var self = this;
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			Object.keys(this.cell.state.updateBindings).map(function(key) {
 				if (self.cell.state.updateBindings[key]) {
-					parameters[key] = record[self.cell.state.updateBindings[key].substring("record.".length)];
+					if (self.cell.state.updateBindings[key].indexOf("record.") == 0) {
+						parameters[key] = record[self.cell.state.updateBindings[key].substring("record.".length)];
+					}
+					else {
+						parameters[key] = self.$services.page.getBindingValue(pageInstance, self.cell.state.updateBindings[key], self);
+					}
 				}
 			});
 			parameters.body = record;
@@ -969,7 +966,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				this.cell.state.filters.map(function(filter) {
 					if (self.cell.bindings[filter.name]) {
-						state[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name]);
+						state[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name], self);
 					}
 				})
 			}
@@ -981,9 +978,13 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				
 			// we put a best effort limit & offset on there, but the operation might not support it
 			// at this point the parameter is simply ignored
-			var limit = this.cell.state.limit ? parseInt(this.cell.state.limit) : 20;
+			var limit = this.cell.state.limit != null ? parseInt(this.cell.state.limit) : 20;
 			parameters.offset = (page ? page : 0) * limit;
 			parameters.limit = limit;
+			
+			if (parameters.limit == 0) {
+				delete parameters.limit;
+			}
 			
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			// bind additional stuff from the page

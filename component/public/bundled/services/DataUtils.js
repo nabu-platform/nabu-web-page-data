@@ -50,7 +50,7 @@ nabu.services.VueService(Vue.extend({
 				div.setAttribute("class", "d3-tooltip");
 				document.body.appendChild(div);
 				if (result.$mount) {
-					result.$mount().$appendTo(div);
+					//result.$mount().$appendTo(div);
 				}
 				else {
 					div.innerHTML = builder(data);
@@ -73,6 +73,7 @@ nabu.services.VueService(Vue.extend({
 			// we use getTime() for dates
 			var xDateValues = [];
 			var minY = Number.MAX_VALUE;
+			var maxY = null;
 			var self = this;
 			records.map(function(record, i) {
 				if (cell.state.z) {
@@ -99,6 +100,9 @@ nabu.services.VueService(Vue.extend({
 				var y = self.$services.page.getValue(record, cell.state.y);
 				if (minY == null || y < minY) {
 					minY = y;
+				}
+				if (maxY == null || y > maxY) {
+					maxY = y;
 				}
 				if (cell.state.x) {
 					yValues[xValues.indexOf(self.$services.page.getValue(record, cell.state.x))] += y;
@@ -141,7 +145,10 @@ nabu.services.VueService(Vue.extend({
 			}
 			
 			// calculate the range of the Y-axis
-			var maxY = d3.max(yValues);
+			//var maxY = d3.max(yValues);
+			
+			// changed @2019-01-25: if a zvalue is non-existent, it will throw an exception in barchart line 167: self.$services.page.setValue(single, self.$services.page.getValue(record, self.cell.state.z), self.$services.page.getValue(record, self.cell.state.y));
+			zValues = zValues.filter(function(x) { return x != null });
 			
 			return {
 				xValues: xValues,

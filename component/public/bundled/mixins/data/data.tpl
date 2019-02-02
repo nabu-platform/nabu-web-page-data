@@ -78,6 +78,7 @@
 						<n-form-text v-model="action.condition" label="Condition"/>
 						<n-form-switch v-model="action.refresh" label="Reload"/>
 						<n-form-switch v-model="action.close" label="Close"/>
+						<n-form-switch v-model="action.delete" label="Delete" v-if="!pageable && (!action.global || action.useSelection)"/>
 						<n-form-combo v-model="action.type" v-if="action.global" :items="['button', 'link']" :nillable="false" label="Type"/>
 						<div class="list-item-actions">
 							<button @click="upAction(action)"><span class="fa fa-chevron-circle-up"></span></button>
@@ -109,6 +110,15 @@
 						<n-form-text v-model="style.class" label="Class"/>
 						<n-form-text v-model="style.condition" label="Condition"/>
 						<button @click="cell.state.styles.splice(cell.state.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
+					</n-form-section>
+				</n-collapsible>
+				<n-collapsible title="Order By" class="list" v-if="orderable">
+					<div class="list-item-actions">
+						<button @click="cell.state.orderBy.push('')">Add Order By</button>
+					</div>
+					<n-form-section class="list-row" v-for="i in Object.keys(cell.state.orderBy)">
+						<n-form-combo v-model="cell.state.orderBy[i]" :items="$services.page.getSimpleKeysFor(inputParameters)"/>
+						<button @click="cell.state.orderBy.splice(i, 1)"><span class="fa fa-trash"></span></button>
 					</n-form-section>
 				</n-collapsible>
 				<n-collapsible title="Column Styling" class="list" v-if="false">
@@ -253,6 +263,7 @@
 						<n-form-text v-model="action.condition" label="Condition"/>
 						<n-form-switch v-model="action.refresh" label="Reload"/>
 						<n-form-switch v-model="action.close" label="Close"/>
+						<n-form-switch v-model="action.delete" label="Delete" v-if="!pageable && (!action.global || action.useSelection)"/>
 						<n-form-combo v-model="action.type" v-if="action.global" :items="['button', 'link']" :nillable="false" label="Type"/>
 						<div class="list-item-actions">
 							<button @click="upAction(action)"><span class="fa fa-chevron-circle-up"></span></button>
@@ -284,6 +295,15 @@
 						<n-form-text v-model="style.class" label="Class"/>
 						<n-form-text v-model="style.condition" label="Condition"/>
 						<button @click="cell.state.styles.splice(cell.state.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
+					</n-form-section>
+				</n-collapsible>
+				<n-collapsible title="Order By" class="list" v-if="orderable">
+					<div class="list-item-actions">
+						<button @click="cell.state.orderBy.push('')">Add Order By</button>
+					</div>
+					<n-form-section class="list-row" v-for="i in Object.keys(cell.state.orderBy)">
+						<n-form-combo v-model="cell.state.orderBy[i]" :items="$services.page.getSimpleKeysFor(inputParameters)"/>
+						<button @click="cell.state.orderBy.splice(i, 1)"><span class="fa fa-trash"></span></button>
 					</n-form-section>
 				</n-collapsible>
 				<n-collapsible title="Column Styling" class="list" v-if="false">
