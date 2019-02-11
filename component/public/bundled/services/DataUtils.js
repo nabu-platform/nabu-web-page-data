@@ -50,7 +50,7 @@ nabu.services.VueService(Vue.extend({
 				div.setAttribute("class", "d3-tooltip");
 				document.body.appendChild(div);
 				if (result.$mount) {
-					//result.$mount().$appendTo(div);
+					result.$mount().$appendTo(div);
 				}
 				else {
 					div.innerHTML = builder(data);

@@ -216,7 +216,7 @@
 						:to="formInputParameters"/>
 					<slot name="main-settings"></slot>
 				</n-collapsible>
-				<n-collapsible title="Refresh">
+				<n-collapsible title="Refresh" v-if="operation != null">
 					<div class="list-actions">
 						<button @click="cell.state.refreshOn.push(null)">Add Refresh Listener</button>
 					</div>
@@ -226,6 +226,16 @@
 						<button @click="cell.state.refreshOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
 					</div>
 					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>
+				</n-collapsible>
+				<n-collapsible title="Update" v-else-if="cell.state.array != null">
+					<div class="list-actions">
+						<button @click="cell.state.refreshOn.push(null)">Add To Array</button>
+					</div>
+					<div v-for="i in Object.keys(cell.state.refreshOn)" class="list-row">
+						<n-form-combo v-model="cell.state.refreshOn[i]"
+							:filter="getRefreshEvents"/>
+						<button @click="cell.state.refreshOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
+					</div>
 				</n-collapsible>
 				<n-collapsible title="Download">
 					<div class="list-actions">

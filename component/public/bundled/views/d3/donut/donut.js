@@ -66,15 +66,20 @@ nabu.page.views.data.Donut = Vue.extend({
 				nabu.utils.elements.clear(this.$refs.svg);
 				
 				var svg = d3.select(this.$refs.svg),
-					width = this.$el.offsetWidth,
+					width = this.$el.offsetWidth - 20,
 					// reserve some space for title etc
-					height = this.$el.offsetHeight - (self.cell.state.title ? 50 : 0),
-					radius = Math.min(width, height) / 2;
+					height = this.$el.offsetHeight - (self.cell.state.title ? 50 : 0);
 					
+				if (this.cell.state.filterType != null && this.cell.state.filterType.component == "data-combo-filter") {
+					height -= 70;
+				}
+				
 				// subtract for actions
 				if (self.globalActions.length) {
 					height -= 75;
 				}
+				
+				var radius = Math.min(width, height) / 2;
 					
 				svg.attr('width', width + margin.left + margin.right)
 					.attr('height', height + margin.top + margin.bottom);

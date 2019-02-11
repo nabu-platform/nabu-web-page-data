@@ -56,8 +56,8 @@
 						"card.js": {
 							"url": "views/card/card.js"
 						}, 
-						"card.sass": {
-							"url": "views/card/card.sass"
+						"card.scss": {
+							"url": "views/card/card.scss"
 						}
 					}, 
 					"table": {
@@ -67,8 +67,8 @@
 						"table.js": {
 							"url": "views/table/table.js"
 						}, 
-						"table.sass": {
-							"url": "views/table/table.sass"
+						"table.scss": {
+							"url": "views/table/table.scss"
 						}
 					}, 
 					"d3": {
@@ -90,8 +90,8 @@
 							"bar.js": {
 								"url": "views/d3/bar/bar.js"
 							}, 
-							"bar.sass": {
-								"url": "views/d3/bar/bar.sass"
+							"bar.scss": {
+								"url": "views/d3/bar/bar.scss"
 							}
 						}, 
 						"line": {
@@ -109,8 +109,8 @@
 							"donut.js": {
 								"url": "views/d3/donut/donut.js"
 							}, 
-							"donut.sass": {
-								"url": "views/d3/donut/donut.sass"
+							"donut.scss": {
+								"url": "views/d3/donut/donut.scss"
 							}, 
 							"donut.tpl": {
 								"url": "views/d3/donut/donut.tpl"

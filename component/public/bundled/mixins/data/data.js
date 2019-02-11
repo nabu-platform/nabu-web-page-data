@@ -289,7 +289,13 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				this.cell.state.refreshOn.map(function(x) {
 					self.subscriptions.push(pageInstance.subscribe(x, function() {
-						self.load(self.paging.current);
+						// mimic the frontend configuration logic
+						if (self.operation != null) {
+							self.load(self.paging.current);
+						}
+						else if (self.cell.state.array != null) {
+							self.pushToArray(pageInstance.get(x));
+						}
 					}));
 				});
 				if (this.cell.state.downloadOn) {
@@ -551,6 +557,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 						}
 						else if (action.delete) {
 							self.records.splice(self.records.indexOf(data), 1);
+							// TODO: do the delete in the original array as well?
 						}
 					});
 				}
@@ -819,6 +826,19 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				});
 			}
 			this.loadArray();
+		},
+		pushToArray: function(record) {
+			if (this.cell.state.array) {
+				var current = this.$services.page.getValue(this.localState, this.cell.state.array);
+				if (current == null) {
+					current = this.$services.page.getPageInstance(this.page, this).get(this.cell.state.array);
+				}
+				if (current != null) {
+					current.push(record);
+				}
+				this.records.push(record);
+				this.doInternalSort();
+			}
 		},
 		loadArray: function() {
 			if (this.cell.state.array) {
