@@ -227,6 +227,13 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}	
 	},
 	methods: {
+		getOrderByKeys: function(value) {
+			var keys = this.$services.page.getSimpleKeysFor({properties:this.definition});
+			if (value && keys.indexOf(value) < 0) {
+				keys.unshift(value);
+			}
+			return keys;
+		},
 		addDownloadListener: function() {
 			if (!this.cell.state.downloadOn) {
 				Vue.set(this.cell.state, "downloadOn", []);

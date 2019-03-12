@@ -8,11 +8,14 @@
 				:updatable="true"
 				:filters="filters"
 				:paging="paging">
-			<n-form-checkbox v-model="cell.state.showLabels" label="Show Labels" slot="main-settings"/>
+			<n-form-section slot="main-settings">
+				<n-form-checkbox v-model="cell.state.showLabels" label="Show Labels" />
+				<n-form-combo label="Direction" v-model="cell.state.direction" :items="['horizontal', 'vertical']"/>
+			</n-form-section>
 		</data-common-header>
 				
-		<div class="data-card-list" :class="dataClass" v-if="edit || records.length">
-			<dl class="data-card" v-for="record in records" :class="$services.page.getDynamicClasses(cell.state.styles, {record:record}, $self)">
+		<div class="data-card-list" :class="dataClass" v-if="edit || records.length" :style="{'flex-direction': cell.state.direction == 'vertical' ? 'column' : 'row-wrapped'}">
+			<dl class="data-card" v-for="record in records" :class="$services.page.getDynamicClasses(cell.state.styles, {record:record}, $self)" :key="record.id ? record.id : records.indexOf(record)">
 				<page-field :field="field" :data="record" :should-style="false" 
 					class="data-card-field" :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields"
 					v-if="!isFieldHidden(field, record)"

@@ -27,7 +27,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="record in records" @click="select(record)" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0">
+				<tr v-for="record in records" @click="select(record)" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0" :key="record.id ? record.id : records.indexOf(record)">
 					<td :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields" v-if="!isAllFieldHidden(field)">
 						<page-field :field="field" :data="record" 
 							v-if="!isFieldHidden(field, record)"

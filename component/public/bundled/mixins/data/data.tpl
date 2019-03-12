@@ -112,12 +112,12 @@
 						<button @click="cell.state.styles.splice(cell.state.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
 					</n-form-section>
 				</n-collapsible>
-				<n-collapsible title="Order By" class="list" v-if="orderable">
+				<n-collapsible title="Order By" v-if="orderable">
 					<div class="list-item-actions">
 						<button @click="cell.state.orderBy.push('')">Add Order By</button>
 					</div>
 					<n-form-section class="list-row" v-for="i in Object.keys(cell.state.orderBy)">
-						<n-form-combo v-model="cell.state.orderBy[i]" :items="$services.page.getSimpleKeysFor(inputParameters)"/>
+						<n-form-combo v-model="cell.state.orderBy[i]" :filter="getOrderByKeys"/>
 						<button @click="cell.state.orderBy.splice(i, 1)"><span class="fa fa-trash"></span></button>
 					</n-form-section>
 				</n-collapsible>
@@ -307,12 +307,12 @@
 						<button @click="cell.state.styles.splice(cell.state.styles.indexOf(style), 1)"><span class="fa fa-trash"></span></button>
 					</n-form-section>
 				</n-collapsible>
-				<n-collapsible title="Order By" class="list" v-if="orderable">
+				<n-collapsible title="Order By" v-if="orderable">
 					<div class="list-item-actions">
 						<button @click="cell.state.orderBy.push('')">Add Order By</button>
 					</div>
 					<n-form-section class="list-row" v-for="i in Object.keys(cell.state.orderBy)">
-						<n-form-combo v-model="cell.state.orderBy[i]" :items="$services.page.getSimpleKeysFor(inputParameters)"/>
+						<n-form-combo v-model="cell.state.orderBy[i]" :filter="getOrderByKeys"/>
 						<button @click="cell.state.orderBy.splice(i, 1)"><span class="fa fa-trash"></span></button>
 					</n-form-section>
 				</n-collapsible>
