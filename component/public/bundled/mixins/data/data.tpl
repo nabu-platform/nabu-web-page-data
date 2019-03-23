@@ -19,9 +19,12 @@
 					<n-form-text v-if="cell.state.operation" v-model="cell.state.autoRefresh" label="Auto-refresh"/>
 					<n-form-text v-model="cell.state.class" label="Class"/>
 					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()"/>
+					<n-form-switch v-if="!cell.state.loadMore && hasLimit" v-model="cell.state.loadLazy" label="Lazy Loading"/> 
+					<n-form-switch v-if="!cell.state.loadLazy && hasLimit" v-model="cell.state.loadMore" label="Load more button"/>
 					<n-form-switch v-if="multiselect" v-model="cell.state.multiselect" label="Allow Multiselect"/>
 					<n-form-combo label="Filter Type" :filter="function(value) { return $window.nabu.page.providers('data-filter') }" v-model="cell.state.filterType"
 						:formatter="function(x) { return x.name }"/>
+					<component v-if="cell.state.filterType && cell.state.filterType.configure" :is="cell.state.filterType.configure" :page="page" :cell="cell" :filters="cell.state.filters"/>
 					<n-form-text v-if="cell.state.filterType == 'combo'" v-model="cell.state.filterPlaceHolder" label="Combo placeholder"/>
 					<n-form-combo label="Update Operation" :value="cell.state.updateOperation"
 						v-if="updatable"
@@ -202,9 +205,12 @@
 					<n-form-text v-if="cell.state.operation" v-model="cell.state.autoRefresh" label="Auto-refresh"/>
 					<n-form-text v-model="cell.state.class" label="Class"/>
 					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()"/>
+					<n-form-switch v-if="!cell.state.loadMore && hasLimit" v-model="cell.state.loadLazy" label="Lazy Loading"/> 
+					<n-form-switch v-if="!cell.state.loadLazy && hasLimit" v-model="cell.state.loadMore" label="Load more button"/>
 					<n-form-switch v-if="multiselect" v-model="cell.state.multiselect" label="Allow Multiselect"/>
 					<n-form-combo label="Filter Type" :filter="function(value) { return $window.nabu.page.providers('data-filter') }" v-model="cell.state.filterType"
 						:formatter="function(x) { return x.name }"/>
+					<component v-if="cell.state.filterType && cell.state.filterType.configure" :is="cell.state.filterType.configure" :page="page" :cell="cell" :filters="cell.state.filters"/>
 					<n-form-text v-if="cell.state.filterType == 'combo'" v-model="cell.state.filterPlaceHolder" label="Combo placeholder"/>
 					<n-form-combo label="Update Operation" :value="cell.state.updateOperation"
 						v-if="updatable"

@@ -182,13 +182,16 @@ nabu.page.views.data.Donut = Vue.extend({
 					.datum(records).selectAll("text")
 					.data(pie)
 					.enter().append('text')
+					.attr('label-index', function(d, i) { return i })
 					.attr('dy', '.35em')
-					.html(function(d) {
+					.html(function(d, i) {
 						var value = "";
 						if (self.cell.state.label) {
 							value = d.data[self.cell.state.label];
 							if (self.cell.state.labelFormat) {
+								var original = value;
 								value = self.$services.formatter.format(value, self.cell.state.labelFormat);
+								self.$services.dataUtils.watchValue(original, self.cell.state.labelFormat, svg, i);
 							}
 						}
 						else {

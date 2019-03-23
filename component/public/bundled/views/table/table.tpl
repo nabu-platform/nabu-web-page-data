@@ -27,7 +27,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="record in records" @click="select(record)" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0" :key="record.id ? record.id : records.indexOf(record)">
+				<tr v-visible="lazyLoad.bind($self, record)" v-for="record in records" @click="select(record)" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0" :key="record.id ? record.id : records.indexOf(record)">
 					<td :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields" v-if="!isAllFieldHidden(field)">
 						<page-field :field="field" :data="record" 
 							v-if="!isFieldHidden(field, record)"
@@ -46,7 +46,10 @@
 				</tr>
 			</tbody>
 		</table>
-		<n-paging :value="paging.current" :total="paging.total" :load="load" :initialize="false"/>
+		<n-paging :value="paging.current" :total="paging.total" :load="load" :initialize="false" v-if="!cell.state.loadLazy && !cell.state.loadMore"/>
+		<div class="load-more" v-else-if="cell.state.loadMore && paging.current != null && paging.total != null && paging.current < paging.total - 1">
+			<button class="load-more-button" @click="load(paging.current + 1, true)">%{Load More}</button>
+		</div>
 		<div v-if="!edit && !records.length && !showEmpty" class="no-data">%{No data available}</div>
 		
 		<data-common-footer :page="page" :parameters="parameters" :cell="cell" 

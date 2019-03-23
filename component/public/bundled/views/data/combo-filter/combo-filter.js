@@ -33,6 +33,23 @@ Vue.component("data-combo-filter", {
 			showLabels: false
 		}
 	},
+	computed: {
+		tags: function() {
+			var self = this;
+			console.log("state is", this.state);
+			return this.filters.filter(function(filter) {
+				return self.state[filter.name] != null;
+			}).map(function(filter) {
+				return {
+					filter: filter,
+					value: self.state[filter.name + "$label"] ? self.state[filter.name + "$label"] : self.state[filter.name],
+					remove: function() {
+						self.setFilter(filter, null);
+					}
+				}
+			});
+		}
+	},
 	created: function() {
 		this.activeFilter = this.filters[0];
 	},
@@ -45,6 +62,33 @@ Vue.component("data-combo-filter", {
 			Vue.set(this.state, filter.name, newValue);
 			// broadcast to parent
 			this.$emit('filter', filter, newValue);
+		},
+		setLabel: function(filter, label) {
+			console.log("label is", label);
+			Vue.set(this.state, filter.name + "$label", label);
+		}
+	}
+})
+
+Vue.component("data-combo-filter-configure", {
+	template: "#data-combo-filter-configure",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		filters: {
+			type: Array,
+			required: true
+		}
+	},
+	created: function() {
+		if (!this.cell.state.comboFilter) {
+			Vue.set(this.cell.state, "comboFilter", {});
 		}
 	}
 })

@@ -15,7 +15,7 @@
 		</data-common-header>
 				
 		<div class="data-card-list" :class="dataClass" v-if="edit || records.length" :style="{'flex-direction': cell.state.direction == 'vertical' ? 'column' : 'row-wrapped'}">
-			<dl class="data-card" v-for="record in records" :class="$services.page.getDynamicClasses(cell.state.styles, {record:record}, $self)" :key="record.id ? record.id : records.indexOf(record)">
+			<dl class="data-card" @click="select(record)" v-visible="lazyLoad.bind($self, record)" v-for="record in records" :class="$services.page.getDynamicClasses(cell.state.styles, {record:record}, $self)" :key="record.id ? record.id : records.indexOf(record)">
 				<page-field :field="field" :data="record" :should-style="false" 
 					class="data-card-field" :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields"
 					v-if="!isFieldHidden(field, record)"
@@ -31,7 +31,10 @@
 				</div>
 			</dl>
 		</div>
-		<n-paging :value="paging.current" :total="paging.total" :load="load" :initialize="false"/>
+		<n-paging :value="paging.current" :total="paging.total" :load="load" :initialize="false" v-if="!cell.state.loadLazy && !cell.state.loadMore"/>
+		<div class="load-more" v-else-if="cell.state.loadMore && paging.current != null && paging.total != null && paging.current < paging.total - 1">
+			<button class="load-more-button" @click="load(paging.current + 1, true)">%{Load More}</button>
+		</div>
 		
 		<data-common-footer :page="page" :parameters="parameters" :cell="cell" 
 			:edit="edit"

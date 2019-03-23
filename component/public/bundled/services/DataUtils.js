@@ -1,6 +1,28 @@
 nabu.services.VueService(Vue.extend({
 	services: ["swagger"],
 	methods: {
+		watchValue: function(original, labelFormat, svg, i) {
+			var self = this;
+			if (labelFormat.format == "masterdata") {
+				var unwatch2 = self.$services.masterdata.$watch("masterdata.resolved." + original + ".label", function(newVal, oldVal) {
+					var value = self.$services.formatter.format(original, labelFormat);
+					if (value) {
+						svg.select("[label-index=\"" + i + "\"]").html(value);
+						unwatch2();
+					}
+				});
+			}
+			else if (labelFormat.format == "resolve") {
+				var key = labelFormat.resolveOperation + "." + labelFormat.resolveOperationIds;
+				var unwatch = self.$services.pageResolver.$watch("resolved." + key + "." + original, function(newVal, oldVal) {
+					var value = self.$services.formatter.format(original, labelFormat);
+					if (value) {
+						svg.select("[label-index=\"" + i + "\"]").html(value);
+						unwatch();
+					}
+				}); //{ deep: true, immediate: true }
+			}	
+		},
 		getOperations: function(accept) {
 			var result = [];
 			var operations = this.$services.swagger.operations;

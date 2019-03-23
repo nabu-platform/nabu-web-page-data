@@ -119,7 +119,7 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 				svg.attr('width', width + margin.left + margin.right)
 					.attr('height', height + margin.top + margin.bottom);
 				console.log("definition is", this.definition);
-				var isDate = this.cell.state.x && this.definition[this.cell.state.x].format.indexOf("date") == 0;
+				var isDate = this.cell.state.x && this.definition[this.cell.state.x].format && this.definition[this.cell.state.x].format.indexOf("date") == 0;
 				
 				if (!isDate) {
 					// band = spread the values evenly over the available space so the gap between 0 and 10 is as big as the one between 10 and 10000
@@ -328,7 +328,7 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 				}
 				
 				if (this.cell.state.legend && zValues.length) {
-					var zFormatter = function(d) {
+					var zFormatter = function(d, i) {
 						return self.cell.state.zFormat ? self.$services.formatter.format(d, self.cell.state.zFormat) : d;
 					}
 					if (!this.cell.state.legendPosition || this.cell.state.legendPosition == "right") {

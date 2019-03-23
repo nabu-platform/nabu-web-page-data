@@ -68,6 +68,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 	},
 	data: function() {
 		return {
+			filterState: null,
 			actionHovering: false,
 			last: null,
 			showFilter: false,
@@ -78,7 +79,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// the current order by
 			orderBy: [],
 			refreshTimer: null,
-			loadTimer: null
+			loadTimer: null,
+			lazyPromise: null
 		}
 	},
 	ready: function() {
@@ -987,17 +989,22 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			}
 		},
 		getFilterState: function() {
-			var state = {};
-			if (this.cell.state.filters) {
-				var self = this;
-				var pageInstance = self.$services.page.getPageInstance(self.page, self);
-				this.cell.state.filters.map(function(filter) {
-					if (self.cell.bindings[filter.name]) {
-						state[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name], self);
-					}
-				})
+			if (this.filterState == null) {
+				var state = {};
+				if (this.cell.state.filters) {
+					var self = this;
+					var pageInstance = self.$services.page.getPageInstance(self.page, self);
+					this.cell.state.filters.map(function(filter) {
+						if (self.cell.bindings[filter.name]) {
+							state[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name], self);
+						}
+					})
+				}
+				this.filterState = state;
 			}
-			return state;
+			// merge the currently set filters
+			nabu.utils.objects.merge(this.filterState, this.filters);
+			return this.filterState;
 		},
 		getRestParameters: function(page) {
 			var parameters = {};
@@ -1017,7 +1024,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// bind additional stuff from the page
 			Object.keys(this.cell.bindings).map(function(name) {
 				if (self.cell.bindings[name]) {
-					var value = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[name]);
+					var value = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[name], self);
 					if (value != null && typeof(value) != "undefined") {
 						parameters[name] = value;
 					}
@@ -1026,7 +1033,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			this.cell.state.filters.map(function(filter) {
 				parameters[filter.name] = filter.type == 'fixed' ? filter.value : self.filters[filter.name];
 				if (parameters[filter.name] == null && self.cell.bindings[filter.name]) {
-					parameters[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name]);
+					parameters[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name], self);
 				}
 			});
 			
@@ -1035,7 +1042,24 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			}
 			return parameters;
 		},
-		load: function(page) {
+		// see if we have to lazy load more records
+		lazyLoad: function(record) {
+			// current is 0-based
+			if (this.lazyPromise == null && this.paging && this.cell.state.loadLazy && this.paging.current != null && this.paging.total != null && this.paging.current < this.paging.total - 1) {
+				var index = this.records.indexOf(record);
+				// if we are in the final 10% of the table, try to load more
+				if (index >= Math.floor(this.records.length * 0.9)) {
+					this.lazyPromise = this.load(this.paging.current + 1, true);
+					var self = this;
+					this.lazyPromise.then(function() {
+						self.lazyPromise = null;
+					}, function() {
+						self.lazyPromise = null;
+					});
+				}
+			}
+		},
+		load: function(page, append) {
 			if (this.refreshTimer) {
 				clearTimeout(this.refreshTimer);
 				this.refreshTimer = null;
@@ -1046,9 +1070,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				var parameters = this.getRestParameters(page);
 				try {
 					this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
-						self.records.splice(0, self.records.length);
+						if (!append) {
+							self.records.splice(0, self.records.length);
+						}
 						Object.keys(list).map(function(field) {
-							if (list[field] instanceof Array && !self.records.length) {
+							if (list[field] instanceof Array) {
 								nabu.utils.arrays.merge(self.records, list[field]);
 							}
 						});
