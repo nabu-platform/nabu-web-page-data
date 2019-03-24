@@ -384,7 +384,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					definition = null;
 				}
 				this.cell.state.actions.map(function(action) {
-					result[action.name] = action.global && !action.useSelection
+					result[action.name] = action.global && (!action.useSelection && !action.useAll)
 						//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
 						? (self.cell.on ? self.cell.on : {})
 						: definition;
@@ -392,7 +392,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			}
 			else {
 				this.cell.state.actions.map(function(action) {
-					result[action.name] = action.global && !action.useSelection
+					result[action.name] = action.global && (!action.useSelection && !action.useAll)
 						? (self.cell.on ? self.cell.on : {})
 						: {properties:self.definition};
 				});
@@ -549,11 +549,23 @@ nabu.page.views.data.DataCommon = Vue.extend({
 							? this.selected
 							: (this.selected.length ? this.selected[0] : null);
 					}
+					else if (action.useAll) {
+						data = this.records;
+					}
 					else {
 						data = this.$services.page.getPageInstance(this.page, this).get(this.cell.on);
 					}
 					if (!data) {
 						data = {};
+					}
+					// if we give a live feed to the array, we can update it remotely
+					// we don't actually want this, new items can be retrieved through a refresh, selection is not an external concern
+					// the problem we had was feeding an array of parameters into a form with a predefined list of parameters
+					// the changes were done right in the records of this data which meant we saw them live while typing (cool!) but they could not be undone on cancel
+					if (data instanceof Array) {
+						var data = data.map(function(x) {
+							return nabu.utils.objects.clone(x);
+						});
 					}
 				}
 				if (action.name) {

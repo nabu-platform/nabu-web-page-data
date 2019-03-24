@@ -75,7 +75,8 @@
 						<n-form-text v-model="action.name" label="Name" @input="$emit('updatedEvents')"/>
 						<n-form-combo v-model="action.class" :filter="$services.page.getSimpleClasses" label="Class"/>
 						<n-form-switch v-model="action.global" label="Global" />
-						<n-form-switch v-model="action.useSelection" v-if="action.global" label="Use Selection" />
+						<n-form-switch v-model="action.useSelection" v-if="action.global && !action.useAll" label="Use Selection" />
+						<n-form-switch v-model="action.useAll" v-if="action.global && !action.useSelection" label="Use All" />
 						<n-form-text v-model="action.icon" label="Icon"/>
 						<n-form-text v-model="action.label" label="Label"/>
 						<n-form-text v-model="action.condition" label="Condition"/>
@@ -273,7 +274,8 @@
 						<n-form-text v-model="action.name" label="Name" @input="$emit('updatedEvents')"/>
 						<n-form-combo v-model="action.class" :filter="$services.page.getSimpleClasses" label="Class"/>
 						<n-form-switch v-model="action.global" label="Global" />
-						<n-form-switch v-model="action.useSelection" v-if="action.global" label="Use Selection" />
+						<n-form-switch v-model="action.useSelection" v-if="action.global && !action.useAll" label="Use Selection" />
+						<n-form-switch v-model="action.useAll" v-if="action.global && !action.useSelection" label="Use All" />
 						<n-form-text v-model="action.icon" label="Icon"/>
 						<n-form-text v-model="action.label" label="Label"/>
 						<n-form-text v-model="action.condition" label="Condition"/>
