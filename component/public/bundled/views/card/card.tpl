@@ -25,7 +25,7 @@
 					:page="page"
 					:cell="cell"/>
 				<div class="data-card-actions" v-if="actions.length" @mouseover="actionHovering = true" @mouseout="actionHovering = false">
-					<button v-if="!action.condition || isCondition(action.condition, {record:record}, $self)" 
+					<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
 						v-for="action in actions" 
 						@click="trigger(action, record)"
 						:class="[action.class, {'has-icon': action.icon}]"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{action.label}}</label></button>

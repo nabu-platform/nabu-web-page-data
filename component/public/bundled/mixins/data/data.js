@@ -704,6 +704,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			var state = {
 				record: record	
 			}
+			console.log("checking", condition, JSON.stringify(state, null, 2));
+			var $services = this.$services;
 			var result = eval(condition);
 			if (result instanceof Function) {
 				result = result(state);
