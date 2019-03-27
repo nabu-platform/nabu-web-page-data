@@ -19,6 +19,7 @@
 					<n-form-text v-if="cell.state.operation" v-model="cell.state.autoRefresh" label="Auto-refresh"/>
 					<n-form-text v-model="cell.state.class" label="Class"/>
 					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()"/>
+					<n-form-text v-model="cell.state.emptyPlaceholder" label="Empty Place Holder"/>
 					<n-form-switch v-if="!cell.state.loadMore && hasLimit" v-model="cell.state.loadLazy" label="Lazy Loading"/> 
 					<n-form-switch v-if="!cell.state.loadLazy && hasLimit" v-model="cell.state.loadMore" label="Load more button"/>
 					<n-form-switch v-if="multiselect" v-model="cell.state.multiselect" label="Allow Multiselect"/>
@@ -206,6 +207,7 @@
 					<n-form-text v-if="cell.state.operation" v-model="cell.state.autoRefresh" label="Auto-refresh"/>
 					<n-form-text v-model="cell.state.class" label="Class"/>
 					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()"/>
+					<n-form-text v-model="cell.state.emptyPlaceholder" label="Empty Place Holder"/>
 					<n-form-switch v-if="!cell.state.loadMore && hasLimit" v-model="cell.state.loadLazy" label="Lazy Loading"/> 
 					<n-form-switch v-if="!cell.state.loadLazy && hasLimit" v-model="cell.state.loadMore" label="Load more button"/>
 					<n-form-switch v-if="multiselect" v-model="cell.state.multiselect" label="Allow Multiselect"/>
