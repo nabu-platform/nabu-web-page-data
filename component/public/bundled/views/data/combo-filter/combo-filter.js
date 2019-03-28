@@ -64,8 +64,10 @@ Vue.component("data-combo-filter", {
 			this.$emit('filter', filter, newValue);
 		},
 		setLabel: function(filter, label) {
-			console.log("label is", label);
-			Vue.set(this.state, filter.name + "$label", label);
+			// if we get a label with the value "null" but the value is still here, the label is being reset for other reasons
+			if (label != null || this.state[filter.name] == null) {
+				Vue.set(this.state, filter.name + "$label", label);
+			}
 		}
 	}
 })
