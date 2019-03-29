@@ -36,6 +36,7 @@
 		<div class="load-more" v-else-if="cell.state.loadMore && paging.current != null && paging.total != null && paging.current < paging.total - 1">
 			<button class="load-more-button" @click="load(paging.current + 1, true)">%{Load More}</button>
 		</div>
+		<div v-if="!records.length && !showEmpty && cell.state.emptyPlaceholder" class="no-data">{{ $services.page.translate(cell.state.emptyPlaceholder) }}</div>
 		
 		<data-common-footer :page="page" :parameters="parameters" :cell="cell" 
 			:edit="edit"
