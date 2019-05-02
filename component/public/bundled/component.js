@@ -30,35 +30,40 @@ window.addEventListener("load", function() {
 			alias: "data-donut",
 			enter: function(parameters) {
 				return new nabu.page.views.data.Donut({propsData:parameters});
-			}
+			},
+			slow: true
 		});
 		
 		$services.router.register({
 			alias: "data-gauge",
 			enter: function(parameters) {
 				return new nabu.page.views.data.Gauge({propsData:parameters});
-			}
+			},
+			slow: true
 		});
 		
 		$services.router.register({
 			alias: "data-bar",
 			enter: function(parameters) {
 				return new nabu.page.views.data.Bar({propsData:parameters});
-			}
+			},
+			slow: true
 		});
 		
 		$services.router.register({
 			alias: "data-line",
 			enter: function(parameters) {
 				return new nabu.page.views.data.Line({propsData:parameters});
-			}
+			},
+			slow: true
 		});
 		
 		$services.router.register({
 			alias: "data-card",
 			enter: function(parameters) {
 				return new nabu.page.views.data.Card({propsData:parameters});
-			}
+			},
+			slow: true
 		});
 		
 		// form list providers

@@ -28,7 +28,7 @@
 					<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
 						v-for="action in actions" 
 						@click="trigger(action, record)"
-						:class="[action.class, {'has-icon': action.icon}]"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{action.label}}</label></button>
+						:class="[action.class, {'has-icon': action.icon}]"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></button>
 				</div>
 			</dl>
 		</div>

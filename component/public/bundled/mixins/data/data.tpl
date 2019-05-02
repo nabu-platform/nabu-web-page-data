@@ -97,7 +97,7 @@
 					:cell="cell"
 					:fields="cell.state.filters" 
 					:possible-fields="filtersToAdd()"/>
-				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="!!cell.state.updateOperation"/>
+				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="!!cell.state.updateOperation" :allow-events="false"/>
 				<n-collapsible title="Formatters" class="list" v-if="false">
 					<n-collapsible class="list-item" :title="cell.state.result[key].label ? cell.state.result[key].label : key" v-for="key in keys">
 						<n-form-text v-model="cell.state.result[key].label" :label="'Label for ' + key" 
@@ -144,7 +144,7 @@
 				<slot name="settings"></slot>
 			</n-form>
 		</n-sidebar>
-		<h2 v-if="cell.state.title">{{cell.state.title}}</h2>
+		<h2 v-if="cell.state.title">{{$services.page.translate($services.page.interpret(cell.state.title, $self))}}</h2>
 
 		<component v-if="cell.state.filterType && !inactive" 
 			:is="cell.state.filterType.component" 
@@ -168,7 +168,7 @@
 				:disabled="action.useSelection && !lastTriggered"
 				:class="[action.class, {'has-icon': action.icon}]"
 				href="javascript:void(0)"
-				v-action="function() { trigger(action) }"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{action.label}}</label></component>
+				v-action="function() { trigger(action) }"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></component>
 		</div>
 	</div>
 </template>
@@ -182,7 +182,7 @@
 				:disabled="action.useSelection && !selected.length"
 				:class="[action.class, {'has-icon': action.icon}]"
 				href="javascript:void(0)"
-				v-action="function() { trigger(action) }"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{action.label}}</label></component>
+				v-action="function() { trigger(action) }"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></component>
 		</div>
 	</div>
 </template>
@@ -297,7 +297,7 @@
 					:cell="cell"
 					:fields="cell.state.filters" 
 					:possible-fields="filtersToAdd()"/>
-				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="!!cell.state.updateOperation"/>
+				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="!!cell.state.updateOperation" :allow-events="false"/>
 				<n-collapsible title="Formatters" class="list" v-if="false">
 					<n-collapsible class="list-item" :title="cell.state.result[key].label ? cell.state.result[key].label : key" v-for="key in keys">
 						<n-form-text v-model="cell.state.result[key].label" :label="'Label for ' + key" 
