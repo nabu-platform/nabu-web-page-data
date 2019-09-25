@@ -149,7 +149,8 @@ nabu.page.views.data.Bar = Vue.extend({
 								}
 							})[0];
 							// build the standard tooltip from that
-							self.$services.dataUtils.buildStandardD3Tooltip(record, i, self.buildToolTip);	
+							//self.$services.dataUtils.buildStandardD3Tooltip(record, i, self.buildToolTip);	
+							self.$services.dataUtils.buildStandardD3Tooltip(record, i, self.buildSimpleToolTip(self.cell.state.y));	
 						};
 						// we need to transform the data, we receive M records
 						// where each record has one combination of x,y,z
@@ -249,7 +250,8 @@ nabu.page.views.data.Bar = Vue.extend({
 					// side-by-side: https://bl.ocks.org/mbostock/3887051
 					else {
 						htmlBuilder = function (data, i) {
-							self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.buildToolTip);	
+							//self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.buildToolTip);	
+							self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.buildSimpleToolTip(self.cell.state.y));	
 						}
 						
 						// group by z
@@ -367,7 +369,8 @@ nabu.page.views.data.Bar = Vue.extend({
 				}
 				else {
 					htmlBuilder = function (data, i) {
-						self.$services.dataUtils.buildStandardD3Tooltip(data, i, self.buildToolTip);	
+						//self.$services.dataUtils.buildStandardD3Tooltip(data, i, self.buildToolTip);	
+						self.$services.dataUtils.buildStandardD3Tooltip(data, i, self.buildSimpleToolTip(self.cell.state.y));	
 					}
 					var xAxis = g.append("g")
 						.attr("class", "axis axis--x")

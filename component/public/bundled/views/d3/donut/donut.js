@@ -120,7 +120,7 @@ nabu.page.views.data.Donut = Vue.extend({
 				}
 				
 				var buildToolTip = function(d) {
-					return self.buildToolTip(d.data);
+					return self.buildSimpleToolTip(self.cell.state.value)(d.data);
 				};
 				
 				var toolTip = function(selection) {

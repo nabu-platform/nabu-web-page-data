@@ -75,7 +75,10 @@ nabu.services.VueService(Vue.extend({
 					result.$mount().$appendTo(div);
 				}
 				else {
-					div.innerHTML = builder(data);
+					if (Number(result) == result && result % 1 != 0) {
+						result = this.$services.formatter.number(result, 2);
+					}
+					div.innerHTML = result;
 				}
 			}
 			return div;

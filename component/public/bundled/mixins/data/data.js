@@ -399,7 +399,17 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			}
 			return result;
 		},
-		buildToolTip: function(d) {
+		buildSimpleToolTip: function(field) {
+			var self = this;
+			return function(data) {
+				var result = data ? data[field] : null;
+				if (result && Number(result) == result && result % 1 != 0) {
+					result = self.$services.formatter.number(result, 2);
+				}
+				return result;
+			}
+		},
+		buildToolTip: function(d, field) {
 			if (!this.cell.state.fields.length) {
 				return null;
 			}
@@ -505,9 +515,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				value: null
 			})
 		},
-		select: function(record) {
+		select: function(record, skipTrigger) {
 			// if you are hovering over an action, you are most likely triggering that, not selecting
-			if (!this.actionHovering) {
+			if (!this.actionHovering || skipTrigger) {
 				if (!this.multiselect || !this.cell.state.multiselect) {
 					this.selected.splice(0, this.selected.length);
 				}
@@ -515,7 +525,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				// if we are adding it, send out an event
 				if (index < 0) {
 					this.selected.push(record);
-					this.trigger(null, record);
+					if (!skipTrigger) {
+						this.trigger(null, record);
+					}
 				}
 				else {
 					this.selected.splice(index, 1);
@@ -525,6 +537,12 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		trigger: function(action, data) {
 			if (!action) {
 				this.lastTriggered = data;
+			}
+			// if we are executing a non global action and we have data, select it as well without triggering the select event
+			// this is expected behavior as you are clicking on the item
+			else if (!action.global && data) {
+				this.lastTriggered = data;
+				this.select(data, true);
 			}
 			// if no action is specified, it is the one without the icon and label (and not global)
 			// this is row specific (not global) but does not have an actual presence (no icon & label)
@@ -1087,16 +1105,18 @@ nabu.page.views.data.DataCommon = Vue.extend({
 						if (!append) {
 							self.records.splice(0, self.records.length);
 						}
-						Object.keys(list).map(function(field) {
-							if (list[field] instanceof Array) {
-								nabu.utils.arrays.merge(self.records, list[field]);
+						if (list) {
+							Object.keys(list).map(function(field) {
+								if (list[field] instanceof Array) {
+									nabu.utils.arrays.merge(self.records, list[field]);
+								}
+							});
+							if (list.page) {
+								nabu.utils.objects.merge(self.paging, list.page);
 							}
-						});
-						if (list.page) {
-							nabu.utils.objects.merge(self.paging, list.page);
-						}
-						else if (!self.orderable) {
-							self.doInternalSort();
+							else if (!self.orderable) {
+								self.doInternalSort();
+							}
 						}
 						self.last = new Date();
 						if (self.cell.state.autoRefresh) {

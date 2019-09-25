@@ -94,6 +94,13 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 					minY = 0;
 				}
 				
+				if (this.cell.state.maxYValue) {
+					var parsed = parseInt(this.cell.state.maxYValue);
+					if (parsed > maxY) {
+						maxY = parsed;
+					}
+				}
+				
 				var pageInstance = this.$services.page.getPageInstance(this.page, this);
 				
 				pageInstance.$emit("svg:predraw", {
@@ -275,7 +282,8 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 				}
 				
 				var htmlBuilder = function (data, i) {
-					self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.buildToolTip);	
+					//self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.buildToolTip);	
+					self.$services.dataUtils.buildStandardD3Tooltip(data.data, i, self.buildSimpleToolTip(self.cell.state.y));
 				};
 				
 				var series = svg.selectAll(".series")
@@ -329,7 +337,26 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 				
 				if (this.cell.state.legend && zValues.length) {
 					var zFormatter = function(d, i) {
-						return self.cell.state.zFormat ? self.$services.formatter.format(d, self.cell.state.zFormat) : d;
+						var result = self.cell.state.zFormat ? self.$services.formatter.format(d, self.cell.state.zFormat, self.page, self.cell) : d;
+						// ugly hack to update the result value later on
+						// the injected value in d3 is not reactive...
+						if (!result) {
+							setTimeout(function() {
+								var result = self.cell.state.zFormat ? self.$services.formatter.format(d, self.cell.state.zFormat, self.page, self.cell) : d;		
+								if (result) {
+									var text = svg.selectAll(".legend-" + i);
+									text.text(result);
+									var totalWidth = 0;
+									svg.selectAll(".legend-entry")
+										.attr("transform", function(d, i, el) {
+											var result = "translate(" + totalWidth + ", 0)";
+											totalWidth += el.item(i).getBBox().width + 15;
+											return result;
+										});
+								}
+							}, 300);
+						}
+						return result;
 					}
 					if (!this.cell.state.legendPosition || this.cell.state.legendPosition == "right") {
 						var legend = svg.append("g")
@@ -377,6 +404,7 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 							.attr("dx", 25)
 							.attr("y", 9.5)
 							.attr("dy", "0.32em")
+							.attr("class", function(d, i) { return "legend-" + i })
 							.text(zFormatter);
 							
 						var totalWidth = 0;
@@ -760,7 +788,8 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 							}
 							
 							var div = document.createElement("div");
-							self.buildToolTip(d.values[index].data).$mount().$appendTo(div);
+							//self.buildToolTip(d.values[index].data).$mount().$appendTo(div);
+							div.innerHTML = self.buildSimpleToolTip(self.cell.state.y)(d.values[index].data);
 							var text = div.innerHTML.replace(/<[^>]+>/g, "");
 							
 							if (index < 0) {
