@@ -283,6 +283,18 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		},
 		activate: function(done) {
 			if (!this.inactive) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				
+				// prefill filter value if necessary
+				if (this.cell.state.filters && this.filters) {
+					this.cell.state.filters.forEach(function(filter) {
+						if (self.cell.bindings[filter.name]) {
+							self.filters[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name], self);
+						}
+					});
+				}
+				
 				if (this.cell.state.array) {
 					this.loadArray();
 					done();
@@ -294,8 +306,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					});
 				}
 				
-				var self = this;
-				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				this.cell.state.refreshOn.map(function(x) {
 					self.subscriptions.push(pageInstance.subscribe(x, function() {
 						// mimic the frontend configuration logic
@@ -515,9 +525,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				value: null
 			})
 		},
-		select: function(record, skipTrigger) {
+		select: function(record, skipTrigger, $event) {
 			// if you are hovering over an action, you are most likely triggering that, not selecting
-			if (!this.actionHovering || skipTrigger) {
+			if ((!$event || this.$services.page.isClickable($event.target)) && (!this.actionHovering || skipTrigger)) {
 				if (!this.multiselect || !this.cell.state.multiselect) {
 					this.selected.splice(0, this.selected.length);
 				}
@@ -1064,9 +1074,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			});
 			this.cell.state.filters.map(function(filter) {
 				parameters[filter.name] = filter.type == 'fixed' ? filter.value : self.filters[filter.name];
-				if (parameters[filter.name] == null && self.cell.bindings[filter.name]) {
+				/*if (parameters[filter.name] == null && self.cell.bindings[filter.name]) {
 					parameters[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name], self);
-				}
+				}*/
 			});
 			
 			if (this.orderable && this.orderBy.length) {

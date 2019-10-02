@@ -15,7 +15,7 @@
 		</data-common-header>
 				
 		<div class="data-card-list" :class="dataClass" v-if="edit || records.length" :style="{'flex-direction': cell.state.direction == 'vertical' ? 'column' : 'row-wrapped'}">
-			<dl class="data-card" @click="select(record)" v-visible="lazyLoad.bind($self, record)" v-for="record in records" :class="$services.page.getDynamicClasses(cell.state.styles, {record:record}, $self)" :key="record.id ? record.id : records.indexOf(record)">
+			<dl class="data-card" @click="select(record, false, $event)" v-visible="lazyLoad.bind($self, record)" v-for="record in records" :class="$services.page.getDynamicClasses(cell.state.styles, {record:record}, $self)" :key="record.id ? record.id : records.indexOf(record)">
 				<page-field :field="field" :data="record" :should-style="false" 
 					:edit="edit"
 					class="data-card-field" :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields"
