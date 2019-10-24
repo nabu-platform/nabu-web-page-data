@@ -378,27 +378,29 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			var self = this;
 			var result = {};
 			if (this.operation) {
-				var schema = this.operation.responses["200"].schema;
-				
-				// the return is always a singular object
-				var definition = this.$services.swagger.resolve(schema).properties;
-				var found = false;
-				// we are interested in the (complex) array within this object
-				Object.keys(definition).map(function(key) {
-					if (!found && definition[key].type == "array" && definition[key].items.properties) {
-						definition = definition[key].items;
-						found = true;
+				if (this.operation.responses && this.operation.responses["200"]) {
+					var schema = this.operation.responses["200"].schema;
+					
+					// the return is always a singular object
+					var definition = this.$services.swagger.resolve(schema).properties;
+					var found = false;
+					// we are interested in the (complex) array within this object
+					Object.keys(definition).map(function(key) {
+						if (!found && definition[key].type == "array" && definition[key].items.properties) {
+							definition = definition[key].items;
+							found = true;
+						}
+					});
+					if (!found) {
+						definition = null;
 					}
-				});
-				if (!found) {
-					definition = null;
+					this.cell.state.actions.map(function(action) {
+						result[action.name] = action.global && (!action.useSelection && !action.useAll)
+							//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
+							? (self.cell.on ? self.cell.on : {})
+							: definition;
+					});
 				}
-				this.cell.state.actions.map(function(action) {
-					result[action.name] = action.global && (!action.useSelection && !action.useAll)
-						//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
-						? (self.cell.on ? self.cell.on : {})
-						: definition;
-				});
 			}
 			else {
 				this.cell.state.actions.map(function(action) {

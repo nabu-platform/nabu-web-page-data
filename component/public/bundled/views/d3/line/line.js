@@ -183,7 +183,9 @@ nabu.page.views.data.Line = Vue.component("data-line", {
 				}
 				else {
 					var axisBottom = d3.axisBottom(x).tickFormat(function(d, index) {
-						return self.$services.formatter.format(d, self.cell.state.xFormat);	
+						if (!xInterval || (index % xInterval == 0)) {
+							return self.$services.formatter.format(d, self.cell.state.xFormat);	
+						}
 					});
 				}
 				
