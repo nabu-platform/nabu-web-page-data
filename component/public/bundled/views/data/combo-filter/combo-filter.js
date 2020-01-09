@@ -13,6 +13,10 @@ Vue.component("data-combo-filter", {
 			type: Boolean, 
 			required: false
 		},
+		showClear: {
+			type: Boolean, 
+			required: false
+		},
 		orderable: {
 			type: Boolean,
 			required: false

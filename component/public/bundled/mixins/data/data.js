@@ -90,6 +90,14 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}
 	},
 	computed: {
+		eventFields: function() {
+			return this.cell.state.fields.map(function(x, index) {
+				return {
+					index: index,
+					label: x.label
+				}
+			});
+		},
 		self: function() {
 			return this;
 		},
@@ -99,6 +107,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		actions: function() {
 			return this.cell.state.actions.filter(function(x) {
 				return !x.global && (x.label || x.icon);
+			});
+		},
+		recordActions: function() {
+			return this.actions.filter(function(x) {
+				return !x.field;
 			});
 		},
 		globalActions: function() {
@@ -229,6 +242,35 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}	
 	},
 	methods: {
+		fieldActions: function(field) {
+			var index = this.cell.state.fields.indexOf(field);
+			return this.cell.state.actions.filter(function(x) {
+				return x.field === index;
+			});
+		},
+		generateStub: function() {
+			var definition = this.definition;
+			if (definition) {
+				var self = this;
+				for (var i = 0; i < 10; i++) {
+					var stub = {};
+					Object.keys(definition).forEach(function(key) {
+						var value = null;
+						if (definition[key].format == "date-time" || definition[key].format == "date") {
+							value = new Date();
+						}
+						else if (definition[key].type == "boolean") {
+							value = true;
+						}
+						else {
+							value = "test";
+						}
+						self.$services.page.setValue(stub, key, value);
+					});
+					this.records.push(stub);
+				}
+			}
+		},
 		getOrderByKeys: function(value) {
 			var keys = this.$services.page.getSimpleKeysFor({properties:this.definition});
 			if (value && keys.indexOf(value) < 0) {

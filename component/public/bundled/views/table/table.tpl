@@ -19,7 +19,7 @@
 				<tr>
 					<th @click="sort(getSortKey(field))"
 							v-for="field in cell.state.fields"
-							v-if="!isAllFieldHidden(field)"><span>{{ field.label }}</span>
+							v-if="!isAllFieldHidden(field)"><span>{{ $services.page.translate(field.label) }}</span>
 						<span class="fa fa-sort-up" v-if="orderBy.indexOf(getSortKey(field)) >= 0"></span>
 						<span class="fa fa-sort-down" v-if="orderBy.indexOf(getSortKey(field) + ' desc') >= 0"></span>
 					</th>
@@ -50,7 +50,7 @@
 		<div class="load-more" v-else-if="cell.state.loadMore && paging.current != null && paging.total != null && paging.current < paging.total - 1">
 			<button class="load-more-button" @click="load(paging.current + 1, true)">%{Load More}</button>
 		</div>
-		<div v-if="!records.length && !showEmpty" class="no-data">{{ cell.state.emptyPlaceholder ? $services.page.translate(cell.state.emptyPlaceholder) : "%{No data available}"}}</div>
+		<div v-if="!records.length && !showEmpty" class="no-data">{{ cell.state.emptyPlaceholder ? $services.page.translate(cell.state.emptyPlaceholder) : "%{No data available}"}}<span v-if="$services.page.wantEdit" class="fa fa-table generate-stub" @click="generateStub" title="Generate Stub Data"></span></div>
 		
 		<data-common-footer :page="page" :parameters="parameters" :cell="cell" 
 			:edit="edit"

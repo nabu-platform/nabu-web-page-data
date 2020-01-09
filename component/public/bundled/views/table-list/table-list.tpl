@@ -21,7 +21,7 @@
 			<li class="row title">
 				<span @click="sort(getSortKey(field))" v-for="field in cell.state.fields" :style="{'flex-grow': (field.width != null ? field.width : '1')}"
 						v-if="!isAllFieldHidden(field)">
-					<span>{{ field.label }}</span>
+					<span>{{ $services.page.translate(field.label) }}</span>
 					<span class="fa fa-sort-up" v-if="orderBy.indexOf(getSortKey(field)) >= 0"></span>
 					<span class="fa fa-sort-down" v-if="orderBy.indexOf(getSortKey(field) + ' desc') >= 0"></span>
 				</span>
@@ -37,10 +37,11 @@
 					:page="page"
 					:class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" 
 					v-for="field in cell.state.fields"
-					:cell="cell"/>
-				<div class="actions" v-if="actions.length" @mouseover="actionHovering = true" @mouseout="actionHovering = false">
+					:cell="cell"
+					:actions="fieldActions(field)"/>
+				<div class="actions" v-if="recordActions.length" @mouseover="actionHovering = true" @mouseout="actionHovering = false">
 					<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
-						v-for="action in actions" 
+						v-for="action in recordActions" 
 						@click="trigger(action, record)"
 						:class="[action.class, {'has-icon': action.icon}, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></button>
 				</div>
@@ -50,7 +51,7 @@
 		<div class="load-more" v-else-if="cell.state.loadMore && paging.current != null && paging.total != null && paging.current < paging.total - 1">
 			<button class="load-more-button" @click="load(paging.current + 1, true)">%{Load More}</button>
 		</div>
-		<div v-if="!records.length && !showEmpty" class="no-data">{{ cell.state.emptyPlaceholder ? $services.page.translate(cell.state.emptyPlaceholder) : "%{No data available}"}}</div>
+		<div v-if="!records.length && !showEmpty" class="no-data">{{ cell.state.emptyPlaceholder ? $services.page.translate(cell.state.emptyPlaceholder) : "%{No data available}"}}<span v-if="$services.page.wantEdit" class="fa fa-table generate-stub" @click="generateStub" title="Generate Stub Data"></span></div>
 		
 		<data-common-footer :page="page" :parameters="parameters" :cell="cell" 
 			:edit="edit"

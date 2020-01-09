@@ -47,6 +47,7 @@
 						<button @click="cell.state.refreshOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
 					</div>
 					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>
+					<n-form-switch v-model="cell.state.showClear" label="Show Clear Filter Option"/>
 				</n-collapsible>
 				<n-collapsible title="Download">
 					<div class="list-actions">
@@ -75,7 +76,7 @@
 					<n-collapsible class="list-item" :title="action.name ? action.name : 'Unnamed'" v-for="action in cell.state.actions">
 						<n-form-text v-model="action.name" label="Name" @input="$emit('updatedEvents')"/>
 						<n-form-combo v-model="action.class" :filter="$services.page.getSimpleClasses" label="Class"/>
-						<n-form-switch v-model="action.global" label="Global" />
+						<n-form-switch v-model="action.global" label="Global" v-if="!action.field" />
 						<n-form-switch v-model="action.useSelection" v-if="action.global && !action.useAll" label="Use Selection" />
 						<n-form-switch v-model="action.useAll" v-if="action.global && !action.useSelection" label="Use All" />
 						<n-form-text v-model="action.icon" label="Icon"/>
@@ -85,6 +86,10 @@
 						<n-form-switch v-model="action.close" label="Close"/>
 						<n-form-switch v-model="action.delete" label="Delete" v-if="!pageable && (!action.global || action.useSelection)"/>
 						<n-form-combo v-model="action.type" v-if="action.global" :items="['button', 'link']" :nillable="false" label="Type"/>
+						<n-form-combo v-model="action.field" v-if="!action.global" :items="eventFields"
+							:formatter="function(x) { return x.index + (x.label ? ' - ' + x.label : '') }"
+							:extracter="function(x) { return x.index }"
+							label="Link to field"/>
 						<div class="list-item-actions">
 							<button @click="upAction(action)"><span class="fa fa-chevron-circle-up"></span></button>
 							<button @click="downAction(action)"><span class="fa fa-chevron-circle-down"></span></button>
@@ -152,6 +157,7 @@
 			:page="page"
 			:cell="cell"
 			:show-refresh="cell.state.showRefresh"
+			:show-clear="cell.state.showClear"
 			:filters="cell.state.filters"
 			:formatters="cell.state.formatters"
 			:orderable="orderable"
@@ -235,6 +241,7 @@
 						<button @click="cell.state.refreshOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
 					</div>
 					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>
+					<n-form-switch v-model="cell.state.showClear" label="Show Clear Filter Option"/>
 				</n-collapsible>
 				<n-collapsible title="Update" v-else-if="cell.state.array != null">
 					<div class="list-actions">
@@ -275,7 +282,7 @@
 					<n-collapsible class="list-item" :title="action.name ? action.name : 'Unnamed'" v-for="action in cell.state.actions">
 						<n-form-text v-model="action.name" label="Name" @input="$emit('updatedEvents')"/>
 						<n-form-combo v-model="action.class" :filter="$services.page.getSimpleClasses" label="Class"/>
-						<n-form-switch v-model="action.global" label="Global" />
+						<n-form-switch v-model="action.global" label="Global" v-if="!action.field" />
 						<n-form-switch v-model="action.useSelection" v-if="action.global && !action.useAll" label="Use Selection" />
 						<n-form-switch v-model="action.useAll" v-if="action.global && !action.useSelection" label="Use All" />
 						<n-form-text v-model="action.icon" label="Icon"/>
@@ -285,6 +292,10 @@
 						<n-form-switch v-model="action.close" label="Close"/>
 						<n-form-switch v-model="action.delete" label="Delete" v-if="!pageable && (!action.global || action.useSelection)"/>
 						<n-form-combo v-model="action.type" v-if="action.global" :items="['button', 'link']" :nillable="false" label="Type"/>
+						<n-form-combo v-model="action.field" v-if="!action.global" :items="eventFields"
+							:formatter="function(x) { return x.index + (x.label ? ' - ' + x.label : '') }"
+							:extracter="function(x) { return x.index }"
+							label="Link to field"/>
 						<div class="list-item-actions">
 							<button @click="upAction(action)"><span class="fa fa-chevron-circle-up"></span></button>
 							<button @click="downAction(action)"><span class="fa fa-chevron-circle-down"></span></button>
@@ -352,6 +363,7 @@
 			:page="page"
 			:cell="cell"
 			:show-refresh="cell.state.showRefresh"
+			:show-clear="cell.state.showClear"
 			:filters="cell.state.filters"
 			:formatters="cell.state.formatters"
 			:orderable="orderable"
