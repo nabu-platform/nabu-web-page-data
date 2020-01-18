@@ -9,7 +9,7 @@
 				:filters="filters"
 				:paging="paging">
 			<n-form-section slot="main-settings">
-				<n-form-checkbox v-model="cell.state.showLabels" label="Show Labels" />
+				<n-form-switch v-model="cell.state.showLabels" label="Show Labels" />
 				<n-form-combo label="Direction" v-model="cell.state.direction" :items="['horizontal', 'vertical']"/>
 			</n-form-section>
 		</data-common-header>

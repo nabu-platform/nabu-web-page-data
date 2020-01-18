@@ -11,6 +11,10 @@ window.addEventListener("load", function() {
 		
 		$services.router.register({
 			alias: "data-table-list",
+			icon: "page/data/images/table.svg",
+			description: "A table based on flex elements",
+			name: "Table List",
+			category: "data",
 			enter: function(parameters) {
 				return new nabu.page.views.data.TableList({propsData:parameters});
 			},
@@ -60,6 +64,10 @@ window.addEventListener("load", function() {
 		
 		$services.router.register({
 			alias: "data-card",
+			icon: "page/data/images/card.svg",
+			description: "Display a list of data records as separate cards",
+			category: "data",
+			name: "Card",
 			enter: function(parameters) {
 				return new nabu.page.views.data.Card({propsData:parameters});
 			},

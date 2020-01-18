@@ -4,6 +4,14 @@
 	"resources": {
 		"page": {
 			"data": {
+				"images": {
+					"card.svg": {
+						"url": "images/card.svg"
+					},
+					"table.svg": {
+						"url": "images/table.svg"
+					}
+				},
 				"mixins": {
 					"data": {
 						"data.js": {

@@ -12,26 +12,12 @@
 				@label="function(label) { setLabel(field, label) }"
 				:cell="cell"
 				@input="function(newValue) { setFilter(field, newValue) }"/>
-				
-				
-			<!--<page-form-field :key="activeFilter.name + '_value'" -->
-			<!--	class="combo-filter-field"-->
-			<!--	:field="activeFilter" -->
-			<!--	:label="false"-->
-			<!--	:value="state[activeFilter.name]"-->
-			<!--	@label="function(label) { setLabel(activeFilter, label) }"-->
-			<!--	:page="page"-->
-			<!--	:cell="cell"-->
-			<!--	@input="function(newValue) { setFilter(activeFilter, newValue) }"/>				-->
-				
-				
-				
 		</n-form>
 		<div class="default-filter-tags" v-if="cell.state.defaultFilter && cell.state.defaultFilter.useTags">
 			<div class="default-filter-tag" v-for="tag in tags">
 				<span class="value">{{ tag.value }}</span>
 				<span class="key">{{ $services.page.translate(tag.filter.label) }}</span>
-				<span class="fa fa-times" @click="tag.remove()"></span>
+				<span class="fa icon fa-times" @click="tag.remove()"></span>
 			</div>
 			<a class="page-action-link page-action-entry"
 				@click="$emit('clear')"
@@ -39,7 +25,7 @@
 					><span v-if="cell.state.defaultFilter.clearFilterIcon" class="icon fa" :class="cell.state.defaultFilter.clearFilterIcon"></span
 					><span v-if="cell.state.defaultFilter.clearFilterText">{{ $services.page.translate(cell.state.defaultFilter.clearFilterText, $self) }}</span>
 			</a>
-			<a class="page-action-link page-action-entry"
+			<a class="page-action-link page-action-entry clear-all-filter"
 				@click="$emit('clear')"
 				v-if="showClear && !cell.state.defaultFilter.clearFilterIcon && !cell.state.defaultFilter.clearFilterText && tags.length > 0"
 					><span class="icon fa fa-times"></span>

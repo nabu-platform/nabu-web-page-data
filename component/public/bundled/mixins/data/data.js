@@ -523,6 +523,12 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// we delay the reload in case of multiple filters firing
 			this.delayedLoad();
 		},
+		clearFilters: function () {
+			var self = this;
+			this.cell.state.filters.map(function (filter) {
+				self.setFilter(filter, null);
+			});
+		},
 		delayedLoad: function() {
 			if (this.loadTimer) {
 				clearTimeout(this.loadTimer);
@@ -1197,13 +1203,18 @@ nabu.page.views.data.DataCommon = Vue.extend({
 });
 
 Vue.component("data-common-header", {
-	template: "#data-common-header",
+	template: "#data-common",
 	mixins:[nabu.page.views.data.DataCommon],
 	props: {
 		configuring: {
 			type: Boolean,
 			required: true
 		}
+	},
+	data: function() {
+		return {
+			isHeader: true
+		}	
 	},
 	created: function() {
 		this.create();
