@@ -80,7 +80,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			orderBy: [],
 			refreshTimer: null,
 			loadTimer: null,
-			lazyPromise: null
+			lazyPromise: null,
+			wizard: "step1"
 		}
 	},
 	ready: function() {

@@ -12,8 +12,8 @@ window.addEventListener("load", function() {
 		$services.router.register({
 			alias: "data-table-list",
 			icon: "page/data/images/table.svg",
-			description: "A table based on flex elements",
-			name: "Table List",
+			description: "A tabular view of data",
+			name: "Table",
 			category: "data",
 			enter: function(parameters) {
 				return new nabu.page.views.data.TableList({propsData:parameters});

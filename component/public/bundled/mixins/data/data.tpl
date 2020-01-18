@@ -1,6 +1,6 @@
 <template id="data-common">
 	<div class="data-common">
-		<n-sidebar @close="isHeader ? configuring = false : $emit('close')" v-if="configuring" class="settings" :inline="true">
+		<n-sidebar :autocloseable="false" v-if="configuring" @close="$emit('close')" class="settings" :inline="true">
 			<n-form class="layout2">
 				<n-collapsible title="Data Settings">
 					<h2>Data<span class="subscript">Determine where you will get your data from</span></h2>
@@ -20,6 +20,7 @@
 					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()" info="How many items do you want to load at once?"/>
 					<n-form-switch v-if="!cell.state.loadMore && hasLimit" v-model="cell.state.loadLazy" label="Lazy Loading"/> 
 					<n-form-switch v-if="!cell.state.loadLazy && hasLimit" v-model="cell.state.loadMore" label="Load more button"/>
+					<slot name="main-settings"></slot>
 					<h2>Additional<span class="subscript">Configure some additional data properties.</span></h2>
 					<n-form-text v-model="cell.state.title" label="Title" info="The title for this data component"/>
 					<n-form-text v-model="cell.state.emptyPlaceholder" label="Empty Place Holder"/>
@@ -36,7 +37,7 @@
 						v-model="cell.state.updateBindings"
 						:from="formAvailableParameters"
 						:to="formInputParameters"/>
-					<slot name="main-settings"></slot>
+					<slot name="additional-settings"></slot>
 				</n-collapsible>
 				<n-collapsible title="Mapping" class="mapping" v-if="Object.keys(inputParameters.properties).length">
 					<n-page-mapper :to="inputParameters" :from="availableParameters" 
@@ -180,7 +181,23 @@
 			@clear="clearFilters"
 			@filter="setFilter"
 			@sort="sort"/>
-		<div class="content" v-if="!isHeader"><slot></slot></div>
+			
+		<div class="page-startup-wizard" v-if="edit && !cell.state.alias && !cell.state.array && (!cell.state.fields || !cell.state.fields.length)">
+			<div class="step" v-if="wizard == 'step1'">
+				<h2 class="title">Choose a data source</h2>
+				<n-form-combo label="Operation" :value="cell.state.operation" 
+					:filter="getDataOperations"
+					@input="updateOperation"
+					v-if="!cell.state.array && !cell.state.collect"/>
+				<div v-if="$services.page.getAllArrays(page, cell.id).length">
+					<h3>Or</h3>
+					<n-form-combo label="Array" :value="cell.state.array"
+						:filter="function(value) { return $services.page.getAllArrays(page, cell.id) }"
+						v-if="!cell.state.operation && !cell.state.collect"
+						@input="updateArray"/>
+				</div>
+			</div>
+		</div>
 		<div class="global-actions" v-if="!isHeader && globalActions.length">
 			<component
 				v-if="!action.condition || $services.page.isCondition(action.condition, state, $self)"

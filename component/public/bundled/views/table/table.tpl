@@ -12,7 +12,11 @@
 			:updatable="true"
 			:paging="paging"
 			:filters="filters"
-			@refresh="refresh"/>
+			@refresh="refresh">
+			<div slot="settings">
+				<button @click="cell.alias = 'data-table-list'"><span>Switch to flex table</span></button>
+			</div>
+		</data-common-header>
 			
 		<table class="classic data" cellspacing="0" cellpadding="0" :class="dataClass" v-if="edit || showEmpty || records.length">
 			<thead>
