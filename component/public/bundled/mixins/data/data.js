@@ -909,23 +909,29 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			Vue.set(this.cell, "bindings", {});
 			Vue.set(this.cell, "result", {});
 			var self = this;
-			if (array) {
-				this.$confirm({
-					message: "(Re)generate fields?"
-				}).then(function() {
-					// we clear out the fields, they are most likely useless with another operation
-					self.cell.state.fields.splice(0, self.cell.state.fields.length);
-					// instead we add entries for all the fields in the return value
-					self.keys.map(function(key) {
-						self.cell.state.fields.push({
-							label: key,
-							fragments: [{
-								type: "data",
-								key: key
-							}]
-						});
+			var regenerate = function() {
+				// we clear out the fields, they are most likely useless with another operation
+				self.cell.state.fields.splice(0, self.cell.state.fields.length);
+				// instead we add entries for all the fields in the return value
+				self.keys.map(function(key) {
+					self.cell.state.fields.push({
+						label: key,
+						fragments: [{
+							type: "data",
+							key: key
+						}]
 					});
 				});
+			};
+			if (array) {
+				if (self.cell.state.fields && self.cell.state.fields.length) {
+					this.$confirm({
+						message: "Regenerate fields?"
+					}).then(regenerate);
+				}
+				else {
+					regenerate();
+				}
 			}
 			this.loadArray();
 		},
@@ -990,23 +996,30 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				
 				Vue.set(this.cell, "result", {});
 				
-				if (operationId) {
-					this.$confirm({
-						message: "(Re)generate fields?"
-					}).then(function() {
-						// we clear out the fields, they are most likely useless with another operation
-						self.cell.state.fields.splice(0, self.cell.state.fields.length);
-						// instead we add entries for all the fields in the return value
-						self.keys.map(function(key) {
-							self.cell.state.fields.push({
-								label: key,
-								fragments: [{
-									type: "data",
-									key: key
-								}]
-							});
+				var regenerate = function() {
+					// we clear out the fields, they are most likely useless with another operation
+					self.cell.state.fields.splice(0, self.cell.state.fields.length);
+					// instead we add entries for all the fields in the return value
+					self.keys.map(function(key) {
+						self.cell.state.fields.push({
+							label: key,
+							fragments: [{
+								type: "data",
+								key: key
+							}]
 						});
-					})
+					});
+				};
+				
+				if (operationId) {
+					if (self.cell.state.fields && self.cell.state.fields.length) {
+						this.$confirm({
+							message: "Regenerate fields?"
+						}).then(regenerate)
+					}
+					else {
+						regenerate();
+					}
 				}
 				// if there are no parameters required, do an initial load
 				if (operationId && !operation.parameters.filter(function(x) { return x.required }).length) {
