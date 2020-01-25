@@ -182,7 +182,7 @@
 			@filter="setFilter"
 			@sort="sort"/>
 			
-		<div class="page-startup-wizard" v-if="edit && !cell.state.alias && !cell.state.array && (!cell.state.fields || !cell.state.fields.length)">
+		<div class="page-startup-wizard" v-if="edit && !cell.state.operation && !cell.state.array && (!cell.state.fields || !cell.state.fields.length)">
 			<div class="step" v-if="wizard == 'step1'">
 				<h2 class="title">Choose a data source</h2>
 				<n-form-combo label="Operation" :value="cell.state.operation" 
