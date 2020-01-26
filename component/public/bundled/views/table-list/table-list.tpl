@@ -16,7 +16,7 @@
 			<div slot="main-settings">
 				<n-form-switch v-model="cell.state.useNativeTable" label="Use HTML Table" info="By default flex tables are used, but in some cases a native HTML table is more appropriate"/>
 			</div>
-			<n-collapsible slot="settings" title="Field widths" v-if="!cell.state.useNativeTable && cell.state.fields && cell.state.fields.length">
+			<n-collapsible slot="settings" class="padded" title="Field widths" v-if="!cell.state.useNativeTable && cell.state.fields && cell.state.fields.length">
 				<n-form-text :label="'Width for: ' + (field.label ? field.label : field.key)" :value="field.width" v-for="field in cell.state.fields" @input="function(newValue) { $window.Vue.set(field, 'width', newValue) }"/>
 			</n-collapsible>
 		</data-common-header>

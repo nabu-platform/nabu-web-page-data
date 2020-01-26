@@ -2,7 +2,7 @@
 	<div class="data-common">
 		<n-sidebar :autocloseable="false" v-if="configuring" @close="$emit('close')" class="settings" :inline="true">
 			<n-form class="layout2">
-				<n-collapsible title="Data Settings">
+				<n-collapsible title="Data Settings" class="padded">
 					<h2>Data<span class="subscript">Determine where you will get your data from</span></h2>
 					<n-form-combo label="Operation" :value="cell.state.operation" 
 						:filter="getDataOperations"
@@ -39,7 +39,7 @@
 						:to="formInputParameters"/>
 					<slot name="additional-settings"></slot>
 				</n-collapsible>
-				<n-collapsible title="Mapping" class="mapping" v-if="Object.keys(inputParameters.properties).length">
+				<n-collapsible title="Mapping" class="mapping padded" v-if="Object.keys(inputParameters.properties).length">
 					<n-page-mapper :to="inputParameters" :from="availableParameters" 
 						v-model="cell.bindings"/>
 				</n-collapsible>
@@ -47,29 +47,33 @@
 					<div class="list-actions">
 						<button @click="cell.state.refreshOn.push(null)"><span class="fa fa-plus"></span>Refresh Listener</button>
 					</div>
-					<div v-for="i in Object.keys(cell.state.refreshOn)" class="list-row">
-						<n-form-combo v-model="cell.state.refreshOn[i]"
-							:filter="getRefreshEvents"/>
-						<span @click="cell.state.refreshOn.splice(i, 1)" class="fa fa-times"></span>
+					<div class="padded-content">
+						<div v-for="i in Object.keys(cell.state.refreshOn)" class="list-row">
+							<n-form-combo v-model="cell.state.refreshOn[i]"
+								:filter="getRefreshEvents"/>
+							<span @click="cell.state.refreshOn.splice(i, 1)" class="fa fa-times"></span>
+						</div>
+						<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>
+						<n-form-switch v-model="cell.state.showClear" label="Show Clear Filter Option"/>
 					</div>
-					<n-form-switch v-model="cell.state.showRefresh" label="Show Refresh Option"/>
-					<n-form-switch v-model="cell.state.showClear" label="Show Clear Filter Option"/>
 				</n-collapsible>
 				<n-collapsible title="Update" v-else-if="cell.state.array != null">
 					<div class="list-actions">
 						<button @click="cell.state.refreshOn.push(null)">Add To Array</button>
 					</div>
-					<div v-for="i in Object.keys(cell.state.refreshOn)" class="list-row">
-						<n-form-combo v-model="cell.state.refreshOn[i]"
-							:filter="getRefreshEvents"/>
-						<button @click="cell.state.refreshOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
+					<div class="padded-content">
+						<div v-for="i in Object.keys(cell.state.refreshOn)" class="list-row">
+							<n-form-combo v-model="cell.state.refreshOn[i]"
+								:filter="getRefreshEvents"/>
+							<button @click="cell.state.refreshOn.splice(i, 1)"><span class="fa fa-trash"></span></button>
+						</div>
 					</div>
 				</n-collapsible>
 				<n-collapsible title="Download">
 					<div class="list-actions">
 						<button @click="addDownloadListener()"><span class="fa fa-plus"></span>Download Listener</button>
 					</div>
-					<div v-if="cell.state.downloadOn">
+					<div v-if="cell.state.downloadOn" class="padded-content">
 						<div v-for="i in Object.keys(cell.state.downloadOn)" class="list-row">
 							<n-form-combo v-model="cell.state.downloadOn[i].event"
 								:filter="getRefreshEvents"/>
@@ -127,24 +131,26 @@
 					</n-collapsible>
 				</n-collapsible>
 				<n-collapsible title="Styling">
-					<n-form-text v-model="cell.state.class" label="Class"/>
+					<div class="padded-content">
+						<n-form-text v-model="cell.state.class" label="Class"/>
+					</div>
 					<div class="list-actions">
 						<button @click="addRecordStyle()"><span class="fa fa-plus"></span>Style</button>
 					</div>
-					<n-form-section class="list-row" v-for="style in cell.state.styles">
+					<div class="list-row" v-for="style in cell.state.styles">
 						<n-form-text v-model="style.class" label="Class"/>
 						<n-form-text v-model="style.condition" label="Condition"/>
 						<span @click="cell.state.styles.splice(cell.state.styles.indexOf(style), 1)" class="fa fa-times"></span>
-					</n-form-section>
+					</div>
 				</n-collapsible>
 				<n-collapsible title="Order By" v-if="orderable">
 					<div class="list-item-actions">
 						<button @click="cell.state.orderBy.push('')"><span class="fa fa-plus"></span>Order By</button>
 					</div>
-					<n-form-section class="list-row" v-for="i in Object.keys(cell.state.orderBy)">
+					<div class="list-row" v-for="i in Object.keys(cell.state.orderBy)">
 						<n-form-combo v-model="cell.state.orderBy[i]" :filter="getOrderByKeys"/>
 						<span @click="cell.state.orderBy.splice(i, 1)" class="fa fa-times"></span>
-					</n-form-section>
+					</div>
 				</n-collapsible>
 				<n-collapsible title="Column Styling" class="list" v-if="false">
 					<n-collapsible class="list-item" :title="key" v-for="key in keys">

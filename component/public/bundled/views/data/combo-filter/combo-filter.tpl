@@ -34,13 +34,13 @@
 				@click="$emit('clear')"
 				v-if="showClear && tags.length > 0"
 					><span v-if="cell.state.comboFilter.clearFilterIcon" class="icon fa" :class="cell.state.comboFilter.clearFilterIcon"></span
-					><span v-if="cell.state.comboFilter.clearFilterText">{{ $services.page.translate($services.page.interpret(cell.state.comboFilter.clearFilterText, $self)) }}</span>
-			</a>
+					><span v-if="cell.state.comboFilter.clearFilterText">{{ $services.page.translate($services.page.interpret(cell.state.comboFilter.clearFilterText, $self)) }}</span
+			></a>
 			<a class="page-action-link page-action-entry"
 				@click="$emit('clear')"
 				v-if="showClear && !cell.state.comboFilter.clearFilterIcon && !cell.state.comboFilter.clearFilterText && tags.length > 0"
 					><span class="icon fa fa-times"></span
-			</a>
+			></a>
 		</div>
 	</form>
 </template>
