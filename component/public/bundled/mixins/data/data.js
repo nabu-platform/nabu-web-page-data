@@ -30,6 +30,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			required: false,
 			default: function() { return [] }
 		},
+		allRecords: {
+			type: Array,
+			required: false,
+			default: function() { return [] }
+		},
 		selected: {
 			type: Array,
 			required: false,
@@ -506,6 +511,21 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				condition:null
 			});
 		},
+		getLiveFilters: function() {
+			var self = this;
+			return this.cell.state.filters.map(function(x) {
+				// if we have a client side filter, enrich it with the possible values
+				if (x && x.name && x.name.indexOf("$client.") == 0) {
+					var fieldName = x.name.substring("$client.".length);
+					var clone = nabu.utils.objects.clone(x);
+					clone.enumerations = self.records.map(function(y) {
+						return y[fieldName];
+					});
+					return clone;
+				}
+				return x;
+			});
+		},
 		// standard methods!
 		refresh: function() {
 			this.load();
@@ -520,9 +540,28 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				if (action.name && pageInstance.get(action.name)) {
 					pageInstance.emit(action.name, null);
 				}
-			})
-			// we delay the reload in case of multiple filters firing
-			this.delayedLoad();
+			});
+			// it is a client side filter
+			if (filter.name.indexOf("$client.") == 0) {
+				this.records.splice(0);
+				nabu.utils.arrays.merge(this.records, this.allRecords.filter(function(x) {
+					var matches = true;
+					Object.keys(self.filters).forEach(function(filter) {
+						// reapply all client filters
+						if (filter && filter.indexOf("$client.") == 0) {
+							var fieldName = filter.substring("$client.".length);
+							if (self.filters[filter] && ("" + x[fieldName]).toLowerCase().indexOf(("" + self.filters[filter]).toLowerCase()) < 0) {
+								matches = false;
+							}
+						}	
+					});
+					return matches;
+				}));
+			}
+			else {
+				// we delay the reload in case of multiple filters firing
+				this.delayedLoad();
+			}
 		},
 		clearFilters: function () {
 			var self = this;
@@ -563,6 +602,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				result = result.filter(function(key) {
 					// must not be bound and not yet a filter
 					return !self.cell.bindings[key] && (currentFilters.indexOf(key) < 0 || ignoreCurrentFilters);
+				});
+			}
+			if (this.cell.state.allowFrontendFiltering) {
+				Object.keys(this.definition).map(function(key) {
+					result.push("$client." + key);
 				});
 			}
 			return result;
@@ -957,6 +1001,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				if (current) {
 					this.records.splice(0, this.records.length);
 					nabu.utils.arrays.merge(this.records, current);
+					nabu.utils.arrays.merge(this.allRecords, current);
 				}
 				this.doInternalSort();
 			}
@@ -1182,7 +1227,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 						if (list) {
 							Object.keys(list).map(function(field) {
 								if (list[field] instanceof Array) {
+									list[field].forEach(function(x, i) {
+										x.$position = i;
+									});
 									nabu.utils.arrays.merge(self.records, list[field]);
+									nabu.utils.arrays.merge(self.allRecords, list[field]);
 								}
 							});
 							if (list.page) {

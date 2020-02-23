@@ -29,6 +29,7 @@
 						:formatter="function(x) { return x.name }"/>
 					<component v-if="cell.state.filterType && cell.state.filterType.configure" :is="cell.state.filterType.configure" :page="page" :cell="cell" :filters="cell.state.filters"/>
 					<n-form-text v-if="cell.state.filterType == 'combo'" v-model="cell.state.filterPlaceHolder" label="Combo placeholder"/>
+					<n-form-switch v-model="cell.state.allowFrontendFiltering" label="Allow Frontend Filtering"/>
 					<n-form-combo label="Update Operation" :value="cell.state.updateOperation"
 						v-if="updatable"
 						:filter="getFormOperations"
@@ -179,7 +180,7 @@
 			:cell="cell"
 			:show-refresh="cell.state.showRefresh"
 			:show-clear="cell.state.showClear"
-			:filters="cell.state.filters"
+			:filters="getLiveFilters()"
 			:formatters="cell.state.formatters"
 			:orderable="orderable"
 			:state="getFilterState()"

@@ -26,6 +26,7 @@
 				<span @click="sort(getSortKey(field))" v-for="field in cell.state.fields" :style="{'flex-grow': (field.width != null ? field.width : '1')}"
 						v-if="!isAllFieldHidden(field)">
 					<span>{{ $services.page.translate(field.label) }}</span>
+					<n-info class="n-form-label-info" v-if="field.info" :icon="field.infoIcon"><span v-html="field.info"></span></n-info>
 					<span class="fa fa-sort-up" v-if="orderBy.indexOf(getSortKey(field)) >= 0"></span>
 					<span class="fa fa-sort-down" v-if="orderBy.indexOf(getSortKey(field) + ' desc') >= 0"></span>
 				</span>
