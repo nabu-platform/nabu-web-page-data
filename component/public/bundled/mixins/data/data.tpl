@@ -1,5 +1,5 @@
-<template id="data-common">
-	<div class="data-common">
+<template id="data-common-header">
+	<div class="data-common-header">
 		<n-sidebar :autocloseable="false" v-if="configuring" @close="$emit('close')" class="settings" :inline="true">
 			<n-form class="layout2">
 				<n-collapsible title="Data Settings" class="padded">
@@ -173,17 +173,13 @@
 		</n-sidebar>
 		<h2 v-if="cell.state.title">{{$services.page.translate($services.page.interpret(cell.state.title, $self))}}</h2>
 
-		<component v-if="cell.state.filterType && !inactive" 
-			:is="cell.state.filterType.component" 
-			class="cell-actions"
-			:page="page"
-			:cell="cell"
-			:show-refresh="cell.state.showRefresh"
-			:show-clear="cell.state.showClear"
+		<data-common-filter
 			:filters="getLiveFilters()"
-			:formatters="cell.state.formatters"
 			:orderable="orderable"
 			:state="getFilterState()"
+			:page="page"
+			:cell="cell"
+			:edit="edit"
 			@refresh="$emit('refresh')"
 			@clear="clearFilters"
 			@filter="setFilter"
@@ -205,17 +201,25 @@
 				</div>
 			</div>
 		</div>
-		<div class="global-actions" v-if="!isHeader && globalActions.length">
-			<component
-				v-if="!action.condition || $services.page.isCondition(action.condition, state, $self)"
-				v-for="action in globalActions"
-				:is="action.type == 'link' ? 'a' : 'button'"
-				:disabled="action.useSelection && !lastTriggered"
-				:class="[action.class, {'has-icon': action.icon}]"
-				href="javascript:void(0)"
-				v-action="function() { trigger(action) }"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></component>
-		</div>
 	</div>
+</template>
+
+<template id="data-common-filter">
+	<component v-if="cell.state.filterType" 
+		:is="cell.state.filterType.component" 
+		class="cell-actions"
+		:page="page"
+		:cell="cell"
+		:show-refresh="cell.state.showRefresh"
+		:show-clear="cell.state.showClear"
+		:filters="filters"
+		:formatters="cell.state.formatters"
+		:orderable="orderable"
+		:state="state"
+		v-bubble:refresh
+		v-bubble:clear
+		v-bubble:filter
+		v-bubble:sort/>
 </template>
 
 <template id="data-common-footer">

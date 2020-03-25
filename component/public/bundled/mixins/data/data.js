@@ -1266,7 +1266,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 });
 
 Vue.component("data-common-header", {
-	template: "#data-common",
+	template: "#data-common-header",
 	mixins:[nabu.page.views.data.DataCommon],
 	props: {
 		configuring: {
@@ -1294,3 +1294,37 @@ Vue.component("data-common-footer", {
 		}
 	}*/
 });
+
+
+Vue.component("data-common-filter", {
+	template: "#data-common-filter",
+	props: {
+		page: {
+			type: Object,
+			required: true
+		},
+		cell: {
+			type: Object,
+			required: true
+		},
+		edit: {
+			type: Boolean,
+			required: true
+		},
+		filters: {
+			type: Array
+		},
+		orderable: {
+			type: Boolean,
+			required: false
+		},
+		state: {
+			type: Object,
+			required: true
+		}
+	}
+})
+
+
+
+
