@@ -48,14 +48,19 @@ nabu.services.VueService(Vue.extend({
 				// we also need at least _a_ complex array in the results
 				if (isAllowed && operation.responses["200"] != null && operation.responses["200"].schema != null) {
 					var schema = operation.responses["200"].schema;
-					var definition = self.$services.swagger.definition(schema["$ref"]);
-					isAllowed = false;
-					if (definition.properties) {
-						Object.keys(definition.properties).map(function(field) {
-							if (definition.properties[field].type == "array") {
-								isAllowed = true;
-							}
-						});
+					if (!schema["$ref"]) {
+						isAllowed = false;
+					}
+					else {
+						var definition = self.$services.swagger.definition(schema["$ref"]);
+						isAllowed = false;
+						if (definition.properties) {
+							Object.keys(definition.properties).map(function(field) {
+								if (definition.properties[field].type == "array") {
+									isAllowed = true;
+								}
+							});
+						}
 					}
 				}
 				return isAllowed;
