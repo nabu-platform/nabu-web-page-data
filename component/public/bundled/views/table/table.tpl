@@ -39,6 +39,8 @@
 							:label="false"
 							@updated="update(record)"
 							:page="page"
+							@mouseover="actionHovering = fieldActions(field).length > 0" @mouseout="actionHovering = false"
+							:actions="fieldActions(field)"
 							:cell="cell"/>
 					</td>
 					<td class="actions" v-if="actions.length" @mouseover="actionHovering = true" @mouseout="actionHovering = false">

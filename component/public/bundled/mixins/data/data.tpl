@@ -121,7 +121,7 @@
 					:cell="cell"
 					:fields="cell.state.filters" 
 					:possible-fields="filtersToAdd()"/>
-				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="!!cell.state.updateOperation" :allow-events="false"/>
+				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="!!cell.state.updateOperation" :allow-events="false" v-if="supportsFields"/>
 				<n-collapsible title="Formatters" class="list" v-if="false">
 					<n-collapsible class="list-item" :title="cell.state.result[key].label ? cell.state.result[key].label : key" v-for="key in keys">
 						<n-form-text v-model="cell.state.result[key].label" :label="'Label for ' + key" 
@@ -135,13 +135,27 @@
 					<div class="padded-content">
 						<n-form-text v-model="cell.state.class" label="Class"/>
 					</div>
-					<div class="list-actions">
-						<button @click="addRecordStyle()"><span class="fa fa-plus"></span>Style</button>
+					<div v-if="supportsRecordStyling">
+						<div class="list-actions">
+							<button @click="addRecordStyle()"><span class="fa fa-plus"></span>Record Style</button>
+						</div>
+						<div class="list-row" v-for="style in cell.state.styles">
+							<n-form-text v-model="style.class" label="Class"/>
+							<n-form-text v-model="style.condition" label="Condition"/>
+							<span @click="cell.state.styles.splice(cell.state.styles.indexOf(style), 1)" class="fa fa-times"></span>
+						</div>
 					</div>
-					<div class="list-row" v-for="style in cell.state.styles">
-						<n-form-text v-model="style.class" label="Class"/>
-						<n-form-text v-model="style.condition" label="Condition"/>
-						<span @click="cell.state.styles.splice(cell.state.styles.indexOf(style), 1)" class="fa fa-times"></span>
+					<div v-if="supportsGlobalStyling">
+						<div class="list-actions">
+							<button @click="addGlobalStyle()"><span class="fa fa-plus"></span>Global Style</button>
+						</div>
+						<div v-if="cell.state.globalStyles">
+							<div class="list-row" v-for="style in cell.state.globalStyles">
+								<n-form-text v-model="style.class" label="Class"/>
+								<n-form-text v-model="style.condition" label="Condition"/>
+								<span @click="cell.state.globalStyles.splice(cell.state.globalStyles.indexOf(style), 1)" class="fa fa-times"></span>
+							</div>
+						</div>
 					</div>
 				</n-collapsible>
 				<n-collapsible title="Order By" v-if="orderable">

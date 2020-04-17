@@ -69,6 +69,21 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			type: Object,
 			required: false,
 			default: function() { return {} }
+		},
+		supportsRecordStyling: {
+			type: Boolean,
+			required: false,
+			default: true
+		},
+		supportsGlobalStyling: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		supportsFields: {
+			type: Boolean,
+			required: false,
+			default: true
 		}
 	},
 	data: function() {
@@ -502,6 +517,15 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				condition: null
 			});
 		},
+		addGlobalStyle: function() {
+			if (!this.cell.state.globalStyles) {
+				Vue.set(this.cell.state, "globalStyles", []);
+			}
+			this.cell.state.globalStyles.push({
+				class: null,
+				condition: null
+			});
+		},
 		addStyle: function(key) {
 			if (!this.cell.state.result[key].styles) {
 				Vue.set(this.cell.state.result[key], "styles", []);
@@ -652,8 +676,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// if no action is specified, it is the one without the icon and label (and not global)
 			// this is row specific (not global) but does not have an actual presence (no icon & label)
 			if (!action && !this.actionHovering) {
+				// selected events must not be linked to fields
 				action = this.cell.state.actions.filter(function(x) {
-					return !x.icon && !x.label && !x.global;
+					return !x.icon && !x.label && !x.global && x.field == null;
 				})[0];
 				if (action && action.condition) {
 					// we do want to change the event, just with a null value
