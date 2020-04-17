@@ -8,7 +8,8 @@ nabu.page.views.data.TableList = Vue.extend({
 	template: "#data-table-list",
 	data: function() {
 		return {
-			configuring: false
+			configuring: false,
+			hiddenColNames: []
 		}
 	},
 	activate: function(done) {
@@ -20,7 +21,84 @@ nabu.page.views.data.TableList = Vue.extend({
 	methods: {
 		configure: function() {
 			this.configuring = true;
+		},
+		addTopHeaderField: function() {
+			if (!this.cell.state.topHeaders) {
+				Vue.set(this.cell.state, "topHeaders", []);
+			}
+			this.cell.state.topHeaders.push({
+				label: null,
+				subheaders: [],
+				colspan: null,
+				styles: []
+			});
+		},
+		addSubheader: function(field) {
+			field.subheaders.push(null);
+		},
+		addStyle: function(field) {
+			field.styles.push({
+				class: null,
+				condition: null
+			});
+		},
+		fieldUp: function(field) {
+			var index = this.cell.state.topHeaders.indexOf(field);
+			if (index > 0) {
+				var replacement = this.cell.state.topHeaders[index - 1];
+				this.cell.state.topHeaders.splice(index - 1, 1, field);
+				this.cell.state.topHeaders.splice(index, 1, replacement);
+			}
+		},
+		fieldDown: function(field) {
+			var index = this.cell.state.topHeaders.indexOf(field);
+			if (index < this.cell.state.topHeaders.length - 1) {
+				var replacement = this.cell.state.topHeaders[index + 1];
+				this.cell.state.topHeaders.splice(index + 1, 1, field);
+				this.cell.state.topHeaders.splice(index, 1, replacement);
+			}
+		},
+		fieldBeginning: function(field) {
+			var index = this.cell.state.topHeaders.indexOf(field);
+			if (index > 0) {
+				this.cell.state.topHeaders.splice(index, 1);
+				this.cell.state.topHeaders.unshift(field);
+			}
+		},
+		fieldEnd: function(field) {
+			var index = this.cell.state.topHeaders.indexOf(field);
+			if (index < this.cell.state.topHeaders.length - 1) {
+				this.cell.state.topHeaders.splice(index, 1);
+				this.cell.state.topHeaders.push(field);
+			}
+		},
+		calculateColspan: function(field) {
+			var self = this;
+			if (field.subheaders != null && this.cell.state.hideEmptyColumns) {
+				var result = field.subheaders.filter(function(subheader) {
+					return self.isAllFieldHidden(self.cell.state.fields[subheader]);
+				});
+				field.colspan = result.length;
+			}
+			else if (field.subheaders != null) {
+				field.colspan = field.subheaders.length;
+			}
+			else {
+				field.colspan = 1;	
+			}
+			return field.colspan
+		},
+		subheadersHidden: function(field) {
+			var self = this;
+			if (field.subheaders != null && field.subheaders.length > 1) {
+				var result = field.subheaders.filter(function(subheader) {
+					return !self.isAllFieldHidden(self.cell.state.fields[subheader]);
+				});
+				return result.length == 0;
+			}
+			else {
+				return false;
+			}
 		}
 	}
 });
-
