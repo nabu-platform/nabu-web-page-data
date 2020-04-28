@@ -172,7 +172,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 			}
 			else if (this.cell.state.array) {
-				var available = this.$services.page.getAvailableParameters(this.page, this.cell);
+				var available = this.$services.page.getAvailableParameters(this.page, this.cell, true);
 				var variable = this.cell.state.array.substring(0, this.cell.state.array.indexOf("."));
 				var rest = this.cell.state.array.substring(this.cell.state.array.indexOf(".") + 1);
 				if (available[variable]) {
@@ -471,6 +471,14 @@ nabu.page.views.data.DataCommon = Vue.extend({
 						? (self.cell.on ? self.cell.on : {})
 						: {properties:self.definition};
 				});
+			}
+			if (this.getCustomEvents) {
+				var custom = this.getCustomEvents();
+				if (custom) {
+					Object.keys(custom).forEach(function(key) {
+						result[key] = custom[key];	
+					});
+				}
 			}
 			return result;
 		},

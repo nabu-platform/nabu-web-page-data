@@ -1,6 +1,15 @@
 window.addEventListener("load", function() {
 	application.bootstrap(function($services) {
 		
+		var accept = function(type, value) {
+			if (type == "operation") {
+				return $services.dataUtils.getDataOperations().map(function(x) { return x.id }).indexOf(value) >= 0;
+			}
+		};
+		var initialize = function(type, value, component, cell, row, page) {
+			component.updateOperation(value);
+		};
+		
 		$services.router.register({
 			alias: "data-table",
 			enter: function(parameters) {
@@ -15,6 +24,11 @@ window.addEventListener("load", function() {
 			description: "A tabular view of data",
 			name: "Table",
 			category: "data",
+			accept: accept,
+			initialize: function(type, value, component, cell, row, page) {
+				// do general initialize
+				initialize(type, value, component, cell, row, page);	
+			},
 			enter: function(parameters) {
 				return new nabu.page.views.data.TableList({propsData:parameters});
 			},
@@ -68,6 +82,8 @@ window.addEventListener("load", function() {
 			description: "Display a list of data records as separate cards",
 			category: "data",
 			name: "Card",
+			accept: accept,
+			initialize: initialize,
 			enter: function(parameters) {
 				return new nabu.page.views.data.Card({propsData:parameters});
 			},

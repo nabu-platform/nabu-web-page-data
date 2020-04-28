@@ -54,8 +54,8 @@
 							<span class="fa fa-times" @click="field.styles.splice(field.styles.indexOf(style), 1)"></span>
 						</n-form-section>
 					</n-collapsible>
-				</n-collapsible>
-			</div>
+				</div>
+			</n-collapsible>
 		</data-common-header>
 		
 		<ul class="table-list classic data" cellspacing="0" cellpadding="0" :class="dataClass" v-if="!cell.state.useNativeTable && (edit || showEmpty || records.length)">
