@@ -18,8 +18,12 @@
 						@input="updateCollect"/>
 					<n-form-text v-if="cell.state.operation" v-model="cell.state.autoRefresh" label="Auto-refresh" info="If you want to automatically refresh the data, fill in the number of ms after which it will be refreshed"/>
 					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()" info="How many items do you want to load at once?"/>
-					<n-form-switch v-if="!cell.state.loadMore && hasLimit" v-model="cell.state.loadLazy" label="Lazy Loading"/> 
-					<n-form-switch v-if="!cell.state.loadLazy && hasLimit" v-model="cell.state.loadMore" label="Load more button"/>
+					<n-form-text v-model="cell.state.windowIncrement" label="Window Increment" :timeout="600" @input="load()" info="For windowed data lists, the limit determines how many items are on screen while the window increment determines how much you move by each time"/>   
+					<n-form-switch v-if="!cell.state.loadMore && !cell.state.loadPrevNext && hasLimit" v-model="cell.state.loadLazy" label="Lazy Loading"/> 
+					<n-form-switch v-if="!cell.state.loadLazy && !cell.state.loadPrevNext && hasLimit" v-model="cell.state.loadMore" label="Load more button"/>
+					<n-form-switch v-if="!cell.state.loadMore && !cell.state.loadLazy && hasLimit" v-model="cell.state.loadPrevNext" label="Load next/prev"/> 
+					<n-form-text v-model="cell.state.prevButtonLabel" label="Label previous button" v-if="cell.state.loadPrevNext"/>
+					<n-form-text v-model="cell.state.nextButtonLabel" label="Label next button" v-if="cell.state.loadPrevNext"/>
 					<slot name="main-settings"></slot>
 					<h2>Additional<span class="subscript">Configure some additional data properties.</span></h2>
 					<n-form-text v-model="cell.state.title" label="Title" info="The title for this data component"/>
@@ -234,6 +238,17 @@
 		v-bubble:clear
 		v-bubble:filter
 		v-bubble:sort/>
+</template>
+
+<template id="data-common-prev-next">
+	<div class="prev-next-actions">
+		<span class="previous-button-wrapper" v-if="hasPrevious">
+			<button class="previous-button" @click="$emit('previous')">{{$services.page.translate(prevButtonLabel)}}</button>
+		</span>
+		<span class="next-button-wrapper" v-if="hasNext">
+			<button class="next-button" @click="$emit('next')">{{$services.page.translate(nextButtonLabel)}}</button>
+		</span>
+	</div>
 </template>
 
 <template id="data-common-footer">

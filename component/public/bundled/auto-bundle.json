@@ -79,55 +79,6 @@
 							"url": "views/table/table.scss"
 						}
 					}, 
-					"d3": {
-						"gauge": {
-							"gauge.tpl": {
-								"url": "views/d3/gauge/gauge.tpl"
-							}, 
-							"gauge.scss": {
-								"url": "views/d3/gauge/gauge.scss"
-							}, 
-							"gauge.js": {
-								"url": "views/d3/gauge/gauge.js"
-							}
-						}, 
-						"bar": {
-							"bar.tpl": {
-								"url": "views/d3/bar/bar.tpl"
-							}, 
-							"bar.js": {
-								"url": "views/d3/bar/bar.js"
-							}, 
-							"bar.scss": {
-								"url": "views/d3/bar/bar.scss"
-							}
-						}, 
-						"line": {
-							"line.scss": {
-								"url": "views/d3/line/line.scss"
-							}, 
-							"line.js": {
-								"url": "views/d3/line/line.js"
-							}, 
-							"line.tpl": {
-								"url": "views/d3/line/line.tpl"
-							}
-						}, 
-						"donut": {
-							"donut.js": {
-								"url": "views/d3/donut/donut.js"
-							}, 
-							"donut.scss": {
-								"url": "views/d3/donut/donut.scss"
-							}, 
-							"donut.tpl": {
-								"url": "views/d3/donut/donut.tpl"
-							}
-						}, 
-						"d3.v5.js": {
-							"url": "views/d3/d3.v5.js"
-						}
-					}, 
 					"multi": {
 						"multi.tpl": {
 							"url": "views/multi/multi.tpl"

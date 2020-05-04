@@ -52,15 +52,16 @@ nabu.services.VueService(Vue.extend({
 						isAllowed = false;
 					}
 					else {
-						var definition = self.$services.swagger.definition(schema["$ref"]);
-						isAllowed = false;
+						var definition = self.$services.swagger.resolve(schema["$ref"]);
+						return self.$services.page.getArrays(definition).length > 0;
+						/*isAllowed = false;
 						if (definition.properties) {
 							Object.keys(definition.properties).map(function(field) {
 								if (definition.properties[field].type == "array") {
 									isAllowed = true;
 								}
 							});
-						}
+						}*/
 					}
 				}
 				return isAllowed;

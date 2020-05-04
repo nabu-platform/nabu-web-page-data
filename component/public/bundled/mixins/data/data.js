@@ -101,7 +101,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			refreshTimer: null,
 			loadTimer: null,
 			lazyPromise: null,
-			wizard: "step1"
+			wizard: "step1",
+			offset: 0
 		}
 	},
 	ready: function() {
@@ -158,7 +159,13 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			var properties = {};
 			if (this.operation && this.operation.responses["200"]) {
 				var definition = this.$services.swagger.resolve(this.operation.responses["200"].schema);
-				//var definition = this.$services.swagger.definition(schema["$ref"]);
+				var arrays = this.$services.page.getArrays(definition);
+				if (arrays.length > 0) {
+					var childDefinition = this.$services.page.getChildDefinition(definition, arrays[0]);
+					if (childDefinition && childDefinition.items && childDefinition.items.properties) {
+						nabu.utils.objects.merge(properties, childDefinition.items.properties);
+					}
+				}
 				if (definition.properties) {
 					var self = this;
 					Object.keys(definition.properties).map(function(field) {
@@ -185,9 +192,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			return properties;
 		},
 		hasLimit: function() {
-			return !this.operation || !this.operation.parameters ? false : this.operation.parameters.filter(function(x) {
+			return !this.operation || (!this.operation.parameters ? false : this.operation.parameters.filter(function(x) {
 				return x.name == "limit";
-			}).length;
+			}).length);
 		},
 		// all the actual parameters (apart from the spec-based ones)
 		inputParameters: function() {
@@ -945,8 +952,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 			}
 		},
-		internalSort: function(key, multiplier) {
-			this.records.sort(function(a, b) {
+		internalSort: function(key, multiplier, records) {
+			if (records == null) {
+				records = this.records;
+			}
+			records.sort(function(a, b) {
 				var valueA = a[key];
 				var valueB = b[key];
 				var result = 0;
@@ -1021,12 +1031,24 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				if (current != null) {
 					current.push(record);
 				}
-				this.records.push(record);
-				this.doInternalSort();
+				// make sure all records stays up to date
+				this.allRecords.push(record);
+				// if we are using paging, reload current page, it may have changed
+				if (this.paging && this.paging.current != null) {
+					this.doInternalSort(this.allRecords);
+					this.load(this.paging.current);
+				}
+				else {
+					this.records.push(record);
+					this.doInternalSort();
+				}
 			}
 		},
 		loadArray: function() {
-			if (this.cell.state.array) {
+			if (true) {
+				this.load();
+			}
+			else if (this.cell.state.array) {
 				var current = this.$services.page.getValue(this.localState, this.cell.state.array);
 				if (current == null) {
 					current = this.$services.page.getPageInstance(this.page, this).get(this.cell.state.array);
@@ -1039,7 +1061,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				this.doInternalSort();
 			}
 		},
-		doInternalSort: function() {
+		doInternalSort: function(records) {
 			if (this.orderBy && this.orderBy.length) {
 				var field = this.orderBy[0];
 				var index = field.indexOf(" desc");
@@ -1048,7 +1070,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					multiplier = -1;
 					field = field.substring(0, index);
 				}
-				this.internalSort(field, multiplier);
+				this.internalSort(field, multiplier, records);
 			}
 		},
 		updateOperation: function(operationId) {
@@ -1190,6 +1212,23 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			nabu.utils.objects.merge(this.filterState, this.filters);
 			return this.filterState;
 		},
+		next: function() {
+			var increment = 1;
+			// suppose page is currently 0, limit is 3
+			// we add the increment to the offset which is relative to the currently loaded page
+			// we already fetched [page, page+limit]
+			// now we fetch [page+limit+offset, page+limit+offset+increment]
+			// we add the increment to the offset for next time
+			this.offset += increment;
+			// we make sure we move the page to match the offset
+			while (this.offset >= limit) {
+				this.page++;
+				this.offset -= limit;
+			}
+		},
+		previous: function() {
+			
+		},
 		getRestParameters: function(page) {
 			var parameters = {};
 			var self = this;
@@ -1243,7 +1282,14 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 			}
 		},
-		load: function(page, append) {
+		loadNext: function() {
+			this.load(this.paging.current != null ? this.paging.current + 1 : 0);
+		},
+		loadPrevious: function() {
+			this.load(this.paging.current != null ? this.paging.current - 1 : 0);
+		},
+		// how much to increment by
+		load: function(page, append, increment) {
 			if (this.refreshTimer) {
 				clearTimeout(this.refreshTimer);
 				this.refreshTimer = null;
@@ -1290,6 +1336,44 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					promise.resolve(error);
 				}
 			}
+			else if (this.cell.state.array) {
+				var current = this.$services.page.getValue(this.localState, this.cell.state.array);
+				if (current == null) {
+					current = this.$services.page.getPageInstance(this.page, this).get(this.cell.state.array);
+				}
+				if (current) {
+					if (!append) {
+						this.records.splice(0, this.records.length);
+					}
+					// only reload the data if we have no data as of yet
+					// otherwise we might lose state that was added via pushToArray
+					if (!this.allRecords.length) {
+						nabu.utils.arrays.merge(this.allRecords, current);
+					}
+					this.doInternalSort(this.allRecords);
+					// if we set a limit, only get those records
+					if (this.cell.state.limit && this.cell.state.limit != 0) {
+						var start = page ? page * parseInt(this.cell.state.limit) : 0;
+						var end = start + parseInt(this.cell.state.limit);
+						// only add something to records if we are still inside the array
+						if (start < this.allRecords.length) {
+							end = Math.min(end, this.allRecords.length);
+							nabu.utils.arrays.merge(this.records, this.allRecords.slice(start, end));
+						}
+						this.paging.current = page ? page : 0;
+						this.paging.totalRowCount = this.allRecords.length;
+						this.paging.pageSize = parseInt(this.cell.state.limit);
+						this.paging.rowOffset = start;
+						this.paging.total = Math.ceil(this.allRecords.length / parseInt(this.cell.state.limit));
+						console.log("paging is now", this.paging);
+					}
+					else {
+						nabu.utils.arrays.merge(this.records, this.allRecords);
+					}
+					promise.resolve();
+					//nabu.utils.arrays.merge(this.records, current);
+				}
+			}
 			else {
 				promise.resolve("No operation found");
 			}
@@ -1328,6 +1412,25 @@ Vue.component("data-common-footer", {
 	}*/
 });
 
+Vue.component("data-common-prev-next", {
+	template: "#data-common-prev-next",
+	props: {
+		hasNext: {
+			type: Boolean,
+			required: false
+		},
+		hasPrevious: {
+			type: Boolean,
+			required: false
+		},
+		prevButtonLabel: {
+			required: false
+		},
+		nextButtonLabel: {
+			required: false
+		}
+	}
+})
 
 Vue.component("data-common-filter", {
 	template: "#data-common-filter",
