@@ -8,6 +8,11 @@ window.addEventListener("load", function() {
 		};
 		var initialize = function(type, value, component, cell, row, page) {
 			component.updateOperation(value);
+			var name = $services.page.guessNameFromOperation(value);
+			if (name != null) {
+				name = name.substring(0, 1).toUpperCase() + name.substring(1);
+				cell.state.title = name;
+			}
 		};
 		
 		$services.router.register({
