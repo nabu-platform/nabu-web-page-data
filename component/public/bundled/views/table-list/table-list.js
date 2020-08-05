@@ -76,7 +76,7 @@ nabu.page.views.data.TableList = Vue.extend({
 			var self = this;
 			if (field.subheaders != null && this.cell.state.hideEmptyColumns) {
 				var result = field.subheaders.filter(function(subheader) {
-					return self.isAllFieldHidden(self.cell.state.fields[subheader]);
+					return !self.isAllFieldHidden(self.cell.state.fields[subheader]);
 				});
 				field.colspan = result.length;
 			}
