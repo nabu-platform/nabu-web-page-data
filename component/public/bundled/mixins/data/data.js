@@ -7,7 +7,7 @@ if (!nabu.page.views.data) { nabu.page.views.data = {} }
 // the first load() is triggered by the main body
 // however any loads triggered through searching come from the header!
 // could really use a refactor...
-nabu.page.views.data.DataCommon = Vue.extend({
+nabu.page.views.data.DataCommon = Vue.extend({ 
 	props: {
 		page: {
 			type: Object,
@@ -111,6 +111,16 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			//this.$emit("input", true);
 		}
 	},
+	watch: {
+		watchedArray: function(newValue) {
+			console.log("-- updating watched array!", newValue);
+			this.allRecords.splice(0);
+			if (newValue) {
+				nabu.utils.arrays.merge(this.allRecords, newValue);
+			}
+			this.load(this.paging && this.paging.current ? this.paging.current : 0, false);
+		}
+	},
 	computed: {
 		eventFields: function() {
 			return this.cell.state.fields.map(function(x, index) {
@@ -119,6 +129,17 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					label: x.label
 				}
 			});
+		},
+		watchedArray: function() {
+			if (this.cell.state.array) {
+				var current = this.$services.page.getValue(this.localState, this.cell.state.array);
+				if (current == null) {
+					current = this.$services.page.getPageInstance(this.page, this).get(this.cell.state.array);
+				}
+				console.log("new updated watched array", current);
+				return current;
+			}
+			return [];
 		},
 		self: function() {
 			return this;
@@ -1295,8 +1316,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				this.refreshTimer = null;
 			}
 			var promise = this.$services.q.defer();
+			var self = this;
 			if (this.cell.state.operation) {
-				var self = this;
 				var parameters = this.getRestParameters(page);
 				try {
 					this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
