@@ -113,7 +113,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 	},
 	watch: {
 		watchedArray: function(newValue) {
-			console.log("-- updating watched array!", newValue);
 			this.allRecords.splice(0);
 			if (newValue) {
 				nabu.utils.arrays.merge(this.allRecords, newValue);
@@ -122,6 +121,21 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}
 	},
 	computed: {
+		filterConfiguration: function() {
+			var self = this;
+			if (this.cell.state.filterType) {
+				// backwards compatibility
+				if (this.cell.state.filterType.configure) {
+					return this.cell.state.filterType.configure;
+				}
+				else {
+					var filter = nabu.page.providers('data-filter').filter(function(x) {
+						return x.component == self.cell.state.filterType;
+					})[0];
+					return filter && filter.configure ? filter.configure : null;
+				}
+			}	
+		},
 		eventFields: function() {
 			return this.cell.state.fields.map(function(x, index) {
 				return {
@@ -136,7 +150,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				if (current == null) {
 					current = this.$services.page.getPageInstance(this.page, this).get(this.cell.state.array);
 				}
-				console.log("new updated watched array", current);
 				return current;
 			}
 			return [];
@@ -888,7 +901,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			var state = {
 				record: record	
 			}
-			console.log("checking", condition, JSON.stringify(state, null, 2));
 			var $services = this.$services;
 			var result = eval(condition);
 			if (result instanceof Function) {
@@ -1123,7 +1135,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					// instead we add entries for all the fields in the return value
 					self.keys.map(function(key) {
 						self.cell.state.fields.push({
-							label: key,
+							// avoid interpretation...
+							label: "%" + "{" + self.$services.page.prettify(key) + "}",
 							fragments: [{
 								type: "data",
 								key: key
@@ -1386,7 +1399,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 						this.paging.pageSize = parseInt(this.cell.state.limit);
 						this.paging.rowOffset = start;
 						this.paging.total = Math.ceil(this.allRecords.length / parseInt(this.cell.state.limit));
-						console.log("paging is now", this.paging);
 					}
 					else {
 						nabu.utils.arrays.merge(this.records, this.allRecords);
@@ -1431,6 +1443,11 @@ Vue.component("data-common-footer", {
 			required: false
 		}
 	}*/
+});
+
+Vue.component("data-common-configure", {
+	template: "#data-common-configure",
+	mixins:[nabu.page.views.data.DataCommon]
 });
 
 Vue.component("data-common-prev-next", {

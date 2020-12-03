@@ -10,8 +10,11 @@ window.addEventListener("load", function() {
 			component.updateOperation(value);
 			var name = $services.page.guessNameFromOperation(value);
 			if (name != null) {
-				name = name.substring(0, 1).toUpperCase() + name.substring(1);
-				cell.state.title = name;
+				cell.state.title = $services.page.prettify(name);
+			}
+			cell.state.filterType = "data-combo-filter";
+			cell.state.comboFilter = {
+				useTags: true
 			}
 		};
 		
@@ -33,6 +36,8 @@ window.addEventListener("load", function() {
 			initialize: function(type, value, component, cell, row, page) {
 				// do general initialize
 				initialize(type, value, component, cell, row, page);	
+				// use native table by default, it deals better with lots of data (which is the default usecase often)
+				cell.state.useNativeTable = true;
 			},
 			enter: function(parameters) {
 				return new nabu.page.views.data.TableList({propsData:parameters});
@@ -109,6 +114,6 @@ window.addEventListener("load", function() {
 	});
 	
 	// register data filter provider
-	nabu.page.provide("data-filter", { component: "data-filter-default", name: "Default Filter" });
+	nabu.page.provide("data-filter", { component: "data-filter-default", name: "Default Filter", configure: "data-default-filter-configure" });
 	nabu.page.provide("data-filter", { component: "data-combo-filter", name: "Combo Filter", configure: "data-combo-filter-configure" });
 });

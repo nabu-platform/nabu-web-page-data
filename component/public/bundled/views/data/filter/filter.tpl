@@ -37,7 +37,6 @@
 
 <template id="data-default-filter-configure">
 	<n-form-section class="data-default-filter-configure">
-		<n-form-switch v-model="hideLabels" label="Hide labels"/>
 		<n-form-switch v-model="cell.state.defaultFilter.displayOpenOnly" label="Always show filters"/>
 		<n-form-text v-model="cell.state.defaultFilter.textBefore" label="Text before"/>
 		<n-form-switch v-model="cell.state.defaultFilter.useTags" label="Use Tags"/>

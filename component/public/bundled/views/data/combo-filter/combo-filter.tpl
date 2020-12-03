@@ -1,8 +1,8 @@
 <template id="data-combo-filter">
 	<form v-on:submit.prevent class="data-combo-filter n-form">
-		<div class="combo-filter n-input-combo n-component" v-if="filters.length">
+		<div class="combo-filter n-input-combo n-component" v-if="filters.length || showRefresh">
 			<div class="n-input-combo-label-container" v-auto-close="function() { showLabels = false }" v-if="filters">
-				<div class="n-component-label n-input-combo-label" @click="showLabels = !showLabels">
+				<div class="n-component-label n-input-combo-label" @click="showLabels = !showLabels" v-if="activeFilter">
 					<span>{{ activeFilter.label ? $services.page.translate(activeFilter.label) : activeFilter.name }}</span><span v-if="filters.length > 1" class="n-icon n-icon-arrow-down fa fa-chevron-down"></span>
 				</div>
 				
@@ -12,15 +12,17 @@
 					</li>
 				</ul>
 			</div>
-			<page-form-field :key="activeFilter.name + '_value'" 
-				class="combo-filter-field"
-				:field="activeFilter" 
-				:label="false"
-				:value="state[activeFilter.name]"
-				@label="function(label) { setLabel(activeFilter, label) }"
-				:page="page"
-				:cell="cell"
-				@input="function(newValue) { setFilter(activeFilter, newValue) }"/>
+			<div v-if="activeFilter">
+				<page-form-field :key="activeFilter.name + '_value'" 
+					class="combo-filter-field"
+					:field="activeFilter" 
+					:label="false"
+					:value="state[activeFilter.name]"
+					@label="function(label) { setLabel(activeFilter, label) }"
+					:page="page"
+					:cell="cell"
+					@input="function(newValue) { setFilter(activeFilter, newValue) }"/>
+			</div>
 			<button class="primary" v-if="showRefresh" @click="$emit('refresh')"><span class="fa fa-sync"></span></button>
 		</div>
 		<div class="combo-filter-tags" v-if="cell.state.comboFilter && cell.state.comboFilter.useTags">
@@ -48,7 +50,7 @@
 <template id="data-combo-filter-configure">
 	<n-form-section class="data-combo-filter-configure">
 		<n-form-switch v-model="cell.state.comboFilter.useTags" label="Use Tags"/>
-		<n-form-text v-model="cell.state.comboFilter.clearFilterIcon" v-if="showClear" label="Clear filter icon"/>
-		<n-form-text v-model="cell.state.comboFilter.clearFilterText" v-if="showClear" label="Clear filter text"/>
+		<n-form-text v-model="cell.state.comboFilter.clearFilterIcon" label="Clear filter icon"/>
+		<n-form-text v-model="cell.state.comboFilter.clearFilterText" label="Clear filter text"/>
 	</n-form-section>
 </template>

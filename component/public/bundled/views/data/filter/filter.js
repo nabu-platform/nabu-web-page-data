@@ -38,6 +38,9 @@ Vue.component("data-filter-default", {
 		}
 	},
 	created: function () {
+		if (!this.cell.state.defaultFilter) {
+			Vue.set(this.cell.state, "defaultFilter", {});
+		}
 		if ( this.cell.state.defaultFilter.displayOpenOnly == true) {
 			this.showFilter = true;
 		}
@@ -45,7 +48,6 @@ Vue.component("data-filter-default", {
 	computed: {
 		tags: function() {
 			var self = this;
-			console.log("state is", this.state);
 			return this.filters.filter(function(filter) {
 				return self.state[filter.name] != null;
 			}).map(function(filter) {

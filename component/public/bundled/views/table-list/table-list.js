@@ -3,9 +3,9 @@ if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
-nabu.page.views.data.TableList = Vue.extend({
+nabu.page.views.data.TableListGenerator = function(name) { return Vue.component(name, {
 	mixins: [nabu.page.views.data.DataCommon],
-	template: "#data-table-list",
+	template: "#" + name,
 	data: function() {
 		return {
 			configuring: false,
@@ -21,6 +21,9 @@ nabu.page.views.data.TableList = Vue.extend({
 	methods: {
 		configure: function() {
 			this.configuring = true;
+		},
+		configurator: function() {
+			return "data-table-list-configure"
 		},
 		addTopHeaderField: function() {
 			if (!this.cell.state.topHeaders) {
@@ -101,4 +104,7 @@ nabu.page.views.data.TableList = Vue.extend({
 			}
 		}
 	}
-});
+});}
+
+nabu.page.views.data.TableList = nabu.page.views.data.TableListGenerator("data-table-list");
+nabu.page.views.data.TableListGenerator("data-table-list-configure");

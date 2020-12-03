@@ -33,7 +33,7 @@ Vue.component("data-combo-filter", {
 	},
 	data: function() {
 		return {
-			activeFilter: false,
+			activeFilter: null,
 			showLabels: false
 		}
 	},
