@@ -648,7 +648,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
 			this.cell.state.actions.map(function(action) {
 				if (action.name && pageInstance.get(action.name)) {
-					pageInstance.emit(action.name, null);
+					pageInstance.emit(action.name, null, true);
 				}
 			});
 			// it is a client side filter

@@ -3,23 +3,28 @@ if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
-nabu.page.views.data.Card = Vue.extend({
-	template: "#data-card",
-	mixins: [nabu.page.views.data.DataCommon],
-	data: function() {
-		return {
-			configuring: false
+nabu.page.views.data.CardGenerator = function(name) {
+	return Vue.component(name, {
+		template: "#" + name,
+		mixins: [nabu.page.views.data.DataCommon],
+		data: function() {
+			return {
+				configuring: false
+			}
+		},
+		created: function() {
+			this.create();
+		},
+		activate: function(done) {
+			this.activate(done);
+		},
+		methods: {
+			configurator: function() {
+				return "data-card-configure";
+			}
 		}
-	},
-	created: function() {
-		this.create();
-	},
-	activate: function(done) {
-		this.activate(done);
-	},
-	methods: {
-		configure: function() {
-			this.configuring = true;	
-		}
-	}
-});
+	});
+};
+
+nabu.page.views.data.Card = nabu.page.views.data.CardGenerator("data-card");
+nabu.page.views.data.TableListGenerator("data-card-configure");

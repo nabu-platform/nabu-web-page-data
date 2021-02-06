@@ -17,44 +17,63 @@
 			<n-form-switch v-if="cell.state.useNativeTable" v-model="cell.state.useTopHeader" label="Use top header"/>
 			<n-form-switch v-model="cell.state.hideEmptyColumns" label="Hide empty columns"/>
 		</div>
-		<n-collapsible slot="settings" class="padded" title="Field widths" v-if="!cell.state.useNativeTable && cell.state.fields && cell.state.fields.length">
-			<n-form-text :label="'Width for: ' + (field.label ? field.label : field.key)" :value="field.width" v-for="field in cell.state.fields" @input="function(newValue) { $window.Vue.set(field, 'width', newValue) }"/>
-		</n-collapsible>
-		<n-collapsible slot="settings" class="page-fields list" title="Top header" v-if="cell.state.useTopHeader && cell.state.fields && cell.state.fields.length">
-			<div class="list-actions">
-				<button @click="addTopHeaderField()"><span class="fa fa-plus"></span>Field</button>
-			</div>
-			<div v-if="cell.state.topHeaders">
-				<n-collapsible class="list-item" :title="field.label ? field.label : 'Unlabeled'" v-for="field in cell.state.topHeaders">
-					<n-form-text v-model="field.label" label="Field Label"/>
-					<div>
+		<div slot="settings">
+			<n-collapsible class="padded" title="Field widths" v-if="!cell.state.useNativeTable && cell.state.fields && cell.state.fields.length">
+				<n-form-text :label="'Width for: ' + (field.label ? field.label : field.key)" :value="field.width" v-for="field in cell.state.fields" @input="function(newValue) { $window.Vue.set(field, 'width', newValue) }"/>
+			</n-collapsible>
+			<n-collapsible class="page-fields list" title="Top header" v-if="cell.state.useTopHeader && cell.state.fields && cell.state.fields.length">
+				<div class="list-actions">
+					<button @click="addTopHeaderField()"><span class="fa fa-plus"></span>Field</button>
+				</div>
+				<div v-if="cell.state.topHeaders">
+					<n-collapsible class="list-item" :title="field.label ? field.label : 'Unlabeled'" v-for="field in cell.state.topHeaders">
+						<n-form-text v-model="field.label" label="Field Label"/>
+						<div>
+							<div class="list-item-actions">
+								<button @click="addSubheader(field)">Add Subheader</button>
+								<button  @click="cell.state.topHeaders.splice(cell.state.topHeaders.indexOf(field), 1)">Remove Field</button>
+								<button @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
+								<button @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
+								<button @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
+								<button @click="fieldEnd(field)"><span class="fa fa-chevron-circle-right"></span></button>
+							</div>
+						</div>
+						<n-form-section class="list-row" v-for="i in Object.keys(field.subheaders)">
+							<n-form-combo v-model="field.subheaders[i]" :items="eventFields"
+								:formatter="function(x) { return x.index + (x.label ? ' - ' + x.label : '') }"
+								:extracter="function(x) { return x.index }"
+								label="Subheader"/>
+							<span class="fa fa-times" @click="field.subheaders.splice(i, 1)"></span>
+						</n-form-section>
 						<div class="list-item-actions">
-							<button @click="addSubheader(field)">Add Subheader</button>
-							<button  @click="cell.state.topHeaders.splice(cell.state.topHeaders.indexOf(field), 1)">Remove Field</button>
-							<button @click="fieldBeginning(field)"><span class="fa fa-chevron-circle-left"></span></button>
-							<button @click="fieldUp(field)"><span class="fa fa-chevron-circle-up"></span></button>
-							<button @click="fieldDown(field)"><span class="fa fa-chevron-circle-down"></span></button>
-							<button @click="fieldEnd(field)"><span class="fa fa-chevron-circle-right"></span></button>
+							<button @click="addStyle(field)"><span class="fa fa-plus"></span>Style</button>
+						</div>
+						<n-form-section class="list-row" v-for="style in field.styles">
+							<n-form-text v-model="style.class" label="Class"/>
+							<n-form-text v-model="style.condition" label="Condition"/>
+							<span class="fa fa-times" @click="field.styles.splice(field.styles.indexOf(style), 1)"></span>
+						</n-form-section>
+					</n-collapsible>
+				</div>
+			</n-collapsible>
+			<n-collapsible title="Device Layout" v-if="cell.state.fields && cell.state.fields.length && $services.page.devices.length">
+				<n-collapsible v-for="field in cell.state.fields" :title="field.label ? field.label : 'Unlabeled'" class="light">
+					<div class="padded-content">
+						<div class="list-actions">
+							<button @click="addDevice(field)"><span class="fa fa-plus"></span>Device rule</button>
+						</div>
+						<div v-if="field.devices">
+							<div class="list-row" v-for="device in field.devices">
+								<n-form-combo v-model="device.operator" :items="['>', '>=', '<', '<=', '==']"/>
+								<n-form-combo v-model="device.name" 
+									:filter="$services.page.suggestDevices"/>
+								<span @click="cell.devices.splice(cell.devices.indexOf(device), 1)" class="fa fa-times"></span>
+							</div>
 						</div>
 					</div>
-					<n-form-section class="list-row" v-for="i in Object.keys(field.subheaders)">
-						<n-form-combo v-model="field.subheaders[i]" :items="eventFields"
-							:formatter="function(x) { return x.index + (x.label ? ' - ' + x.label : '') }"
-							:extracter="function(x) { return x.index }"
-							label="Subheader"/>
-						<span class="fa fa-times" @click="field.subheaders.splice(i, 1)"></span>
-					</n-form-section>
-					<div class="list-item-actions">
-						<button @click="addStyle(field)"><span class="fa fa-plus"></span>Style</button>
-					</div>
-					<n-form-section class="list-row" v-for="style in field.styles">
-						<n-form-text v-model="style.class" label="Class"/>
-						<n-form-text v-model="style.condition" label="Condition"/>
-						<span class="fa fa-times" @click="field.styles.splice(field.styles.indexOf(style), 1)"></span>
-					</n-form-section>
 				</n-collapsible>
-			</div>
-		</n-collapsible>
+			</n-collapsible>
+		</div>
 	</data-common-configure>
 </template>
 <template id="data-table-list">
@@ -160,7 +179,7 @@
 				<tr>
 					<th @click="sort(getSortKey(field))"
 							v-for="field in cell.state.fields"
-							v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns)"><span>{{ $services.page.translate(field.label) }}</span>
+							v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field)"><span>{{ $services.page.translate(field.label) }}</span>
 						<n-info class="n-form-label-info" v-if="field.info" :icon="field.infoIcon"><span>{{ $services.page.translate(field.info) }}</span></n-info>
 						<span class="fa fa-sort-up" v-if="orderBy.indexOf(getSortKey(field)) >= 0"></span>
 						<span class="fa fa-sort-down" v-if="orderBy.indexOf(getSortKey(field) + ' desc') >= 0"></span>
@@ -170,7 +189,7 @@
 			</thead>
 			<tbody>
 				<tr v-visible="lazyLoad.bind($self, record)" v-for="record in records" @click="select(record)" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0" :key="record.id ? record.id : records.indexOf(record)">
-					<td :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields" v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns)">
+					<td :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields" v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field)">
 						<page-field :field="field" :data="record" 
 							v-if="!isFieldHidden(field, record)"
 							:should-style="false" 

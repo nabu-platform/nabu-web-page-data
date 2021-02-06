@@ -93,7 +93,14 @@ window.addEventListener("load", function() {
 			category: "data",
 			name: "Card",
 			accept: accept,
-			initialize: initialize,
+			initialize: function(type, value, component, cell, row, page) {
+				initialize(type, value, component, cell, row, page);
+				// default show labels
+				cell.state.showLabels = true;
+				// default we want row view, note that this may no be available in all themes
+				// we might remove this in the future, but for now it makes things easier..
+				cell.state.class = "row";
+			},
 			enter: function(parameters) {
 				return new nabu.page.views.data.Card({propsData:parameters});
 			},

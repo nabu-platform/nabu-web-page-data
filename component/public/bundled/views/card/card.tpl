@@ -1,3 +1,25 @@
+<template id="data-card-configure">
+	<data-common-configure :page="page" :parameters="parameters" :cell="cell"
+			:edit="edit"
+			:records="records"
+			:selected="selected"
+			:inactive="inactive"
+			@updatedEvents="$emit('updatedEvents')"
+			@close="$emit('close'); configuring=false"
+			:multiselect="true"
+			:configuring="true"
+			:updatable="true"
+			:paging="paging"
+			:filters="filters"
+			@refresh="refresh">
+		<n-form-section slot="main-settings">
+			<n-form-switch v-model="cell.state.showLabels" label="Show Labels" />
+			<n-form-combo label="Direction" v-model="cell.state.direction" :items="['horizontal', 'vertical']"/>
+		</n-form-section>
+	</data-common-configure>
+	
+</template>
+
 <template id="data-card">
 	<div class="data-cell data-cards">
 		<data-common-header :page="page" :parameters="parameters" :cell="cell" :edit="edit"
@@ -9,10 +31,6 @@
 				:updatable="true"
 				:filters="filters"
 				:paging="paging">
-			<n-form-section slot="main-settings">
-				<n-form-switch v-model="cell.state.showLabels" label="Show Labels" />
-				<n-form-combo label="Direction" v-model="cell.state.direction" :items="['horizontal', 'vertical']"/>
-			</n-form-section>
 		</data-common-header>
 				
 		<div class="data-card-list" :class="dataClass" v-if="edit || records.length" :style="{'flex-direction': cell.state.direction == 'vertical' ? 'column' : 'row-wrapped'}">

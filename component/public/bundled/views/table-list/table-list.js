@@ -19,6 +19,15 @@ nabu.page.views.data.TableListGenerator = function(name) { return Vue.component(
 		this.create();
 	},
 	methods: {
+		addDevice: function(field) {
+			if (!field.devices) {
+				Vue.set(field, "devices", []);
+			}
+			field.devices.push({name: null, operator: '>='});
+		},
+		isAllowedDevice: function(field) {
+			return !field.devices || field.devices.length == 0 || this.$services.page.isDevice(field.devices);
+		},
 		configure: function() {
 			this.configuring = true;
 		},
@@ -79,7 +88,7 @@ nabu.page.views.data.TableListGenerator = function(name) { return Vue.component(
 			var self = this;
 			if (field.subheaders != null && this.cell.state.hideEmptyColumns) {
 				var result = field.subheaders.filter(function(subheader) {
-					return !self.isAllFieldHidden(self.cell.state.fields[subheader]);
+					return !self.isAllFieldHidden(self.cell.state.fields[subheader]) && self.isAllowedDevice(self.cell.state.fields[subheader]);
 				});
 				field.colspan = result.length;
 			}
@@ -95,7 +104,7 @@ nabu.page.views.data.TableListGenerator = function(name) { return Vue.component(
 			var self = this;
 			if (field.subheaders != null && field.subheaders.length > 1) {
 				var result = field.subheaders.filter(function(subheader) {
-					return !self.isAllFieldHidden(self.cell.state.fields[subheader]);
+					return !self.isAllFieldHidden(self.cell.state.fields[subheader]) && self.isAllowedDevice(self.cell.state.fields[subheader]);
 				});
 				return result.length == 0;
 			}
