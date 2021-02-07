@@ -167,7 +167,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		},
 		recordActions: function() {
 			return this.actions.filter(function(x) {
-				return !x.field;
+				return !x.global && x.field == null;
 			});
 		},
 		globalActions: function() {

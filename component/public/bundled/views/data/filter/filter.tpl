@@ -4,7 +4,7 @@
 		<span class="fa fa-search" @click="showFilter = !showFilter" v-if="filters.length && !cell.state.defaultFilter.displayOpenOnly"></span>
 		<n-form class="layout2 filter" v-if="showFilter">
 			<span v-if="!!cell.state.defaultFilter.textBefore" class="data-filter-text-before">{{$services.page.translate(cell.state.defaultFilter.textBefore)}}</span>
-			<page-form-field v-for="field in filters" 
+			<page-form-field v-for="field in filters" class="filter-field"
 				:key="field.name + '_value'" 
 				:field="field" 
 				:value="state[field.name]"

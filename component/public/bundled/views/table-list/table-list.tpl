@@ -202,7 +202,7 @@
 					</td>
 					<td class="actions" v-if="actions.length" @mouseover="actionHovering = true" @mouseout="actionHovering = false">
 						<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
-							v-for="action in actions" 
+							v-for="action in recordActions" 
 							@click="trigger(action, record)"
 							:class="[action.class, {'has-icon': action.icon}, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></button>
 					</td>

@@ -51,10 +51,6 @@ Vue.component("data-filter-default", {
 			return this.filters.filter(function(filter) {
 				return self.state[filter.name] != null;
 			}).map(function(filter) {
-				console.log("comput tags for filter", filter, self.state);
-				
-				console.log("asdfasfksadfjklasd ", self.state[filter.name + "$label"] ? self.state[filter.name + "$label"] : self.state[filter.name]);
-				
 				return {
 					filter: filter,
 					value: self.state[filter.name + "$label"] ? self.state[filter.name + "$label"] : self.state[filter.name],
