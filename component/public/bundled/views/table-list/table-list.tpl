@@ -56,6 +56,23 @@
 					</n-collapsible>
 				</div>
 			</n-collapsible>
+			<n-collapsible title="Row Grouping" v-if="cell.state.useNativeTable">
+				<div class="list-actions">
+					<button @click="addGroupingField()"><span class="fa fa-plus"></span>Field</button>
+				</div>
+				<div v-if="cell.state.rowGroups" class="padded-content">
+					<div v-for="field in cell.state.rowGroups" class="list-row">
+						<n-form-combo v-model="field.fieldIndex" :items="eventFields"
+							:formatter="function(x) { return x.index + (x.label ? ' - ' + x.label : '') }"
+							:extracter="function(x) { return x.index }"
+							label="Group column"/>
+						<n-form-combo v-model="field.fieldName" :items="keys"
+							label="Group by field"/>
+						<n-form-switch v-model="field.subGroup" label="Is a subgroup of previous?" v-if="cell.state.rowGroups.indexOf(field) > 0"/>
+						<span @click="cell.state.rowGroups.splice(cell.state.rowGroups.indexOf(field), 1)" class="fa fa-times"></span>
+					</div>
+				</div>
+			</n-collapsible>
 			<n-collapsible title="Device Layout" v-if="cell.state.fields && cell.state.fields.length && $services.page.devices.length">
 				<n-collapsible v-for="field in cell.state.fields" :title="field.label ? field.label : 'Unlabeled'" class="light">
 					<div class="padded-content">
@@ -189,7 +206,7 @@
 			</thead>
 			<tbody>
 				<tr v-visible="lazyLoad.bind($self, record)" v-for="record in records" @click="select(record)" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0" :key="record.id ? record.id : records.indexOf(record)">
-					<td :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields" v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field)">
+					<td :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields" v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field) && calculateRowspan(field, record) >= 0" :rowspan="calculateRowspan(field, record)">
 						<page-field :field="field" :data="record" 
 							v-if="!isFieldHidden(field, record)"
 							:should-style="false" 
