@@ -73,6 +73,17 @@
 					</div>
 				</div>
 			</n-collapsible>
+			<n-collapsible title="Batch Selection" v-if="cell.state.useNativeTable">
+				<div class="padded-content">
+					<n-form-combo v-model="cell.state.batchSelectionColumn" :items="eventFields"
+						:formatter="function(x) { return x.index + (x.label ? ' - ' + x.label : '') }"
+						:extracter="function(x) { return x.index }"
+						label="Batch selection column"
+						@input="updateMultiSelect"/>
+					<n-form-text v-if="cell.state.batchSelectionColumn != null" v-model="cell.state.batchSelectionEvent" label="Event to emit with the full batch of selected elements"/>
+					<n-form-switch v-if="cell.state.batchSelectionColumn != null" v-model="cell.state.batchSelectAll" label="Whether or not you want to add a 'select all' to the header"/>
+				</div>
+			</n-collapsible>
 			<n-collapsible title="Device Layout" v-if="cell.state.fields && cell.state.fields.length && $services.page.devices.length">
 				<n-collapsible v-for="field in cell.state.fields" :title="field.label ? field.label : 'Unlabeled'" class="light">
 					<div class="padded-content">
@@ -196,7 +207,10 @@
 				<tr>
 					<th @click="sort(getSortKey(field))"
 							v-for="field in cell.state.fields"
-							v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field)"><span>{{ $services.page.translate(field.label) }}</span>
+							v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field)">
+						<n-form-checkbox v-if="cell.state.batchSelectAll && cell.state.batchSelectionColumn != null && cell.state.fields.indexOf(field) == cell.state.batchSelectionColumn" 
+							:value="allSelected" @input="selectAll"/>
+						<span>{{ $services.page.translate(field.label) }}</span>
 						<n-info class="n-form-label-info" v-if="field.info" :icon="field.infoIcon"><span>{{ $services.page.translate(field.info) }}</span></n-info>
 						<span class="fa fa-sort-up" v-if="orderBy.indexOf(getSortKey(field)) >= 0"></span>
 						<span class="fa fa-sort-down" v-if="orderBy.indexOf(getSortKey(field) + ' desc') >= 0"></span>
@@ -205,8 +219,10 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-visible="lazyLoad.bind($self, record)" v-for="record in records" @click="select(record)" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0" :key="record.id ? record.id : records.indexOf(record)">
+				<tr v-visible="lazyLoad.bind($self, record)" v-for="record in records" @click="cell.state.batchSelectionColumn == null ? select(record) : function() {}" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0" :key="record.id ? record.id : records.indexOf(record)">
 					<td :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields" v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field) && calculateRowspan(field, record) >= 0" :rowspan="calculateRowspan(field, record)">
+						<n-form-checkbox v-if="cell.state.batchSelectionColumn != null && cell.state.fields.indexOf(field) == cell.state.batchSelectionColumn" 
+							:value="selected" :item="record" @add="selectBatch" @remove="unselectBatch"/>
 						<page-field :field="field" :data="record" 
 							v-if="!isFieldHidden(field, record)"
 							:should-style="false" 

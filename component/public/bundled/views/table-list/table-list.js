@@ -19,6 +19,75 @@ nabu.page.views.data.TableListGenerator = function(name) { return Vue.component(
 		this.create();
 	},
 	methods: {
+		selectAll: function() {
+			// if everything is selected, deselect everything
+			if (this.allSelected) {
+				this.selected.splice(0);
+				this.emitBatchSelection();
+			}
+			else {
+				var self = this;
+				var lastAdded = null;
+				this.records.forEach(function(x) {
+					if (self.selected.indexOf(x) < 0) {
+						self.selected.push(x);
+						lastAdded = x;
+					}
+				});
+				if (lastAdded) {
+					this.emitBatchSelection();
+				}
+				// TODO: should emit the single select as well for the last one?
+			}
+		},
+		selectBatch: function(record) {
+			var field = this.cell.state.fields[this.cell.state.batchSelectionColumn];
+			if (field) {
+				var rowspan = this.calculateRowspan(field, record);
+				var index = this.records.indexOf(record);
+				// not the record itself, it is already added by the checkbox
+				for (var i = 1; i < rowspan; i++) {
+					// we skip the trigger for all but the last
+					// the first one does not trigger the select either because the selection array is directly manipulated by the checkbox _without_ the selection event
+					this.select(this.records[index + i], i != rowspan - 1);
+				}
+				this.emitBatchSelection();
+			}
+		},
+		emitBatchSelection: function() {
+			if (this.cell.state.batchSelectionEvent) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				pageInstance.emit(this.cell.state.batchSelectionEvent, this.selected);
+			}
+		},
+		unselectBatch: function(record) {
+			var field = this.cell.state.fields[this.cell.state.batchSelectionColumn];
+			if (field) {
+				var rowspan = this.calculateRowspan(field, record);
+				var index = this.records.indexOf(record);
+				// not the record itself, it is already added by the checkbox
+				for (var i = 1; i < rowspan; i++) {
+					var selectionIndex = this.selected.indexOf(this.records[index + i]);
+					if (selectionIndex >= 0) {
+						this.selected.splice(selectionIndex, 1, i != rowspan - 1);
+					}
+				}
+				this.emitBatchSelection();
+			}
+		},
+		getCustomEvents: function() {
+			var events = {};
+			if (this.cell.state.multiselect && this.cell.state.batchSelectionEvent) {
+				events[this.cell.state.batchSelectionEvent] = {type: "array", items: {properties: this.definition, type: "object"}};
+			}
+			console.log("custom events are", events);
+			return events;
+		},
+		updateMultiSelect: function(index) {
+			this.cell.state.multiselect = index != null;
+			console.log("multiselect is", this.cell.state.multiselect);
+		},
 		calculateRowspan: function(field, record) {
 			// no rowspan at all, return 1
 			if (!this.cell.state.rowGroups || this.cell.state.rowGroups.length == 0) {

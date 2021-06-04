@@ -121,6 +121,10 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}
 	},
 	computed: {
+		allSelected: function() {
+			// double should not be selected...otherwise we need to check deeper
+			return this.records.length == this.selected.length;	
+		},
 		filterConfiguration: function() {
 			var self = this;
 			if (this.cell.state.filterType) {
@@ -214,12 +218,22 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			}
 			else if (this.cell.state.array) {
 				var available = this.$services.page.getAvailableParameters(this.page, this.cell, true);
-				var variable = this.cell.state.array.substring(0, this.cell.state.array.indexOf("."));
-				var rest = this.cell.state.array.substring(this.cell.state.array.indexOf(".") + 1);
+				var indexOfDot = this.cell.state.array.indexOf(".");
+				var variable = indexOfDot < 0 ? this.cell.state.array : this.cell.state.array.substring(0, indexOfDot);
+				var rest = indexOfDot < 0 ? null : this.cell.state.array.substring(indexOfDot + 1);
 				if (available[variable]) {
-					var childDefinition = this.$services.page.getChildDefinition(available[variable], rest);
-					if (childDefinition) {
-						nabu.utils.objects.merge(properties, childDefinition.items.properties);
+					// we can have root arrays rather than part of something else
+					// for example from a multiselect event
+					if (!rest) {
+						if (available[variable].items && available[variable].items.properties) {
+							nabu.utils.objects.merge(properties, available[variable].items.properties);
+						}
+					}
+					else {
+						var childDefinition = this.$services.page.getChildDefinition(available[variable], rest);
+						if (childDefinition) {
+							nabu.utils.objects.merge(properties, childDefinition.items.properties);
+						}
 					}
 				}
 			}
@@ -535,7 +549,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					if (!found) {
 						definition = null;
 					}
-					this.cell.state.actions.map(function(action) {
+					this.cell.state.actions.forEach(function(action) {
 						result[action.name] = action.global && (!action.useSelection && !action.useAll)
 							//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
 							? (self.cell.on ? self.cell.on : {})
@@ -544,8 +558,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 			}
 			else {
-				this.cell.state.actions.map(function(action) {
-					result[action.name] = action.global && (!action.useSelection && !action.useAll)
+				this.cell.state.actions.forEach(function(action) {
+					result[action.name] = action.global && (!action.useSelection && !action.useAll) 
 						? (self.cell.on ? self.cell.on : {})
 						: {properties:self.definition};
 				});
@@ -733,7 +747,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		select: function(record, skipTrigger, $event) {
 			// if you are hovering over an action, you are most likely triggering that, not selecting
 			if ((!$event || this.$services.page.isClickable($event.target)) && (!this.actionHovering || skipTrigger)) {
-				if (!this.multiselect || !this.cell.state.multiselect) {
+				if (!this.cell.state.multiselect) {
 					this.selected.splice(0, this.selected.length);
 				}
 				var index = this.selected.indexOf(record);
@@ -749,6 +763,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 			}
 		},
+		isSelectionAction: function(action) {
+			return !action.icon && !action.label && !action.global && action.field == null;
+		},
 		trigger: function(action, data) {
 			if (!action) {
 				this.lastTriggered = data;
@@ -763,9 +780,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// this is row specific (not global) but does not have an actual presence (no icon & label)
 			if (!action && !this.actionHovering) {
 				// selected events must not be linked to fields
-				action = this.cell.state.actions.filter(function(x) {
-					return !x.icon && !x.label && !x.global && x.field == null;
-				})[0];
+				action = this.cell.state.actions.filter(this.isSelectionAction)[0];
 				if (action && action.condition) {
 					// we do want to change the event, just with a null value
 					if (!this.$services.page.isCondition(action.condition, {record:data}, this)) {
@@ -779,7 +794,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				// if there is no data (for a global event) 
 				if (action.global) {
 					if (action.useSelection) {
-						data = this.multiselect && this.cell.state.multiselect && this.selected.length > 1 
+						data = this.cell.state.multiselect && this.selected.length > 1 
 							? this.selected
 							: (this.selected.length ? this.selected[0] : null);
 					}
