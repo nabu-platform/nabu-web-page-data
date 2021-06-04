@@ -18,7 +18,20 @@ nabu.page.views.data.TableListGenerator = function(name) { return Vue.component(
 	created: function() {
 		this.create();
 	},
+	watch: {
+		"records": function() {
+			// if we change the records, reset the selected
+			// we especially need to clear the event!
+			// the data component should be wiping the selected already...?
+			this.clearAllSelected();		
+		}
+	},
 	methods: {
+		// deselect all in case of reload
+		clearAllSelected: function() {
+			this.selected.splice(0);
+			this.emitBatchSelection();
+		},
 		selectAll: function() {
 			// if everything is selected, deselect everything
 			if (this.allSelected) {
