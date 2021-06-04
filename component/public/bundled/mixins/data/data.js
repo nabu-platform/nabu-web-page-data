@@ -102,7 +102,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			loadTimer: null,
 			lazyPromise: null,
 			wizard: "step1",
-			offset: 0
+			offset: 0,
+			// a dynamic limit set by the user
+			dynamicLimit: null
 		}
 	},
 	ready: function() {
@@ -461,7 +463,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					});
 				}
 				
-				this.cell.state.refreshOn.map(function(x) {
+				this.cell.state.refreshOn.forEach(function(x) {
 					self.subscriptions.push(pageInstance.subscribe(x, function() {
 						// mimic the frontend configuration logic
 						if (self.operation != null) {
@@ -473,9 +475,26 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					}));
 				});
 				if (this.cell.state.downloadOn) {
-					this.cell.state.downloadOn.map(function(x) {
+					this.cell.state.downloadOn.forEach(function(x) {
 						self.subscriptions.push(pageInstance.subscribe(x.event, function() {
 							self.download(x);
+						}));
+					});
+				}
+				if (this.cell.state.updateLimitListeners) {
+					this.cell.state.updateLimitListeners.forEach(function(x) {
+						var index = x.indexOf(".");
+						var eventName = index >= 0 ? x.substring(0, index) : x;
+						self.subscriptions.push(pageInstance.subscribe(eventName, function(a) {
+							// we want a subpart of it
+							if (a && index >= 0) {
+								a = self.$services.page.getValue(a, x.substring(index + 1));
+							}
+							if (a != null) {
+								a = parseInt(a);
+							}
+							self.dynamicLimit = a;
+							self.load();
 						}));
 					});
 				}
@@ -483,6 +502,12 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			else {
 				done();
 			}
+		},
+		addLimitUpdateListener: function() {
+			if (!this.cell.state.updateLimitListeners) {
+				Vue.set(this.cell.state, "updateLimitListeners", []);
+			}	
+			this.cell.state.updateLimitListeners.push(null);
 		},
 		download: function(definition) {
 			var fileName = definition.fileName;
@@ -1322,6 +1347,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// we put a best effort limit & offset on there, but the operation might not support it
 			// at this point the parameter is simply ignored
 			var limit = this.cell.state.limit != null ? parseInt(this.cell.state.limit) : 20;
+			if (this.dynamicLimit != null) {
+				limit = this.dynamicLimit;
+			}
 			
 			var limitName = this.getLimitName();
 			var offsetName = this.getOffsetName();

@@ -16,7 +16,20 @@
 					v-if="false && !cell.state.operation && !cell.state.array"
 					@input="updateCollect"/>
 				<n-form-text v-if="cell.state.operation" v-model="cell.state.autoRefresh" label="Auto-refresh" info="If you want to automatically refresh the data, fill in the number of ms after which it will be refreshed"/>
-				<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()" info="How many items do you want to load at once?"/>
+				<div v-if="hasLimit">
+					<h4>Limit</h4>
+					<n-form-text v-model="cell.state.limit" label="Limit" :timeout="600" @input="load()" info="How many items do you want to load at once?"/>
+					<p class="subscript">Whenever an event is emitted, you can capture a value from it by configuring a listener.</p>
+					<div class="list-item-actions">
+						<button @click="addLimitUpdateListener"><span class="fa fa-plus"></span>Limit Update Listener</button>
+					</div>
+					<div v-if="cell.state.updateLimitListeners">
+						<div class="list-row" v-for="i in Object.keys(cell.state.updateLimitListeners)">
+							<n-form-combo v-model="cell.state.updateLimitListeners[i]" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
+							<span @click="cell.state.updateLimitListeners.splice(i, 1)" class="fa fa-times"></span>
+						</div>
+					</div>
+				</div>
 				<n-form-text v-model="cell.state.windowIncrement" label="Window Increment" :timeout="600" @input="load()" info="For windowed data lists, the limit determines how many items are on screen while the window increment determines how much you move by each time"/>   
 				<n-form-switch v-if="!cell.state.loadMore && !cell.state.loadPrevNext && hasLimit" v-model="cell.state.loadLazy" label="Lazy Loading"/> 
 				<n-form-switch v-if="!cell.state.loadLazy && !cell.state.loadPrevNext && hasLimit" v-model="cell.state.loadMore" label="Load more button"/>
@@ -217,7 +230,21 @@
 						v-if="false && !cell.state.operation && !cell.state.array"
 						@input="updateCollect"/>
 					<n-form-text v-if="cell.state.operation" v-model="cell.state.autoRefresh" label="Auto-refresh" info="If you want to automatically refresh the data, fill in the number of ms after which it will be refreshed"/>
-					<n-form-text v-model="cell.state.limit" v-if="hasLimit" label="Limit" :timeout="600" @input="load()" info="How many items do you want to load at once?"/>
+					<div v-if="hasLimit">
+						<h4>Limit</h4>
+						<n-form-text v-model="cell.state.limit" label="Limit" :timeout="600" @input="load()" info="How many items do you want to load at once?"/>
+						<p class="subscript">Whenever an event is emitted, you can capture a value from it by configuring a listener.</p>
+						<div class="list-item-actions">
+							<button @click="addLimitUpdateListener"><span class="fa fa-plus"></span>Limit Update Listener</button>
+						</div>
+						<div v-if="cell.state.updateListeners">
+							<div class="list-row" v-for="i in Object.keys(cell.state.updateListeners)">
+								<n-form-combo v-model="cell.state.updateListeners[i]" :filter="function(value) { return $services.page.getAllAvailableKeys(page, true, value) }" />
+								<span @click="cell.state.updateListeners.splice(i, 1)" class="fa fa-times"></span>
+							</div>
+						</div>
+					</div>
+					<h4>Paging Settings</h4>
 					<n-form-text v-model="cell.state.windowIncrement" label="Window Increment" :timeout="600" @input="load()" info="For windowed data lists, the limit determines how many items are on screen while the window increment determines how much you move by each time"/>   
 					<n-form-switch v-if="!cell.state.loadMore && !cell.state.loadPrevNext && hasLimit" v-model="cell.state.loadLazy" label="Lazy Loading"/> 
 					<n-form-switch v-if="!cell.state.loadLazy && !cell.state.loadPrevNext && hasLimit" v-model="cell.state.loadMore" label="Load more button"/>
