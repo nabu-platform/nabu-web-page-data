@@ -589,6 +589,10 @@ nabu.page.views.data.DataCommon = Vue.extend({
 						: {properties:self.definition};
 				});
 			}
+			// add the event!
+			if (this.cell.state.inlineUpdateEvent) {
+				result[this.cell.state.inlineUpdateEvent] = {properties:self.definition};
+			}
 			if (this.getCustomEvents) {
 				var custom = this.getCustomEvents();
 				if (custom) {
@@ -791,7 +795,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		isSelectionAction: function(action) {
 			return !action.icon && !action.label && !action.global && action.field == null;
 		},
-		trigger: function(action, data) {
+		trigger: function(action, data, skipSelect) {
 			if (!action) {
 				this.lastTriggered = data;
 			}
@@ -799,7 +803,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// this is expected behavior as you are clicking on the item
 			else if (!action.global && data) {
 				this.lastTriggered = data;
-				this.select(data, true);
+				if (!skipSelect) {
+					this.select(data, true);
+				}
 			}
 			// if no action is specified, it is the one without the icon and label (and not global)
 			// this is row specific (not global) but does not have an actual presence (no icon & label)
@@ -1242,18 +1248,27 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			var parameters = {};
 			var self = this;
 			var pageInstance = self.$services.page.getPageInstance(self.page, self);
-			Object.keys(this.cell.state.updateBindings).map(function(key) {
-				if (self.cell.state.updateBindings[key]) {
-					if (self.cell.state.updateBindings[key].indexOf("record.") == 0) {
-						parameters[key] = record[self.cell.state.updateBindings[key].substring("record.".length)];
+			if (this.cell.state.updateOperation) {
+				Object.keys(this.cell.state.updateBindings).map(function(key) {
+					if (self.cell.state.updateBindings[key]) {
+						if (self.cell.state.updateBindings[key].indexOf("record.") == 0) {
+							parameters[key] = record[self.cell.state.updateBindings[key].substring("record.".length)];
+						}
+						else {
+							parameters[key] = self.$services.page.getBindingValue(pageInstance, self.cell.state.updateBindings[key], self);
+						}
 					}
-					else {
-						parameters[key] = self.$services.page.getBindingValue(pageInstance, self.cell.state.updateBindings[key], self);
+				});
+				parameters.body = record;
+				return this.$services.swagger.execute(this.cell.state.updateOperation, parameters).then(function() {
+					if (self.cell.state.inlineUpdateEvent) {
+						pageInstance.emit(self.cell.state.inlineUpdateEvent, record);
 					}
-				}
-			});
-			parameters.body = record;
-			return this.$services.swagger.execute(this.cell.state.updateOperation, parameters);
+				});
+			}
+			else if (self.cell.state.inlineUpdateEvent) {
+				pageInstance.emit(self.cell.state.inlineUpdateEvent, record);
+			}
 		},
 		isHidden: function(key) {
 			return this.cell.state.result[key] && this.cell.state.result[key].format == "hidden";	

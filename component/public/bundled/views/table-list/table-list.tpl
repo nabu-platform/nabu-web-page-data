@@ -177,7 +177,7 @@
 			</li>
 			<li v-visible="lazyLoad.bind($self, record)" class="row" v-for="record in records" @click="select(record)" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0" :key="record.id ? record.id : records.indexOf(record)">
 				<page-field :field="field" :data="record" 
-					v-if="!(isFieldHidden(field, record) && cell.state.hideEmptyColumns)"
+					v-if="!(isFieldHidden(field, record))"
 					:should-style="false" 
 					:label="false"
 					:style="{'flex-grow': (field.width != null ? field.width : '1')}"
@@ -236,7 +236,7 @@
 					<td class="actions" v-if="actions.length" @mouseover="actionHovering = true" @mouseout="actionHovering = false">
 						<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
 							v-for="action in recordActions" 
-							@click="trigger(action, record)"
+							@click="trigger(action, record, cell.state.batchSelectionColumn != null && actionHovering)"
 							:class="[action.class, {'has-icon': action.icon && action.label }, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></button>
 					</td>
 				</tr>

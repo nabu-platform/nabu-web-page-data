@@ -42,6 +42,8 @@
 				<n-form-text v-model="cell.state.emptyPlaceholder" label="Empty Place Holder"/>
 				<n-form-switch v-if="multiselect" v-model="cell.state.multiselect" label="Allow Multiselect"/>
 				
+				<n-form-text v-model="cell.state.inlineUpdateEvent" label="Successful Inline Record Update Event" @resetEvents="resetEvents"/>
+				
 				<n-form-combo label="Update Operation" :value="cell.state.updateOperation"
 					v-if="updatable"
 					:filter="getFormOperations"
@@ -145,7 +147,7 @@
 					</div>
 				</n-collapsible>
 			</n-collapsible>
-			<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="!!cell.state.updateOperation" :allow-events="false" v-if="supportsFields"/>
+			<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="true || !!cell.state.updateOperation" :allow-events="false" v-if="supportsFields"/>
 			<n-collapsible title="Formatters" class="list" v-if="false">
 				<n-collapsible class="list-item" :title="cell.state.result[key].label ? cell.state.result[key].label : key" v-for="key in keys">
 					<n-form-text v-model="cell.state.result[key].label" :label="'Label for ' + key" 
@@ -352,7 +354,7 @@
 					:cell="cell"
 					:fields="cell.state.filters" 
 					:possible-fields="filtersToAdd()"/>
-				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="!!cell.state.updateOperation" :allow-events="false" v-if="supportsFields"/>
+				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="true || !!cell.state.updateOperation" :allow-events="false" v-if="supportsFields"/>
 				<n-collapsible title="Formatters" class="list" v-if="false">
 					<n-collapsible class="list-item" :title="cell.state.result[key].label ? cell.state.result[key].label : key" v-for="key in keys">
 						<n-form-text v-model="cell.state.result[key].label" :label="'Label for ' + key" 
