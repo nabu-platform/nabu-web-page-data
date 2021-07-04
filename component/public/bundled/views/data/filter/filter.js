@@ -64,11 +64,11 @@ Vue.component("data-filter-default", {
 	methods: {
 		isHidden: function(field) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			return !!field.hidden && this.$services.page.isCondition(field.hidden, pageInstance.variables, this);
+			return pageInstance && !!field.hidden && this.$services.page.isCondition(field.hidden, pageInstance.variables, this);
 		},
 		isDisabled: function(field) {
 			var pageInstance = this.$services.page.getPageInstance(this.page, this);
-			return !!field.disabled && this.$services.page.isCondition(field.disabled, pageInstance, this);
+			return pageInstance && !!field.disabled && this.$services.page.isCondition(field.disabled, pageInstance, this);
 		},
 		filter: function(value, label) {
 			

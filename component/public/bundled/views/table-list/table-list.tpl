@@ -81,6 +81,7 @@
 						label="Batch selection column"
 						@input="updateMultiSelect"/>
 					<n-form-text v-if="cell.state.batchSelectionColumn != null" v-model="cell.state.batchSelectionEvent" label="Event to emit with the full batch of selected elements"/>
+					<n-form-text v-if="cell.state.batchSelectionColumn != null" v-model="cell.state.batchSelectionCondition" label="Show if" info="If left empty, the checkbox will always show"/>
 					<n-form-switch v-if="cell.state.batchSelectionColumn != null" v-model="cell.state.batchSelectAll" label="Whether or not you want to add a 'select all' to the header"/>
 				</div>
 			</n-collapsible>
@@ -221,7 +222,7 @@
 			<tbody>
 				<tr v-visible="lazyLoad.bind($self, record)" v-for="record in records" @click="cell.state.batchSelectionColumn == null ? select(record) : function() {}" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0" :key="record.id ? record.id : records.indexOf(record)">
 					<td :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields" v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field) && calculateRowspan(field, record) >= 0" :rowspan="calculateRowspan(field, record)">
-						<n-form-checkbox v-if="cell.state.batchSelectionColumn != null && cell.state.fields.indexOf(field) == cell.state.batchSelectionColumn" 
+						<n-form-checkbox v-if="cell.state.batchSelectionColumn != null && cell.state.fields.indexOf(field) == cell.state.batchSelectionColumn && isShowBatchSelection(record)" 
 							:value="selected" :item="record" @add="selectBatch" @remove="unselectBatch"/>
 						<page-field :field="field" :data="record" 
 							v-if="!isFieldHidden(field, record)"

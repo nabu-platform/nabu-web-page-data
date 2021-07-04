@@ -27,30 +27,62 @@ nabu.page.views.data.TableListGenerator = function(name) { return Vue.component(
 		}
 	},
 	methods: {
+		isShowBatchSelection: function(record) {
+			if (this.cell.state.batchSelectionCondition) {
+				return this.$services.page.isCondition(this.cell.state.batchSelectionCondition, record, this);
+			}
+			return true;
+		},
 		// deselect all in case of reload
 		clearAllSelected: function() {
 			this.selected.splice(0);
 			this.emitBatchSelection();
 		},
 		selectAll: function() {
-			// if everything is selected, deselect everything
-			if (this.allSelected) {
-				this.selected.splice(0);
-				this.emitBatchSelection();
+			// if we have no condition, it is all or nothing
+			if (!this.cell.state.batchSelectionCondition) {
+				// if everything is selected, deselect everything
+				if (this.allSelected) {
+					this.selected.splice(0);
+					this.emitBatchSelection();
+				}
+				else {
+					var self = this;
+					var lastAdded = null;
+					this.records.forEach(function(x) {
+						if (self.selected.indexOf(x) < 0) {
+							self.selected.push(x);
+							lastAdded = x;
+						}
+					});
+					if (lastAdded) {
+						this.emitBatchSelection();
+					}
+					// TODO: should emit the single select as well for the last one?
+				}
 			}
 			else {
 				var self = this;
-				var lastAdded = null;
-				this.records.forEach(function(x) {
-					if (self.selected.indexOf(x) < 0) {
-						self.selected.push(x);
-						lastAdded = x;
-					}
+				var available = this.records.filter(function(x) {
+					return self.$services.page.isCondition(self.cell.state.batchSelectionCondition, x, self);
 				});
-				if (lastAdded) {
+				// if we have selected all the possible ones, we assume deselect
+				if (this.selected.length == available.length) {
+					this.selected.splice(0);
 					this.emitBatchSelection();
 				}
-				// TODO: should emit the single select as well for the last one?
+				else {
+					var lastAdded = null;
+					available.forEach(function(x) {
+						if (self.selected.indexOf(x) < 0) {
+							self.selected.push(x);
+							lastAdded = x;
+						}
+					});
+					if (lastAdded) {
+						this.emitBatchSelection();
+					}
+				}
 			}
 		},
 		selectBatch: function(record) {
