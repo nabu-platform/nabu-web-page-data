@@ -13,7 +13,23 @@ nabu.page.views.data.TableListGenerator = function(name) { return Vue.component(
 		}
 	},
 	activate: function(done) {
-		this.activate(done);
+		var self = this;
+		var event = null;
+		// we capture the value of the event before any watchers can trigger and clear it...
+		if (self.cell.state.batchSelectionColumn != null && self.cell.state.batchSelectionEvent != null && self.cell.state.batchSelectionEventLoad) {
+			var pageInstance = self.$services.page.getPageInstance(self.page, self);
+			event = pageInstance.get(self.cell.state.batchSelectionEvent);
+		}
+		this.activate(function() {
+			if (event instanceof Array) {
+				// we need to trigger after the watcher below that clears both the selected array _and_ the event!
+				setTimeout(function() {
+					self.loadSelected(event);
+					self.emitBatchSelection();
+				}, 1)
+			}
+			done();
+		});
 	},
 	created: function() {
 		this.create();
@@ -95,6 +111,10 @@ nabu.page.views.data.TableListGenerator = function(name) { return Vue.component(
 					// we skip the trigger for all but the last
 					// the first one does not trigger the select either because the selection array is directly manipulated by the checkbox _without_ the selection event
 					this.select(this.records[index + i], i != rowspan - 1);
+				}
+				if (this.cell.state.batchSelectionAmount && this.selected.length > parseInt(this.cell.state.batchSelectionAmount)) {
+					// we splice as many as needed to reach the goal
+					this.selected.splice(0, this.selected.length - parseInt(this.cell.state.batchSelectionAmount))
 				}
 				this.emitBatchSelection();
 			}

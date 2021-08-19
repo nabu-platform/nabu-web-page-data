@@ -81,8 +81,10 @@
 						label="Batch selection column"
 						@input="updateMultiSelect"/>
 					<n-form-text v-if="cell.state.batchSelectionColumn != null" v-model="cell.state.batchSelectionEvent" label="Event to emit with the full batch of selected elements"/>
+					<n-form-switch v-if="cell.state.batchSelectionEvent" v-model="cell.state.batchSelectionEventLoad" label="Load the current event as initial selection"/>
 					<n-form-text v-if="cell.state.batchSelectionColumn != null" v-model="cell.state.batchSelectionCondition" label="Show if" info="If left empty, the checkbox will always show"/>
-					<n-form-switch v-if="cell.state.batchSelectionColumn != null" v-model="cell.state.batchSelectAll" label="Whether or not you want to add a 'select all' to the header"/>
+					<n-form-switch v-if="cell.state.batchSelectionColumn != null && !cell.state.batchSelectionAmount" v-model="cell.state.batchSelectAll" label="Whether or not you want to add a 'select all' to the header"/>
+					<n-form-text v-if="!cell.state.batchSelectAll" v-model="cell.state.batchSelectionAmount" label="Maximum amount of selected"/>
 				</div>
 			</n-collapsible>
 			<n-collapsible title="Device Layout" v-if="cell.state.fields && cell.state.fields.length && $services.page.devices.length">

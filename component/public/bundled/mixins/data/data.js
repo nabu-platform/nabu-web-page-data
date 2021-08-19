@@ -120,6 +120,13 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				nabu.utils.arrays.merge(this.allRecords, newValue);
 			}
 			this.load(this.paging && this.paging.current ? this.paging.current : 0, false);
+		},
+		records: function(newValue) {
+			if (this.cell.state.recordsUpdatedEvent) {
+				var self = this;
+				var pageInstance = self.$services.page.getPageInstance(self.page, self);
+				pageInstance.emit(this.cell.state.recordsUpdatedEvent, this.records);
+			}
 		}
 	},
 	computed: {
@@ -323,6 +330,37 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}	
 	},
 	methods: {
+		// TODO: allow the user to choose their own key in the record
+		getKey: function(record) {
+			if (record && record.id) {
+				return record.id;
+			}
+			// sometimes we have arrays of uuids
+			else if (record && typeof(record) == "string") {
+				return record;
+			}
+			else {
+				return this.records.indexOf(record);
+			}
+		},
+		// allows to load selected items
+		loadSelected: function(selected) {
+			if (selected instanceof Array) {
+				selected.forEach(this.loadSelected);
+			}
+			else if (selected) {
+				var self = this;
+				this.records.forEach(function(record) {
+					// if we have an "id" field, we will try to match on this
+					if (selected.id && selected.id == record.id) {
+						self.selected.push(record);
+					}
+					else if (!selected.id && JSON.stringify(selected) == JSON.stringify(record)) {
+						self.selected.push(record);
+					}
+				});
+			}
+		},
 		getLimitName: function() {
 			var self = this;
 			var limit = !this.operation || !this.operation.parameters ? null : this.operation.parameters.filter(function(x) {
@@ -592,6 +630,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// add the event!
 			if (this.cell.state.inlineUpdateEvent) {
 				result[this.cell.state.inlineUpdateEvent] = {properties:self.definition};
+			}
+			if (this.cell.state.recordsUpdatedEvent) {
+				result[this.cell.state.recordsUpdatedEvent] = {type: "array", items: {properties: this.definition, type: "object"}};
 			}
 			if (this.getCustomEvents) {
 				var custom = this.getCustomEvents();
