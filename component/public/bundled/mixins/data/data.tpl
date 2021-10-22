@@ -45,6 +45,8 @@
 				<n-form-text v-model="cell.state.inlineUpdateEvent" label="Successful Inline Record Update Event" @input="$updateEvents()" :timeout="600"/>
 				<n-form-text v-model="cell.state.recordsUpdatedEvent" label="Records updated event" info="This event is emitted every time the records array is updated" @input="$updateEvents()" :timeout="600"/>
 				
+				<n-form-ace v-model="cell.state.arrayFilter" v-if="cell.state.array" label="Array filter"/>
+				
 				<n-form-combo label="Update Operation" :value="cell.state.updateOperation"
 					v-if="updatable"
 					:filter="getFormOperations"

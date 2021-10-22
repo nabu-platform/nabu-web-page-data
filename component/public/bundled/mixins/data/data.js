@@ -104,7 +104,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			wizard: "step1",
 			offset: 0,
 			// a dynamic limit set by the user
-			dynamicLimit: null
+			dynamicLimit: null,
+			// doing certain actions (like drag drop) you may want to halt refreshing
+			blockRefresh: false,
+			// keep track when the update is working
+			updating: false
 		}
 	},
 	ready: function() {
@@ -338,6 +342,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// sometimes we have arrays of uuids
 			else if (record && typeof(record) == "string") {
 				return record;
+			}
+			else if (record && record.hasOwnProperty("$position")) {
+				return record["$position"];
 			}
 			else {
 				return this.records.indexOf(record);
@@ -1301,10 +1308,14 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					}
 				});
 				parameters.body = record;
+				this.updating = true;
 				return this.$services.swagger.execute(this.cell.state.updateOperation, parameters).then(function() {
 					if (self.cell.state.inlineUpdateEvent) {
 						pageInstance.emit(self.cell.state.inlineUpdateEvent, record);
 					}
+					self.updating = false;
+				}, function() {
+					self.updating = false;
 				});
 			}
 			else if (self.cell.state.inlineUpdateEvent) {
@@ -1462,6 +1473,25 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		loadPrevious: function() {
 			this.load(this.paging.current != null ? this.paging.current - 1 : 0);
 		},
+		reload: function(page) {
+			var self = this;
+			if (self.cell.state.autoRefresh) {
+				self.refreshTimer = setTimeout(function() {
+					// don't refresh if explicitly blocked or if updating
+					if (!self.blockRefresh && !self.updating) {
+						try {
+							self.load(page);
+						}
+						catch (exception) {
+							self.reload(page);
+						}
+					}
+					else {
+						self.reload(page);
+					}
+				}, self.cell.state.autoRefresh);
+			}
+		},
 		// how much to increment by
 		load: function(page, append, increment) {
 			if (this.refreshTimer) {
@@ -1520,9 +1550,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 						}
 						self.last = new Date();
 						if (self.cell.state.autoRefresh) {
-							self.refreshTimer = setTimeout(function() {
-								self.load(page);
-							}, self.cell.state.autoRefresh);
+							self.reload(page);
 						}
 						promise.resolve();
 					}, function(error) {
@@ -1546,6 +1574,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					// only reload the data if we have no data as of yet
 					// otherwise we might lose state that was added via pushToArray
 					if (!this.allRecords.length) {
+						if (this.cell.state.arrayFilter) {
+							current = current.filter(function(record) {
+								return self.$services.page.isCondition(self.cell.state.arrayFilter, record, self);
+							});
+						}
 						nabu.utils.arrays.merge(this.allRecords, current);
 					}
 					this.doInternalSort(this.allRecords);
@@ -1567,6 +1600,17 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					else {
 						nabu.utils.arrays.merge(this.records, this.allRecords);
 					}
+					var highest = this.records.reduce(function(previousValue, currentValue) {
+						return currentValue.hasOwnProperty("$position") && currentValue["$position"] > previousValue ? currentValue["$position"] : previousValue;
+					}, 0);
+					this.records.forEach(function(x, i) {
+						// this is obviously not an exact science, we will be skipping some indexes but it doesn't matter, as long as it's unique
+						// we are very unlikely to overflow...
+						// otherwise, may need to optimize this
+						if (!x.hasOwnProperty("$position")) {
+							x.$position = highest + i;
+						}
+					});
 					promise.resolve();
 					//nabu.utils.arrays.merge(this.records, current);
 				}
