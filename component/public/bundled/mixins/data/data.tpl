@@ -187,7 +187,7 @@
 					</div>
 				</div>
 			</n-collapsible>
-			<n-collapsible title="Order By" v-if="orderable">
+			<n-collapsible title="Order By" v-if="orderable || cell.state.array">
 				<div class="list-item-actions">
 					<button @click="cell.state.orderBy.push('')"><span class="fa fa-plus"></span>Order By</button>
 				</div>

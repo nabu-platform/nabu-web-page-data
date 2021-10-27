@@ -119,10 +119,13 @@ nabu.page.views.data.DataCommon = Vue.extend({
 	},
 	watch: {
 		watchedArray: function(newValue) {
+			//this.allRecords.splice(0);
+			//if (newValue) {
+			//	nabu.utils.arrays.merge(this.allRecords, newValue);
+			//}
+			
+			// if we don't splice it, we get _very_ strange behavior
 			this.allRecords.splice(0);
-			if (newValue) {
-				nabu.utils.arrays.merge(this.allRecords, newValue);
-			}
 			this.load(this.paging && this.paging.current ? this.paging.current : 0, false);
 		},
 		records: function(newValue) {
@@ -1651,6 +1654,9 @@ Vue.component("data-common-footer", {
 			required: false
 		}
 	}*/
+	created: function() {
+		this.create();
+	}
 });
 
 Vue.component("data-common-configure", {
