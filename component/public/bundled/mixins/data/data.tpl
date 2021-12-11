@@ -64,8 +64,9 @@
 			</n-collapsible>
 			<n-collapsible title="Data streaming" v-if="$services.websocket && (hasStreamCreate || hasStreamUpdate)">
 				<div class="padded-content">
-					<n-form-switch v-if="hasStreamCreate" v-model="cell.state.subscribeStreamCreate" label="Subscribe to creates"/>
-					<n-form-switch v-if="hasStreamUpdate" v-model="cell.state.subscribeStreamUpdate" label="Subscribe to updates"/>
+					<n-form-switch v-if="hasStreamCreate && hasStreamUpdate" v-model="cell.state.subscribeStream" label="Subscribe to creates and updates"/>
+					<n-form-switch v-else-if="hasStreamCreate" v-model="cell.state.subscribeStream" label="Subscribe to creates"/>
+					<n-form-switch v-else-if="hasStreamUpdate" v-model="cell.state.subscribeStream" label="Subscribe to updates"/>
 				</div>
 			</n-collapsible>
 			<n-collapsible title="Mapping" class="mapping padded" v-if="Object.keys(inputParameters.properties).length">

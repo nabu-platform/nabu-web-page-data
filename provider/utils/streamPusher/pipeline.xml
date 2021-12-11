@@ -3,9 +3,11 @@
         <field name="webSocketInstanceId" type="java.lang.String"/>
         <field name="webApplicationId" type="java.lang.String"/>
         <field minOccurs="0" name="path" type="java.lang.String"/>
-        <field name="jwtId" type="java.lang.String"/>
+        <field comment="The jwt id also provides a uniqueness to the subscriber, even if everything else is the exact same. This prevents early unsubscription in extreme circumstances." name="jwtId" type="java.lang.String"/>
+        <field comment="The primary key for this output, we need it if we want to automatically update the jwt update subscription" minOccurs="0" name="primaryKey" type="java.lang.String"/>
     </structure>
     <structure name="output"/>
     <field minOccurs="0" name="amountOfWebsocketClients" type="java.lang.Integer"/>
     <structure definition="nabu.web.page.data.provider.utils.streamPushData" name="content" restrict="content"/>
+    <field name="updateSubscriptionId" type="java.lang.String"/>
 </structure>

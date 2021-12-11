@@ -6,4 +6,6 @@
     <structure definition="nabu.web.page.data.provider.utils.streamPusher:input" name="serviceInput"/>
     <field minOccurs="0" name="amountOfClients" type="java.lang.Integer"/>
     <field maxOccurs="unbounded" name="subscriptionIds" type="java.lang.String"/>
+    <field name="subscriptionId" type="java.lang.String"/>
+    <structure definition="nabu.web.page.data.provider.streamUnsubscription" name="unsubscription"/>
 </structure>

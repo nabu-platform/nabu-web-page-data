@@ -122,7 +122,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			showFilter: false,
 			ready: false,
 			subscriptions: [],
-			streamSubscription: [],
+			streamSubscriptions: [],
 			lastTriggered: null,
 			query: null,
 			// the current order by
@@ -391,10 +391,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		this.subscriptions.map(function(x) {
 			x();
 		});
-		this.streamSubscription.map(function(jwtToken) {
-			self.$services.websocket.send("unsubscribe", {
-				subscriptionId: jwtToken.jti
-			});
+		this.streamSubscriptions.forEach(function(x) {
+			x();
 		});
 		if (this.refreshTimer) {
 			clearTimeout(this.refreshTimer);
@@ -1568,6 +1566,10 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		},
 		// how much to increment by
 		load: function(page, append, increment) {
+			// if we are doing a new load, unsubscribe from any stream subscriptions you might have
+			// we'll start a new subscription if relevant
+			this.streamSubscriptions.splice(0).forEach(function(x) { x() });
+			
 			if (this.refreshTimer) {
 				clearTimeout(this.refreshTimer);
 				this.refreshTimer = null;
@@ -1581,26 +1583,67 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				// you need to have the websocket component and an up to date version of the utils that contains the jwt
 				if (self.$services.websocket && nabu.utils.jwt) {
 					parameters.$$rawMapper = function(response, raw) {
-						if (self.cell.state.subscribeStreamCreate) {
-							var token = raw.getResponseHeader("Stream-Create-Token");
+						if (self.cell.state.subscribeStream) {
+							var token = raw.getResponseHeader("Stream-Token");
 							if (token) {
 								var parsed = nabu.utils.jwt.parse(token);
+								console.log("subscribing", parsed.jti);
 								self.$services.websocket.send("stream-subscribe", {
 									jwtToken: token
 								});
 								// we want to push an unsubscribe function
-								self.subscriptions.push(function() {
+								self.streamSubscriptions.push(function() {
+									console.log("unsubscribing!", parsed.jti);
 									self.$services.websocket.send("stream-unsubscribe", {
-										jwtToken: token
+										jwtId: parsed.jti
 									});
 								});
 								console.log("parsed token", parsed, token);
-								self.subscriptions.push(self.$services.websocket.subscribe(function(data) {
+								self.streamSubscriptions.push(self.$services.websocket.subscribe(function(data) {
 									console.log("received data", data, parsed);
 									if (data.type == "subscription-data") {
 										// it's for us!
 										if (data.content.subscriptionId == parsed.jti) {
-											self.records.push(data.content.data);
+											var found = false;
+											// if we have a primary key, check if it's an update to something we know
+											if (parsed.p) {
+												var recordsToRemove = [];
+												self.records.forEach(function(record) {
+													// check if we found it!
+													if (record[parsed.p] == data.content.data[parsed.p]) {
+														found = true;
+														// we must evaluate if the updated data still matches the filter
+														if (!parsed.j || self.$services.page.evalInContext(data.content.data, parsed.j)) {
+															var newKeys = Object.keys(data.content.data);
+															var oldKeys = Object.keys(record);
+															// hard override
+															newKeys.forEach(function(key) {
+																record[key] = data.content.data[key];
+															});
+															// any existing keys that do not exist in the new data, we set to null
+															oldKeys.filter(function(x) { return newKeys.indexOf(x) < 0 }).forEach(function(key) {
+																record[key] = null;	
+															});
+														}
+														else {
+															console.log("removing data that no longer matches filter", data.content.data, parsed.j);
+															recordsToRemove.push(record);
+														}
+													}
+												});
+												// we don't do this in the foreach above, deleting while looping is probably not a good idea...
+												recordsToRemove.forEach(function(record) {
+													var index = self.records.indexOf(record);	
+													if (index >= 0) {
+														self.records.splice(index, 1);
+													}
+												});
+											}
+											if (!found) {
+												if (!parsed.j || self.$services.page.evalInContext(data.content.data, parsed.j)) {
+													self.records.push(data.content.data);
+												}
+											}
 										}
 									}
 								}));

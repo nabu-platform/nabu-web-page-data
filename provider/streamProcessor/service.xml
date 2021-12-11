@@ -178,6 +178,24 @@
 				<from>token/jti</from>
 				<to>serviceInput/jwtId</to>
 			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="197a7299-9ba2-407d-8a0d-b6e1afe26e6b"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>token/values[key = "u"]/value</from>
+				<to>serviceInput/updateJwtId</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="3bbf76cd-335f-4fff-ab02-3b7a3279304e"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>token/values[key = "p"]/value</from>
+				<to>serviceInput/primaryKey</to>
+			</steps>
 		</steps>
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				comment="We store the actual subscription id in the websocket, we can update the subscription over time, the JWT id remains constant"
@@ -465,24 +483,331 @@
 			id="5464a44235994bbf828ab66814404381"
 			label="input/message/type = &quot;stream-unsubscribe&quot;"
 			lineNumber="12">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+				disabled="false"
+				id="9f3d8ca4823b41a198824417bee7c5b3"
+				lineNumber="13">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+					disabled="false"
+					id="6728bbb3e1a74c158a19e8ed9e3158a8"
+					serviceId="nabu.data.json.Services.unmarshal"
+					resultName="result94c07b5649914ef98b966327a4649937"
+					temporaryMapping="true"
+					x="63"
+					y="78"
+					invocationOrder="0"
+					asynchronous="false"
+					recache="false">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="1774bb6322cc4b7c8bdbd3243b2ea066"
+						mask="false"
+						optional="false"
+						fixedValue="true">
+					<from>nabu.web.page.data.provider.streamUnsubscription</from>
+					<to>type</to>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="3e5127410b0e4ad59448b47b3eedd44d"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>input/message/content</from>
+					<to>input</to>
+				</steps>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="75af8b2d-92cf-4e4d-9cea-a09683bd1d6d"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>result94c07b5649914ef98b966327a4649937/unmarshalled</from>
+				<to>unsubscription</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+				disabled="false"
+				id="8029757f45e8474a8fc58d3e673c713a"
+				lineNumber="14">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+					disabled="false"
+					id="1d076848253741d5a4365309a723055e"
+					serviceId="nabu.protocols.websockets.provider.Services.getContext"
+					resultName="result66c2921b1d6f48419f570d219ae1bf10"
+					temporaryMapping="true"
+					x="62"
+					y="64"
+					invocationOrder="0"
+					asynchronous="false"
+					recache="false">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="9aeacebda8f643b7b7b6e39c1d7fa2e3"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>input/webApplicationId</from>
+					<to>webApplicationId</to>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="9afc1107037e4cbc84d4b4f4934cb99a"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>input/path</from>
+					<to>path</to>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="27f64e59da0a4453a266ae28ab1a080a"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>input/webSocketInstanceId</from>
+					<to>webSocketInstanceId</to>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="9317ac26-4711-46fd-b944-cf3a46f7c036"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>unsubscription/jwtId</from>
+					<to>key</to>
+				</steps>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="89d49867-ac50-4e5c-9bc9-29bd8c94a0ac"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>result66c2921b1d6f48419f570d219ae1bf10/value</from>
+				<to>subscriptionId</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Sequence"
+				comment="We only proceed if it is actually a thing"
+				disabled="false"
+				id="b2b039b2-1c16-4483-99b5-efdc57d3a795"
+				label="subscriptionId != null"
+				lineNumber="15">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+					disabled="false"
+					id="07031bdb-c27a-432a-a96d-b35fd5118b08"
+					lineNumber="16">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="96519b53-f709-4fd6-a5a6-d36cd5801a6c"
+						serviceId="nabu.misc.broadcast.Services.unsubscribe"
+						resultName="result6959fe85596c46a78f6c4f35e3e52240"
+						temporaryMapping="true"
+						x="65"
+						y="65"
+						invocationOrder="0"
+						asynchronous="false"
+						recache="false">
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="ab9864a4-e1cd-4f2e-a107-aaa8994e7779"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>subscriptionId</from>
+						<to>subscriptionId</to>
+					</steps>
+				</steps>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+					disabled="false"
+					id="a5d4643b9c8a400a93815adc08ceba7c"
+					lineNumber="17">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="dfb21477be9246c69e5c74e670a39c16"
+						serviceId="nabu.protocols.websockets.provider.Services.getContext"
+						resultName="result66c2921b1d6f48419f570d219ae1bf10"
+						temporaryMapping="true"
+						x="62"
+						y="64"
+						invocationOrder="0"
+						asynchronous="false"
+						recache="false">
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="a753348367d847ed8405c0b31ae65c0e"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>input/webApplicationId</from>
+						<to>webApplicationId</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="8fbb3fd911c94dd3ba9530e294dd9610"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>input/path</from>
+						<to>path</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="ca9d4b7e082f4f2987579f34c8e35baf"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>input/webSocketInstanceId</from>
+						<to>webSocketInstanceId</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="a39df19f9709415c81ab4623dc2978a5"
+							mask="false"
+							optional="false"
+							fixedValue="true">
+						<from>subscriptionIds</from>
+						<to>key</to>
+					</steps>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="3d254f59487a4efca4af9dcf0e4b2869"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>result66c2921b1d6f48419f570d219ae1bf10/value</from>
+					<to>subscriptionIds</to>
+				</steps>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+					disabled="false"
+					id="c9aa7fb837af4bda8535a6df8e478012"
+					lineNumber="18">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="62d88cb4-0882-4b43-addd-253ffce43c52"
+						serviceId="nabu.utils.List.remove"
+						resultName="result6dd055b015d74220b1a5096a72342056"
+						temporaryMapping="true"
+						x="75"
+						y="210"
+						invocationOrder="0"
+						asynchronous="false"
+						recache="false">
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="71150e08-0006-4476-8bbf-3fbae23113ba"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>subscriptionIds</from>
+						<to>list</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="5044c969-d3f6-43d6-bd31-febbb0ffd2b6"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>unsubscription/jwtId</from>
+						<to>object</to>
+					</steps>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="665416fb-c618-44fb-a6ee-a36192865daa"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>result6dd055b015d74220b1a5096a72342056/list</from>
+					<to>subscriptionIds</to>
+				</steps>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+					disabled="false"
+					id="78d9c74219b24ca8aab8ab604a3b3236"
+					lineNumber="19">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+						disabled="false"
+						id="b6382a77710a4490a96f5008c19d0241"
+						serviceId="nabu.protocols.websockets.provider.Services.setContext"
+						resultName="result77f07f00c5c5458cbcd575b3a0973d1e"
+						temporaryMapping="true"
+						x="101"
+						y="48"
+						invocationOrder="0"
+						asynchronous="false"
+						recache="false">
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="5fab2627d4444745ae94067626872d45"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>input/webSocketInstanceId</from>
+						<to>webSocketInstanceId</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="0d155c5b92c54ba9aebeee0a7b4ebfb7"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>input/webApplicationId</from>
+						<to>webApplicationId</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="84308bbdd96b42538ba36c2874cdb99d"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>input/path</from>
+						<to>path</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="e4b90c85b5f243f3b01be122e42a637c"
+							mask="false"
+							optional="false"
+							fixedValue="true">
+						<from>subscriptionIds</from>
+						<to>key</to>
+					</steps>
+					<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+							disabled="false"
+							id="cf73f65492424de3b6a9652cf9ca589a"
+							mask="false"
+							optional="false"
+							fixedValue="false">
+						<from>subscriptionIds</from>
+						<to>value</to>
+					</steps>
+				</steps>
+			</steps>
+		</steps>
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Sequence"
 			comment="Unsubscribe from a specific id in a specific stream. E.g. update stream where certain ids are thrown out"
 			disabled="false"
 			id="ebb1b729a68b457e9938504d7115fa81"
 			label="input/message/type = &quot;stream-unsubscribe-id&quot;"
-			lineNumber="13">
+			lineNumber="20">
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Sequence"
 			comment="We disconnect a websocket and should unsubscribe"
 			disabled="false"
 			id="449955c2-5ead-4faa-8ad9-4fb54dbb8744"
 			label="input/message/type = &quot;$disconnect&quot;"
-			lineNumber="14">
+			lineNumber="21">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				disabled="false"
 				id="2e332de401cd4f048a0528fce6856b74"
-				lineNumber="15">
+				lineNumber="22">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="12a6cf27ad61477eb2a91bdb2716d521"
@@ -544,12 +869,12 @@
 		<steps xsi:type="be.nabu.libs.services.vm.step.For"
 				disabled="false"
 				id="04bcabf4-fd12-4982-90a3-6dd9408e7700"
-				lineNumber="16"
+				lineNumber="23"
 				variable="subscriptionToUnsubscribe">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 					disabled="false"
 					id="fe21e8b1-3f39-49bd-ad30-5af3e88e7b00"
-					lineNumber="17">
+					lineNumber="24">
 				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 						disabled="false"
 						id="db2dd17c-31cc-4302-93af-ce1322cb1462"
