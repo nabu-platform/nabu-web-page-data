@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.services.vm.VMServiceManager" created="2021-12-11T07:58:47.304+01:00" lastModified="2021-12-11T08:14:11.170+01:00" leaf="true" version="8">
+    <environmentId>apollo</environmentId>
+    <hidden>false</hidden>
+    <properties/>
+    <references>nabu.misc.broadcast.specs.subscriber</references>
+    <references>nabu.utils.List.size</references>
+    <references>java.lang.Boolean</references>
+    <references>java.lang.Object</references>
+    <references>java.lang.String</references>
+    <references>java.lang.Integer</references>
+    <references>nabu.web.page.data.provider.utils.streamPushData</references>
+    <references>nabu.protocols.websockets.provider.Services.broadcast</references>
+</node>

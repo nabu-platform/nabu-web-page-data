@@ -1,0 +1,6 @@
+<structure name="streamSubscriptionResponse" restrict="content" superType="nabu.web.page.websocket.standardMessage">
+    <structure name="content">
+        <field name="jwtId" type="java.lang.String"/>
+        <field name="subscriptionId" type="java.lang.String"/>
+    </structure>
+</structure>

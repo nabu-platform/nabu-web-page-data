@@ -3,6 +3,22 @@ if (!nabu.page) { nabu.page = {} }
 if (!nabu.page.views) { nabu.page.views = {} }
 if (!nabu.page.views.data) { nabu.page.views.data = {} }
 
+// this is a helper component, we want to combine a mixin (datacommon) with reusable templates
+// unfortunately that is pretty hard to do in vue
+// the reusable templates must have the correct methods in some way, shape or form, this currently means they also use the mixin
+// that means, we have in general 3 instances of the data common: the core component (e.g. table), the data header and the data footer
+// we "solve" this (badly) by passing in a lot of state from the outside so the footer and header work on the same dataset even though they have different instances
+// we then encapsulate this in a separate component (this one) so all that binding is done centrally
+// again, we are looking for a better alternative, but this approach should be forwards-compatible and hides the bad solution
+Vue.component("data-common-content", {
+	template: "#data-common-content",
+	props: {
+		data: {
+			type: Object
+		}
+	}
+})
+
 // because we split up the header, footer and they all extend common
 // the first load() is triggered by the main body
 // however any loads triggered through searching come from the header!
@@ -84,6 +100,18 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			type: Boolean,
 			required: false,
 			default: true
+		},
+		supportsDetailFields: {
+			type: Boolean,
+			required: false,
+			default: false
+		},
+		dynamicArray: {
+			type: Array,
+			required: false,
+			default: function() {
+				return [];
+			}
 		}
 	},
 	data: function() {
@@ -137,6 +165,12 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}
 	},
 	computed: {
+		hasStreamCreate: function() {
+				
+		},
+		hasStreamUpdate: function() {
+			
+		},
 		allSelected: function() {
 			// double should not be selected...otherwise we need to check deeper
 			return this.records.length == this.selected.length;	
@@ -253,6 +287,12 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					}
 				}
 			}
+			else if (this.cell.state.dynamicArrayType) {
+				var schema = this.$services.swagger.swagger.definitions[this.cell.state.dynamicArrayType];
+				if (schema && schema.properties) {
+					nabu.utils.objects.merge(properties, schema.properties);
+				}
+			}
 			return properties;
 		},
 		hasLimit: function() {
@@ -298,7 +338,22 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			return result;
 		},
 		keys: function() {
-			var keys = this.$services.page.getSimpleKeysFor({properties:this.definition});
+			var keys = this.$services.page.getSimpleKeysFor({properties:this.definition}, true, true);
+			var self = this;
+			keys.map(function(key) {
+				if (!self.cell.state.result[key]) {
+					Vue.set(self.cell.state.result, key, {
+						label: null,
+						format: null,
+						custom: null,
+						styles: []
+					});
+				}
+			});
+			return keys;
+		},
+		simpleKeys: function() {
+			var keys = this.$services.page.getSimpleKeysFor({properties:this.definition}, false, false);
 			var self = this;
 			keys.map(function(key) {
 				if (!self.cell.state.result[key]) {
@@ -591,6 +646,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			return this.$services.dataUtils.getDataOperations(value).map(function(x) { return x.id });	
 		},
 		getSortKey: function(field) {
+			if (field.orderField) {
+				return field.orderField;
+			}
 			for (var i = 0; i < field.fragments.length; i++) {
 				var fragment = field.fragments[i];
 				if (fragment.type == "data" && fragment.key) {
@@ -959,6 +1017,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			if (!state.fields) {
 				Vue.set(state, "fields", []);
 			}
+			if (this.supportsDetailFields && !state.detailFields) {
+				Vue.set(state, "detailFields", []);
+			}
 			if (!state.updateOperation) {
 				Vue.set(state, "updateOperation", null);
 			}
@@ -1094,7 +1155,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					this.load();
 				}
 				// do a frontend sort (can't do it if paged)
-				else if (this.cell.state.array || !this.pageable) {
+				else if (this.cell.state.array || this.cell.state.dynamicArrayType || !this.pageable) {
 					var newOrderBy = [];
 					var multiplier = 1;
 					if (this.orderBy.indexOf(key) >= 0) {
@@ -1565,8 +1626,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					promise.resolve(error);
 				}
 			}
-			else if (this.cell.state.array) {
-				var current = this.$services.page.getValue(this.localState, this.cell.state.array);
+			else if (this.cell.state.array || this.cell.state.dynamicArrayType) {
+				var current = this.cell.state.dynamicArrayType ? this.dynamicArray : this.$services.page.getValue(this.localState, this.cell.state.array);
 				if (current == null) {
 					current = this.$services.page.getPageInstance(this.page, this).get(this.cell.state.array);
 				}
@@ -1643,7 +1704,7 @@ Vue.component("data-common-header", {
 	created: function() {
 		this.create();
 	}
-});
+}); 
 
 Vue.component("data-common-footer", {
 	template: "#data-common-footer",

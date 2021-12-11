@@ -1,0 +1,7 @@
+<structure name="streamPushData" restrict="content" superType="nabu.web.page.websocket.standardMessage">
+    <structure name="content">
+        <field name="subscriptionId" type="java.lang.String"/>
+        <field name="typeId" type="java.lang.String"/>
+        <structure definition="java.lang.Object" name="data"/>
+    </structure>
+</structure>

@@ -1,0 +1,9 @@
+<structure interface="nabu.web.page.websocket.processor" name="pipeline">
+    <structure name="input"/>
+    <structure name="output"/>
+    <structure definition="nabu.web.page.data.provider.streamSubscription" name="subscription"/>
+    <structure definition="be.nabu.libs.http.jwt.JWTBody" minOccurs="0" name="token"/>
+    <structure definition="nabu.web.page.data.provider.utils.streamPusher:input" name="serviceInput"/>
+    <field minOccurs="0" name="amountOfClients" type="java.lang.Integer"/>
+    <field maxOccurs="unbounded" name="subscriptionIds" type="java.lang.String"/>
+</structure>

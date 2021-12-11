@@ -1,0 +1,145 @@
+<sequence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		disabled="false"
+		id="83a58587-38e0-46e4-9462-2e03bb739453"
+		lineNumber="1">
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			comment="Map the data to push"
+			disabled="false"
+			id="43e2ab50-0732-40d6-94cd-65ddac71a301"
+			lineNumber="2">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="b9a645d3-1a2e-4717-9ac2-45d719b148d2"
+				mask="false"
+				optional="false"
+				fixedValue="true">
+			<from>subscription-data</from>
+			<to>content/type</to>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="0c61c7ab-3082-4653-98b3-f1086882ca8e"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>input/typeId</from>
+			<to>content/content/typeId</to>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="c41fd7df-fa18-4c1b-bb3f-8c0f8692bcec"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>input/data</from>
+			<to>content/content/data</to>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="a1c15275-87e7-46ad-8b96-444629984ce5"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>input/jwtId</from>
+			<to>content/content/subscriptionId</to>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			disabled="false"
+			id="fd1d4e8d-f47f-4ca4-af4f-2db8865a333f"
+			lineNumber="3">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="b1b201db-d9d9-4a92-bbfc-2010cde352d2"
+				serviceId="nabu.protocols.websockets.provider.Services.broadcast"
+				resultName="result579702dbf2bd4f0c97d856f9ddc9fa4f"
+				temporaryMapping="true"
+				x="30"
+				y="20"
+				invocationOrder="0"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="4b54435e-9d21-45f0-b39d-08081dab490d"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/webApplicationId</from>
+				<to>webApplicationId</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="65e9bc23-100b-4f42-bf24-650b1d436e24"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/path</from>
+				<to>path</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="1940328d-d794-46c5-91d6-c34cdaea7b60"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>input/webSocketInstanceId</from>
+				<to>webSocketInstanceIds[0]</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="c37ce4ac-beec-4b6f-9a2b-6f677433fd5a"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>content</from>
+				<to>object</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+				disabled="false"
+				id="e46c22c7-1389-4e4d-93f8-c642110d7186"
+				serviceId="nabu.utils.List.size"
+				resultName="result24c292c4a5a84d889d145c64d6d04200"
+				temporaryMapping="true"
+				x="285"
+				y="337"
+				invocationOrder="1"
+				asynchronous="false"
+				recache="false">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="f54bf487-9c12-4edb-991a-a01a1e0d262f"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>result579702dbf2bd4f0c97d856f9ddc9fa4f/clients</from>
+				<to>list</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="c78b823e-bf47-43df-ac7b-3865ee47e127"
+				mask="false"
+				optional="false"
+				fixedValue="false">
+			<from>result24c292c4a5a84d889d145c64d6d04200/size</from>
+			<to>amountOfWebsocketClients</to>
+		</steps>
+	</steps>
+	<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+			comment="Active only  if we were able to reach the websocket"
+			disabled="false"
+			id="c386033d-2b13-4fa1-b488-493b2501f6dc"
+			lineNumber="4">
+		<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+				disabled="false"
+				id="2d5746b6-b974-42d9-8840-375e85c9b8ca"
+				mask="false"
+				optional="false"
+				fixedValue="true">
+			<from>=amountOfWebsocketClients &gt; 0</from>
+			<to>output/active</to>
+		</steps>
+	</steps>
+</sequence>
