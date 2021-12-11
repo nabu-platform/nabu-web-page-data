@@ -122,6 +122,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			showFilter: false,
 			ready: false,
 			subscriptions: [],
+			streamSubscription: [],
 			lastTriggered: null,
 			query: null,
 			// the current order by
@@ -166,10 +167,13 @@ nabu.page.views.data.DataCommon = Vue.extend({
 	},
 	computed: {
 		hasStreamCreate: function() {
-				
+			var operation = this.operation;
+			console.log("operation is", operation);
+			return operation && operation["x-stream-create"];
 		},
 		hasStreamUpdate: function() {
-			
+			var operation = this.operation;
+			return operation && operation["x-stream-update"];
 		},
 		allSelected: function() {
 			// double should not be selected...otherwise we need to check deeper
@@ -383,8 +387,14 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}
 	},
 	beforeDestroy: function() {
+		var self = this;
 		this.subscriptions.map(function(x) {
 			x();
+		});
+		this.streamSubscription.map(function(jwtToken) {
+			self.$services.websocket.send("unsubscribe", {
+				subscriptionId: jwtToken.jti
+			});
 		});
 		if (this.refreshTimer) {
 			clearTimeout(this.refreshTimer);
@@ -1566,6 +1576,39 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			var self = this;
 			if (this.cell.state.operation) {
 				var parameters = this.getRestParameters(page);
+				// allows us to modify the response based on the raw xmlhttprequest
+				// we don't actually want to modify it, but we do want to capture the headers
+				// you need to have the websocket component and an up to date version of the utils that contains the jwt
+				if (self.$services.websocket && nabu.utils.jwt) {
+					parameters.$$rawMapper = function(response, raw) {
+						if (self.cell.state.subscribeStreamCreate) {
+							var token = raw.getResponseHeader("Stream-Create-Token");
+							if (token) {
+								var parsed = nabu.utils.jwt.parse(token);
+								self.$services.websocket.send("stream-subscribe", {
+									jwtToken: token
+								});
+								// we want to push an unsubscribe function
+								self.subscriptions.push(function() {
+									self.$services.websocket.send("stream-unsubscribe", {
+										jwtToken: token
+									});
+								});
+								console.log("parsed token", parsed, token);
+								self.subscriptions.push(self.$services.websocket.subscribe(function(data) {
+									console.log("received data", data, parsed);
+									if (data.type == "subscription-data") {
+										// it's for us!
+										if (data.content.subscriptionId == parsed.jti) {
+											self.records.push(data.content.data);
+										}
+									}
+								}));
+							}
+						}
+						return response;
+					}
+				}
 				try {
 					this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
 						if (!append) {

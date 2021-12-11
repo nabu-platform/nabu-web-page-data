@@ -62,8 +62,11 @@
 					:to="formInputParameters"/>
 				<slot name="additional-settings"></slot>
 			</n-collapsible>
-			<n-collapsible title="Data streaming" v-if="$services.websocket">
-				
+			<n-collapsible title="Data streaming" v-if="$services.websocket && (hasStreamCreate || hasStreamUpdate)">
+				<div class="padded-content">
+					<n-form-switch v-if="hasStreamCreate" v-model="cell.state.subscribeStreamCreate" label="Subscribe to creates"/>
+					<n-form-switch v-if="hasStreamUpdate" v-model="cell.state.subscribeStreamUpdate" label="Subscribe to updates"/>
+				</div>
 			</n-collapsible>
 			<n-collapsible title="Mapping" class="mapping padded" v-if="Object.keys(inputParameters.properties).length">
 				<n-page-mapper :to="inputParameters" :from="availableParameters" 
