@@ -103,9 +103,90 @@
 			</steps>
 		</steps>
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
+				comment="Get dates"
+				disabled="false"
+				id="7301f48a-5987-4375-841b-e4cae4bfeb4c"
+				lineNumber="6">
+			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+					disabled="false"
+					id="f6ba36a0-d64f-4b92-b914-cb4d282941cb"
+					serviceId="nabu.utils.Date.now"
+					resultName="resulta01d8ccb18704f628b1c8b9341a7c1f3"
+					temporaryMapping="true"
+					x="81"
+					y="273"
+					invocationOrder="0"
+					asynchronous="false"
+					recache="false">
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="83d9e21c-67b2-42f8-8872-9fa013d7c700"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>resulta01d8ccb18704f628b1c8b9341a7c1f3/date</from>
+				<to>date</to>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
+					disabled="false"
+					id="1bdad4ad-1956-40ec-8768-a1ac306c4bf9"
+					serviceId="nabu.utils.Date.increment"
+					resultName="result7be65026415b4d56becb565198d8828c"
+					temporaryMapping="true"
+					x="363"
+					y="79"
+					invocationOrder="1"
+					asynchronous="false"
+					recache="false">
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="a0a1b537-240c-44b6-9b89-9d9a0c0b1b79"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>resulta01d8ccb18704f628b1c8b9341a7c1f3/date</from>
+					<to>start</to>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="332cd4fd-44ad-4e5a-92d5-327b95f93c65"
+						mask="false"
+						optional="false"
+						fixedValue="false">
+					<from>token/exp</from>
+					<to>increment</to>
+				</steps>
+				<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+						disabled="false"
+						id="b0131783-ffb2-4725-8f75-1a6bd15ba5f3"
+						mask="false"
+						optional="false"
+						fixedValue="true">
+					<from>SECONDS</from>
+					<to>unit</to>
+				</steps>
+			</steps>
+			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
+					disabled="false"
+					id="a7aa4e1e-f154-49fe-a322-a9d44a90f2e8"
+					mask="false"
+					optional="false"
+					fixedValue="false">
+				<from>result7be65026415b4d56becb565198d8828c/date</from>
+				<to>expiration</to>
+			</steps>
+		</steps>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Throw"
+				disabled="false"
+				id="4f76f9f72eaf4890b30d809bf344416b"
+				label="expiration &lt; date"
+				lineNumber="7"
+				message="No longer valid" xsi:nil="true"/>
+		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				disabled="false"
 				id="ad49c0e3-cf79-4b82-b6bd-20b71384c091"
-				lineNumber="6">
+				lineNumber="8">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="825f0f9b-967e-4f55-b3ab-28ff31cdcfca"
@@ -141,7 +222,7 @@
 				comment="Map the service input"
 				disabled="false"
 				id="3d0c06a9-9842-471d-a8cc-0b7b38685914"
-				lineNumber="7">
+				lineNumber="9">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
 					id="83e9a047-d51f-4099-95a2-1e6b4886fc1d"
@@ -180,15 +261,6 @@
 			</steps>
 			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
 					disabled="false"
-					id="197a7299-9ba2-407d-8a0d-b6e1afe26e6b"
-					mask="false"
-					optional="false"
-					fixedValue="false">
-				<from>token/values[key = "u"]/value</from>
-				<to>serviceInput/updateJwtId</to>
-			</steps>
-			<steps xsi:type="be.nabu.libs.services.vm.step.Link"
-					disabled="false"
 					id="3bbf76cd-335f-4fff-ab02-3b7a3279304e"
 					mask="false"
 					optional="false"
@@ -201,7 +273,7 @@
 				comment="We store the actual subscription id in the websocket, we can update the subscription over time, the JWT id remains constant"
 				disabled="false"
 				id="e41bb65d-d72c-4ad5-852a-636956301fcb"
-				lineNumber="8">
+				lineNumber="10">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="7d6ffa80-5e90-44c2-8971-f2cfa7aa5336"
@@ -311,7 +383,7 @@
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				disabled="false"
 				id="84e64d97-b783-466b-a09b-9950ae633bf3"
-				lineNumber="9">
+				lineNumber="11">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="e48b21e0-4a5d-4f0e-8cd4-c6d8f8ca86e9"
@@ -373,7 +445,7 @@
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				disabled="false"
 				id="58b85163-72d4-4d4c-af4e-393e1ee80587"
-				lineNumber="10">
+				lineNumber="12">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="ba6e4e0e-7d47-40f7-9752-927d50878e76"
@@ -417,7 +489,7 @@
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				disabled="false"
 				id="a3c4de8b-25f3-434b-8ca9-2e26b2dfe763"
-				lineNumber="11">
+				lineNumber="13">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="62c4eb77-e9d2-4b5e-90de-73ccac970cef"
@@ -482,11 +554,11 @@
 			disabled="false"
 			id="5464a44235994bbf828ab66814404381"
 			label="input/message/type = &quot;stream-unsubscribe&quot;"
-			lineNumber="12">
+			lineNumber="14">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				disabled="false"
 				id="9f3d8ca4823b41a198824417bee7c5b3"
-				lineNumber="13">
+				lineNumber="15">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="6728bbb3e1a74c158a19e8ed9e3158a8"
@@ -530,7 +602,7 @@
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				disabled="false"
 				id="8029757f45e8474a8fc58d3e673c713a"
-				lineNumber="14">
+				lineNumber="16">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="1d076848253741d5a4365309a723055e"
@@ -594,11 +666,11 @@
 				disabled="false"
 				id="b2b039b2-1c16-4483-99b5-efdc57d3a795"
 				label="subscriptionId != null"
-				lineNumber="15">
+				lineNumber="17">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 					disabled="false"
 					id="07031bdb-c27a-432a-a96d-b35fd5118b08"
-					lineNumber="16">
+					lineNumber="18">
 				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 						disabled="false"
 						id="96519b53-f709-4fd6-a5a6-d36cd5801a6c"
@@ -624,7 +696,7 @@
 			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 					disabled="false"
 					id="a5d4643b9c8a400a93815adc08ceba7c"
-					lineNumber="17">
+					lineNumber="19">
 				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 						disabled="false"
 						id="dfb21477be9246c69e5c74e670a39c16"
@@ -686,7 +758,7 @@
 			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 					disabled="false"
 					id="c9aa7fb837af4bda8535a6df8e478012"
-					lineNumber="18">
+					lineNumber="20">
 				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 						disabled="false"
 						id="62d88cb4-0882-4b43-addd-253ffce43c52"
@@ -730,7 +802,7 @@
 			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 					disabled="false"
 					id="78d9c74219b24ca8aab8ab604a3b3236"
-					lineNumber="19">
+					lineNumber="21">
 				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 						disabled="false"
 						id="b6382a77710a4490a96f5008c19d0241"
@@ -796,18 +868,18 @@
 			disabled="false"
 			id="ebb1b729a68b457e9938504d7115fa81"
 			label="input/message/type = &quot;stream-unsubscribe-id&quot;"
-			lineNumber="20">
+			lineNumber="22">
 	</steps>
 	<steps xsi:type="be.nabu.libs.services.vm.step.Sequence"
 			comment="We disconnect a websocket and should unsubscribe"
 			disabled="false"
 			id="449955c2-5ead-4faa-8ad9-4fb54dbb8744"
 			label="input/message/type = &quot;$disconnect&quot;"
-			lineNumber="21">
+			lineNumber="23">
 		<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 				disabled="false"
 				id="2e332de401cd4f048a0528fce6856b74"
-				lineNumber="22">
+				lineNumber="24">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 					disabled="false"
 					id="12a6cf27ad61477eb2a91bdb2716d521"
@@ -869,12 +941,12 @@
 		<steps xsi:type="be.nabu.libs.services.vm.step.For"
 				disabled="false"
 				id="04bcabf4-fd12-4982-90a3-6dd9408e7700"
-				lineNumber="23"
+				lineNumber="25"
 				variable="subscriptionToUnsubscribe">
 			<steps xsi:type="be.nabu.libs.services.vm.step.Map"
 					disabled="false"
 					id="fe21e8b1-3f39-49bd-ad30-5af3e88e7b00"
-					lineNumber="24">
+					lineNumber="26">
 				<steps xsi:type="be.nabu.libs.services.vm.step.Invoke"
 						disabled="false"
 						id="db2dd17c-31cc-4302-93af-ce1322cb1462"

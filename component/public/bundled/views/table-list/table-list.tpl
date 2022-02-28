@@ -152,7 +152,7 @@
 			</li>
 		</ul>
 		
-		<table class="classic data" cellspacing="0" cellpadding="0" :class="dataClass" v-else-if="cell.state.useNativeTable && (edit || showEmpty || records.length)">
+		<table class="classic data" cellspacing="0" cellpadding="0" :class="[dataClass, {'selectable': selectable}]" v-else-if="cell.state.useNativeTable && (edit || showEmpty || records.length)">
 			<thead>
 				<tr v-if="cell.state.useTopHeader && cell.state.topHeaders && cell.state.topHeaders.length" class="top-header">
 					<th v-if="cell.state.detailFields && cell.state.detailFields.length > 0"></th>
@@ -165,7 +165,7 @@
 					<th @click="sort(getSortKey(field))"
 							v-for="field in cell.state.fields"
 							v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field)">
-						<n-form-checkbox v-if="cell.state.batchSelectAll && cell.state.batchSelectionColumn != null && cell.state.fields.indexOf(field) == cell.state.batchSelectionColumn" 
+						<n-form-checkbox v-if="cell.state.batchSelectAll && cell.state.batchSelectionColumn != null && cell.state.fields.indexOf(field) == cell.state.batchSelectionColumn && isShowAnyBatchSelection()" 
 							:value="allSelected" @input="selectAll"/>
 						<span>{{ $services.page.translate(field.label) }}</span>
 						<n-info class="n-form-label-info" v-if="field.info" :icon="field.infoIcon"><span>{{ $services.page.translate(field.info) }}</span></n-info>
@@ -204,6 +204,7 @@
 						<td></td>
 						<td v-for="(field, index) in cell.state.detailFields" :colspan="index == cell.state.detailFields.length - 1 ? (cell.state.fields.length - cell.state.detailFields.length) + 1 + (actions.length ? 1 : 0) : 1">
 							<page-field :field="field" :data="record" 
+								v-if="!isFieldHidden(field, record)"
 								:should-style="false" 
 								:label="false"
 								:page="page"

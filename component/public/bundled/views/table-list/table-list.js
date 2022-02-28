@@ -65,6 +65,16 @@ nabu.page.views.data.TableListGenerator = function(name) { return Vue.component(
 			}
 			return this.open.indexOf(record) >= 0;
 		},
+		isShowAnyBatchSelection: function() {
+			var show = false;
+			for (var i = 0; i < this.records.length; i++) {
+				if (this.isShowBatchSelection(this.records[i])) {
+					show = true;
+					break;
+				}
+			}
+			return show;
+		},
 		isShowBatchSelection: function(record) {
 			if (this.cell.state.batchSelectionCondition) {
 				return this.$services.page.isCondition(this.cell.state.batchSelectionCondition, record, this);

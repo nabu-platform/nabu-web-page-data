@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<node artifactManager="be.nabu.eai.module.services.vm.VMServiceManager" created="2021-12-11T07:47:32.507+01:00" lastModified="2021-12-11T21:13:10.152+01:00" leaf="true" version="31">
+<node artifactManager="be.nabu.eai.module.services.vm.VMServiceManager" created="2021-12-11T07:47:32.507+01:00" lastModified="2021-12-16T11:07:22.033+01:00" leaf="true" version="35">
     <environmentId>apollo</environmentId>
     <hidden>false</hidden>
     <properties/>
     <references>nabu.utils.List.add</references>
     <references>be.nabu.libs.types.api.KeyValuePair</references>
+    <references>java.util.Date</references>
+    <references>nabu.utils.Date.now</references>
     <references>nabu.web.page.data.provider.utils.streamPusher:input</references>
     <references>nabu.misc.broadcast.Services.subscribe</references>
     <references>java.lang.Integer</references>
@@ -19,6 +21,7 @@
     <references>nabu.web.page.data.provider.streamUnsubscription</references>
     <references>be.nabu.libs.http.jwt.JWTBody</references>
     <references>java.lang.String</references>
+    <references>nabu.utils.Date.increment</references>
     <references>nabu.data.json.Services.unmarshal</references>
     <references>nabu.web.application.jwt.Services.unmarshal</references>
 </node>

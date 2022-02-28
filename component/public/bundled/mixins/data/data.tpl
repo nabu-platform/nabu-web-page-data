@@ -50,6 +50,8 @@
 				<n-form-text v-model="cell.state.inlineUpdateEvent" label="Successful Inline Record Update Event" @input="$updateEvents()" :timeout="600"/>
 				<n-form-text v-model="cell.state.recordsUpdatedEvent" label="Records updated event" info="This event is emitted every time the records array is updated" @input="$updateEvents()" :timeout="600"/>
 				
+				<n-form-switch v-if="cell.state.operation" v-model="cell.state.reverseData" label="Reverse data"/>
+				
 				<n-form-ace v-model="cell.state.arrayFilter" v-if="cell.state.array" label="Array filter"/>
 				
 				<n-form-combo label="Update Operation" :value="cell.state.updateOperation"
@@ -73,6 +75,18 @@
 				<n-page-mapper :to="inputParameters" :from="availableParameters" 
 					v-model="cell.bindings"/>
 			</n-collapsible>
+			<n-collapsible title="Aggregation" class="mapping padded">
+				<div class="list-actions">
+					<button @click="pushAggregation"><span class="fa fa-plus"></span>Aggregation</button>
+				</div>
+				<div v-if="cell.state.aggregations">
+					<div class="list-row" v-for="aggregation in cell.state.aggregations">
+						<n-form-combo v-model="aggregation.field" :items="keys" label="Field"/>
+						<n-form-combo v-model="aggregation.operation" :items="['group by', 'sum', 'average', 'max', 'min']" label="Operation" info="You must have at least one group by operation"/>
+						<span @click="cell.state.aggregations.splice(cell.state.aggregations.indexOf(aggregation), 1)" class="fa fa-times"></span>
+					</div>
+				</div>
+			</n-collapsible>
 			<n-collapsible title="Filters" v-if="cell.state.filters.length || filtersToAdd().length">
 				<div class="padded-content">
 					<n-form-combo label="Filter Type" :filter="function(value) { return $window.nabu.page.providers('data-filter') }" 
@@ -88,7 +102,8 @@
 					:page="page"
 					:cell="cell"
 					:fields="cell.state.filters" 
-					:possible-fields="filtersToAdd()"/>
+					:possible-fields="filtersToAdd()"
+					:allow-paste="true"/>
 			</n-collapsible>
 			<n-collapsible title="Refresh" v-if="operation != null">
 				<div class="list-actions">

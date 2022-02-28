@@ -8,4 +8,6 @@
     <field maxOccurs="unbounded" name="subscriptionIds" type="java.lang.String"/>
     <field name="subscriptionId" type="java.lang.String"/>
     <structure definition="nabu.web.page.data.provider.streamUnsubscription" name="unsubscription"/>
+    <field minOccurs="0" name="date" type="java.util.Date"/>
+    <field minOccurs="0" name="expiration" type="java.util.Date"/>
 </structure>

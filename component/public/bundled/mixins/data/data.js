@@ -166,6 +166,10 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}
 	},
 	computed: {
+		selectable: function() {
+			// selected events must not be linked to fields
+			return this.cell.state.actions.filter(this.isSelectionAction).length > 0;
+		},
 		hasStreamCreate: function() {
 			var operation = this.operation;
 			console.log("operation is", operation);
@@ -1564,6 +1568,96 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}, self.cell.state.autoRefresh);
 			}
 		},
+		updateRecord: function(oldRecord, newRecord) {
+			var newKeys = Object.keys(newRecord);
+			var oldKeys = Object.keys(oldRecord);
+			// hard override
+			newKeys.forEach(function(key) {
+				oldRecord[key] = newRecord[key];
+			});
+			// any existing keys that do not exist in the new data, we set to null
+			oldKeys.filter(function(x) { return newKeys.indexOf(x) < 0 }).forEach(function(key) {
+				oldRecord[key] = null;	
+			});
+		},
+		// post process the records before we add them
+		postProcess: function(records) {
+			var self = this;
+			if (this.cell.state.aggregations) {
+				// first we perform the group by
+				var groupBy = this.cell.state.aggregations.filter(function(x) { return x.field && x.operation == "group by" });
+				// only proceed if we actually have a group by
+				if (groupBy.length) {
+					// first we group
+					var result = {};
+					records.forEach(function(x) {
+						var key = "";
+						groupBy.forEach(function(g) {
+							if (key != "") {
+								key += "::";
+							}
+							key += self.$services.page.getValue(x, g.field);
+						});
+						if (!result[key]) {
+							result[key] = [];
+						}
+						result[key].push(x);
+					});
+					records = [];
+					// then we aggregate (if any)
+					var aggregations = this.cell.state.aggregations.filter(function(x) { return x.field && x.operation != "group by" });
+					if (aggregations.length) {
+						// for each grouped array
+						Object.keys(result).forEach(function(key) {
+							var start = result[key][0];
+							// we need at least two records to have useful aggregation
+							if (result[key].length >= 2) {
+								for (var i = 1; i < result[key].length; i++) {
+									aggregations.forEach(function(a) {
+										if (a.operation == "sum" || a.operation == "average") {
+											start[a.field] += result[key][i][a.field];
+										}
+										else if (a.operation == "min") {
+											start[a.field] = Math.min(start[a.field], result[key][i][a.field]);
+										}
+										else if (a.operation == "max") {
+											start[a.field] = Math.max(start[a.field], result[key][i][a.field]);
+										}
+									});
+								}
+								aggregations.forEach(function(a) {
+									if (a.operation == "average") {
+										start[a.field] = start[a.field] / result[key].length;
+									}
+								});
+							}
+							records.push(start);
+						});
+						this.doInternalSort(records);
+					}
+					// if there are no actual aggregations, we just take the first record
+					// they should still be in the correct order
+					else {
+						Object.keys(result).forEach(function(key) {
+							var start = result[key][0];
+							records.push(start);
+						});
+					}
+					// use internalSort according to original order by criteria
+				}
+			}
+			console.log("post processed!", records);
+			if (self.cell.state.reverseData) {
+				records.reverse();
+			}
+			return records;
+		},
+		pushAggregation: function() {
+			if (!this.cell.state.aggregations) {
+				Vue.set(this.cell.state, "aggregations", []);
+			}
+			this.cell.state.aggregations.push({});
+		},
 		// how much to increment by
 		load: function(page, append, increment) {
 			// if we are doing a new load, unsubscribe from any stream subscriptions you might have
@@ -1587,20 +1681,16 @@ nabu.page.views.data.DataCommon = Vue.extend({
 							var token = raw.getResponseHeader("Stream-Token");
 							if (token) {
 								var parsed = nabu.utils.jwt.parse(token);
-								console.log("subscribing", parsed.jti);
 								self.$services.websocket.send("stream-subscribe", {
 									jwtToken: token
 								});
 								// we want to push an unsubscribe function
 								self.streamSubscriptions.push(function() {
-									console.log("unsubscribing!", parsed.jti);
 									self.$services.websocket.send("stream-unsubscribe", {
 										jwtId: parsed.jti
 									});
 								});
-								console.log("parsed token", parsed, token);
 								self.streamSubscriptions.push(self.$services.websocket.subscribe(function(data) {
-									console.log("received data", data, parsed);
 									if (data.type == "subscription-data") {
 										// it's for us!
 										if (data.content.subscriptionId == parsed.jti) {
@@ -1614,19 +1704,24 @@ nabu.page.views.data.DataCommon = Vue.extend({
 														found = true;
 														// we must evaluate if the updated data still matches the filter
 														if (!parsed.j || self.$services.page.evalInContext(data.content.data, parsed.j)) {
-															var newKeys = Object.keys(data.content.data);
-															var oldKeys = Object.keys(record);
-															// hard override
-															newKeys.forEach(function(key) {
-																record[key] = data.content.data[key];
-															});
-															// any existing keys that do not exist in the new data, we set to null
-															oldKeys.filter(function(x) { return newKeys.indexOf(x) < 0 }).forEach(function(key) {
-																record[key] = null;	
-															});
+															if (self.pushUpdate) {
+																self.pushUpdate(record, data.content.data);
+															}
+															else {
+																self.updateRecord(record, data.content.data);
+																//var newKeys = Object.keys(data.content.data);
+																//var oldKeys = Object.keys(record);
+																//// hard override
+																//newKeys.forEach(function(key) {
+																//	record[key] = data.content.data[key];
+																//});
+																//// any existing keys that do not exist in the new data, we set to null
+																//oldKeys.filter(function(x) { return newKeys.indexOf(x) < 0 }).forEach(function(key) {
+																//	record[key] = null;	
+																//});
+															}
 														}
 														else {
-															console.log("removing data that no longer matches filter", data.content.data, parsed.j);
 															recordsToRemove.push(record);
 														}
 													}
@@ -1635,13 +1730,36 @@ nabu.page.views.data.DataCommon = Vue.extend({
 												recordsToRemove.forEach(function(record) {
 													var index = self.records.indexOf(record);	
 													if (index >= 0) {
-														self.records.splice(index, 1);
+														if (self.pushDelete) {
+															self.pushDelete(record, index);
+														}
+														else {
+															self.records.splice(index, 1);
+														}
 													}
 												});
 											}
 											if (!found) {
 												if (!parsed.j || self.$services.page.evalInContext(data.content.data, parsed.j)) {
-													self.records.push(data.content.data);
+													if (self.pushCreate) {
+														self.pushCreate(data.content.data);
+													}
+													else {
+														self.records.push(data.content.data);
+													}
+													var limit = self.cell.state.limit != null ? parseInt(self.cell.state.limit) : null;
+													if (self.dynamicLimit != null) {
+														limit = self.dynamicLimit;
+													}
+													// if we are over the limit, toss the first record
+													if (limit && self.records.length > limit) {
+														if (self.pushDelete) {
+															self.pushDelete(self.records[0], 0);
+														}
+														else {
+															self.records.splice(0, 1);
+														}
+													}
 												}
 											}
 										}
@@ -1662,6 +1780,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 							var findArray = function(root) {
 								Object.keys(root).forEach(function(field) {
 									if (root[field] instanceof Array && !arrayFound) {
+										root[field] = self.postProcess(root[field]);
 										root[field].forEach(function(x, i) {
 											x.$position = i;
 										});
@@ -1718,6 +1837,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					current = this.$services.page.getPageInstance(this.page, this).get(this.cell.state.array);
 				}
 				if (current) {
+					current = self.postProcess(current);
 					if (!append) {
 						this.records.splice(0, this.records.length);
 					}
@@ -1859,7 +1979,6 @@ Vue.component("data-common-filter", {
 		}
 	}
 })
-
 
 
 
