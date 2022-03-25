@@ -71,6 +71,15 @@
 					<n-form-switch v-else-if="hasStreamUpdate" v-model="cell.state.subscribeStream" label="Subscribe to updates"/>
 				</div>
 			</n-collapsible>
+			<n-collapsible title="Drag/drop">
+				<div class="padded-content">
+					<n-form-switch v-model="cell.state.enableDrag" label="Enable dragging"/>
+					<n-form-text v-model="cell.state.dragName" label="Drag source name" v-if="cell.state.enableDrag" placeholder="default"/>
+					<n-form-switch v-model="cell.state.enableDrop" label="Enable dropping"/>
+					<n-form-combo v-model="cell.state.dropName" label="Accepted drag source" v-if="cell.state.enableDrop" :filter="$services.page.getDraggableKeys"/>
+					<n-form-text v-model="cell.state.dropEventName" label="Drop Event Name" v-if="cell.state.enableDrop" />
+				</div>
+			</n-collapsible>
 			<n-collapsible title="Mapping" class="mapping padded" v-if="Object.keys(inputParameters.properties).length">
 				<n-page-mapper :to="inputParameters" :from="availableParameters" 
 					v-model="cell.bindings"/>
@@ -177,11 +186,13 @@
 					</div>
 				</n-collapsible>
 			</n-collapsible>
+			
+			<h2>Fields</h2>
 			<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="true || !!cell.state.updateOperation" :allow-events="false" v-if="supportsFields"/>
 			
-			<div v-if="supportsFields">
+			<div v-if="supportsDetailFields">
 				<div class="padded-content">
-					<h2>Detail fields</h2>
+					<h2>Detail fields<span class="subscript">You can configure additional fields that provide details for a single record.</span></h2>
 				</div>
 				<page-fields-edit :cell="cell" :page="page" :keys="keys" :allow-editable="false" :allow-events="false" fields-name="detailFields"/>
 			</div>

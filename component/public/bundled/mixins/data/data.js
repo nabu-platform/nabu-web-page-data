@@ -404,6 +404,45 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}	
 	},
 	methods: {
+		onDragStart: function(event, record) {
+			var name = this.cell.state.dragName ? this.cell.state.dragName : "default";
+			this.$services.page.setDragData(event, "data-" + name, JSON.stringify(record));
+		},
+		onDragOver: function(event, record) {
+			if (this.cell.state.enableDrop) {
+				var dropName = this.cell.state.dropName ? this.cell.state.dropName : "default";
+				var data = this.$services.page.getDragData(event, "data-" + dropName);
+				// TODO: add support for further conditions to be evaluated
+				if (data) {
+					event.preventDefault();
+				}
+			}
+		},
+		onDrop: function(event, record) {
+			console.log("dropping", event, record);
+			var self = this;
+			if (this.cell.state.enableDrop && this.cell.state.dropEventName) {
+				var eventName = this.cell.state.dropEventName;
+				var dropName = this.cell.state.dropName ? this.cell.state.dropName : "default";
+				var data = this.$services.page.getDragData(event, "data-" + dropName);
+				
+				if (data) {
+					var pageInstance = self.$services.page.getPageInstance(self.page, self);
+					pageInstance.emit(eventName, {
+						source: JSON.parse(data),
+						target: record
+					});
+				}
+			}
+		},
+		getDraggables: function() {
+			var result = {};
+			if (this.cell.state.enableDrag) {
+				var name = this.cell.state.dragName ? this.cell.state.dragName : "default";
+				result[name] = this.definition;
+			}
+			return result;
+		},
 		// TODO: allow the user to choose their own key in the record
 		getKey: function(record) {
 			if (record && record.id) {
@@ -720,6 +759,18 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					Object.keys(custom).forEach(function(key) {
 						result[key] = custom[key];	
 					});
+				}
+			}
+			if (this.cell.state.enableDrop && this.cell.state.dropEventName) {
+				var draggables = this.$services.page.getDraggables();
+				var dragName = this.cell.state.dragName ? this.cell.state.dragName : "default"; 
+				if (draggables[dragName]) {
+					result[this.cell.state.dropEventName] = {
+						properties: {
+							"source": { type: "object", properties: draggables[dragName] },
+							"target": { type: "object", properties: this.definition }
+						}
+					};
 				}
 			}
 			return result;
