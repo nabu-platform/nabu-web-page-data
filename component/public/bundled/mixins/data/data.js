@@ -16,6 +16,9 @@ Vue.component("data-common-content", {
 		data: {
 			type: Object
 		}
+	},
+	beforeDestroy: function() {
+		this.data.$destroy();
 	}
 })
 
@@ -23,6 +26,15 @@ Vue.component("data-common-content", {
 // the first load() is triggered by the main body
 // however any loads triggered through searching come from the header!
 // could really use a refactor...
+
+// a section is a logical subdivision of a component
+// for instance a calendar might have a section "day", that day might not have actual data (records) attached to it, but it is a visual section that has a meaning
+// you can for instance attach events to particular sections
+
+// pluggable functions
+// - getCustomEvents: add your own events
+// - getDropDefinition: add a definition for the drop target data available (so when you drop on a particular zone, which information will be available?)
+// - getSectionDefinition: when a section emits an event, what is the data it will be emitting?
 nabu.page.views.data.DataCommon = Vue.extend({ 
 	props: {
 		page: {
@@ -137,7 +149,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// doing certain actions (like drag drop) you may want to halt refreshing
 			blockRefresh: false,
 			// keep track when the update is working
-			updating: false
+			updating: false,
+			// if we get a call back after destroy, we don't want to start reloading etc
+			destroyed: false
 		}
 	},
 	ready: function() {
@@ -229,7 +243,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		},
 		recordActions: function() {
 			return this.actions.filter(function(x) {
-				return !x.global && x.field == null;
+				return !x.global && !x.section && x.field == null;
 			});
 		},
 		globalActions: function() {
@@ -392,18 +406,26 @@ nabu.page.views.data.DataCommon = Vue.extend({
 	},
 	beforeDestroy: function() {
 		var self = this;
+		this.destroyed = true;
 		this.subscriptions.map(function(x) {
 			x();
 		});
 		this.streamSubscriptions.forEach(function(x) {
 			x();
 		});
+		console.log("destroying data!", this.refreshTimer, this.cell.state.operation, this);
 		if (this.refreshTimer) {
 			clearTimeout(this.refreshTimer);
 			this.refreshTimer = null;
 		}	
 	},
 	methods: {
+		// get all the events that apply to a certain section
+		getSectionActions: function(section) {
+			return this.actions.filter(function(x) {
+				return x.section == section;
+			});
+		},
 		onDragStart: function(event, record) {
 			var name = this.cell.state.dragName ? this.cell.state.dragName : "default";
 			this.$services.page.setDragData(event, "data-" + name, JSON.stringify(record));
@@ -732,20 +754,29 @@ nabu.page.views.data.DataCommon = Vue.extend({
 						definition = null;
 					}
 					this.cell.state.actions.forEach(function(action) {
-						result[action.name] = action.global && (!action.useSelection && !action.useAll)
-							//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
-							? (self.cell.on ? self.cell.on : {})
-							: definition;
+						if (!action.section) {
+							result[action.name] = action.global && (!action.useSelection && !action.useAll)
+								//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
+								? (self.cell.on ? self.cell.on : {})
+								: definition;
+						}
 					});
 				}
 			}
 			else {
 				this.cell.state.actions.forEach(function(action) {
-					result[action.name] = action.global && (!action.useSelection && !action.useAll) 
-						? (self.cell.on ? self.cell.on : {})
-						: {properties:self.definition};
+					if (!action.section) {
+						result[action.name] = action.global && (!action.useSelection && !action.useAll) 
+							? (self.cell.on ? self.cell.on : {})
+							: {properties:self.definition};
+					}
 				});
 			}
+			this.cell.state.actions.forEach(function(action) {
+				if (action.section) {
+					result[action.name] = {properties:self.getSectionDefinition ? self.getSectionDefinition(action.section) : {}};
+				}
+			});
 			// add the event!
 			if (this.cell.state.inlineUpdateEvent) {
 				result[this.cell.state.inlineUpdateEvent] = {properties:self.definition};
@@ -763,12 +794,12 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			}
 			if (this.cell.state.enableDrop && this.cell.state.dropEventName) {
 				var draggables = this.$services.page.getDraggables();
-				var dragName = this.cell.state.dragName ? this.cell.state.dragName : "default"; 
-				if (draggables[dragName]) {
+				var dropName = this.cell.state.dropName ? this.cell.state.dropName : "default"; 
+				if (draggables[dropName]) {
 					result[this.cell.state.dropEventName] = {
 						properties: {
-							"source": { type: "object", properties: draggables[dragName] },
-							"target": { type: "object", properties: this.definition }
+							"source": { type: "object", properties: draggables[dropName] },
+							"target": { type: "object", properties: this.getDropDefinition ? this.getDropDefinition() : {} }	// this.definition
 						}
 					};
 				}
@@ -1602,7 +1633,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		},
 		reload: function(page) {
 			var self = this;
-			if (self.cell.state.autoRefresh) {
+			if (self.cell.state.autoRefresh && !this.destroyed) {
+				if (self.refreshTimer != null) {
+					clearTimeout(self.refreshTimer);
+					self.refreshTimer = null;
+				}
 				self.refreshTimer = setTimeout(function() {
 					// don't refresh if explicitly blocked or if updating
 					if (!self.blockRefresh && !self.updating) {
@@ -1697,7 +1732,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					// use internalSort according to original order by criteria
 				}
 			}
-			console.log("post processed!", records);
 			if (self.cell.state.reverseData) {
 				records.reverse();
 			}
@@ -1979,7 +2013,13 @@ Vue.component("data-common-footer", {
 
 Vue.component("data-common-configure", {
 	template: "#data-common-configure",
-	mixins:[nabu.page.views.data.DataCommon]
+	mixins:[nabu.page.views.data.DataCommon],
+	props: {
+		getSections: {
+			type: Function,
+			required: false
+		}
+	}
 });
 
 Vue.component("data-common-prev-next", {

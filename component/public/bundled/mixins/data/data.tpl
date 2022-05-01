@@ -165,7 +165,8 @@
 				<n-collapsible class="list-item" :title="action.name ? action.name : 'Unnamed'" v-for="action in cell.state.actions">
 					<n-form-text v-model="action.name" label="Name" @input="$updateEvents()" :timeout="600"/>
 					<n-form-combo v-model="action.class" :filter="$services.page.getSimpleClasses" label="Class"/>
-					<n-form-switch v-model="action.global" label="Global" v-if="!action.field" />
+					<n-form-switch v-model="action.global" label="Global" v-if="!action.field && !action.section" />
+					<n-form-combo v-model="action.section" :items="getSections()" v-if="!action.global && !action.field && getSections && getSections().length > 0" label="Section"/>
 					<n-form-switch v-model="action.useSelection" v-if="action.global && !action.useAll" label="Use Selection" />
 					<n-form-switch v-model="action.useAll" v-if="action.global && !action.useSelection" label="Use All" />
 					<n-form-text v-model="action.icon" label="Icon" :timeout="600"/>
@@ -175,7 +176,7 @@
 					<n-form-switch v-model="action.close" label="Close"/>
 					<n-form-switch v-model="action.delete" label="Delete" v-if="!pageable && (!action.global || action.useSelection)"/>
 					<n-form-combo v-model="action.type" v-if="action.global" :items="['button', 'link']" :nillable="false" label="Type"/>
-					<n-form-combo v-model="action.field" v-if="!action.global" :items="eventFields"
+					<n-form-combo v-model="action.field" v-if="!action.global && !action.section" :items="eventFields"
 						:formatter="function(x) { return x.index + (x.label ? ' - ' + x.label : '') }"
 						:extracter="function(x) { return x.index }"
 						label="Link to field"/>
@@ -298,7 +299,19 @@
 		</div>
 		
 		<slot></slot>
-		<data-common-footer :page="data.page" :parameters="data.parameters" :cell="data.cell" 
+		
+		<div class="data-common-footer">
+			<div class="global-actions" v-if="data.globalActions.length">
+				<component
+					v-for="action in data.globalActions"
+					:is="action.type == 'link' ? 'a' : 'button'"
+					:disabled="action.useSelection && !data.selected.length"
+					:class="[action.class, {'has-icon': action.icon}]"
+					href="javascript:void(0)"
+					v-action="function() { data.trigger(action) }"><span v-if="action.icon" class="fa" :class="action.icon"></span><label v-if="action.label">{{$services.page.translate(action.label)}}</label></component>
+			</div>
+		</div>
+		<!--<data-common-footer :page="data.page" :parameters="data.parameters" :cell="data.cell" 
 			:edit="data.edit"
 			:records="data.records"
 			:selected="data.selected"
@@ -307,7 +320,7 @@
 			@updatedEvents="data.$emit('updatedEvents')"
 			@close="data.$emit('close')"
 			:multiselect="true"
-			:updatable="true"/>
+			:updatable="true"/>-->
 	</div>
 </template>
 
