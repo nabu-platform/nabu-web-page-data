@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<node artifactManager="be.nabu.eai.module.web.component.WebComponentManager" created="2018-04-20T16:05:49.804+02:00" lastModified="2018-08-31T17:35:53.218+02:00" leaf="true" version="2">
+    <environmentId>hyperion</environmentId>
+    <hidden>false</hidden>
+    <properties/>
+</node>

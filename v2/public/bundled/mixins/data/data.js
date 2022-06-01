@@ -15,6 +15,10 @@ Vue.component("data-common-content", {
 	props: {
 		data: {
 			type: Object
+		},
+		childComponents: {
+			type: Array,
+			required: false
 		}
 	},
 	beforeDestroy: function() {
@@ -124,6 +128,10 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			default: function() {
 				return [];
 			}
+		},
+		childComponents: {
+			type: Object,
+			required: false
 		}
 	},
 	data: function() {
@@ -420,6 +428,52 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}	
 	},
 	methods: {
+		getSharedChildComponents: function(component) {
+			var components = [];
+			// we don't want to style fields atm
+			var self = this;
+			if (this.cell.state.fields && false) {
+				this.cell.state.fields.forEach(function(x, index) {
+					components.push({
+						title: "Data Field - " + (x.label ? self.$services.page.translate(x.label) : index),
+						name: "data-" + (component ? component + "-" : "") + "field-" + index,
+						defaultVariant: "data-" + (component ? component + "-" : "") + "field",
+						component: "data-field"
+					})
+				});
+			}
+			components.push({
+				title: "Title",
+				name: "data-title",
+				component: "h2"
+			});
+			components.push({
+				title: "Global Button Menu",
+				name: "data-button-container",
+				component: "menu"
+			});
+			components.push({
+				title: "Paging Menu",
+				name: "paging-menu",
+				component: "menu"
+			});
+			components.push({
+				title: "Paging Button",
+				name: "paging-button",
+				component: "button"
+			});
+			if (this.cell.state.actions) {
+				this.cell.state.actions.forEach(function(x, index) {
+					components.push({
+						title: "Button - " + (x.label ? self.$services.page.translate(x.label) : (x.icon ? x.icon : index)),
+						name: "data-" + (component ? component + "-" : "") + "button-" + index,
+						defaultVariant: "data-" + (component ? component + "-" : "") + (x.global ? "global-" : "inline-") + "button",
+						component: "button"
+					})
+				});
+			}
+			return components;
+		},
 		// get all the events that apply to a certain section
 		getSectionActions: function(section) {
 			return this.actions.filter(function(x) {
@@ -849,7 +903,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			return this.$services.page.getPageInstance(this.page, this).getAvailableEvents();
 		},
 		getRecordStyles: function(record) {
-			var styles = [{'selected': this.selected.indexOf(record) >= 0}];
+			var styles = [{"is-selected": this.selected.indexOf(record) >= 0}];
 			nabu.utils.arrays.merge(styles, this.$services.page.getDynamicClasses(this.cell.state.styles, {record:record}, this));
 			return styles;
 		},
@@ -1177,6 +1231,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			}
 		},
 		getDynamicClasses: function(key, record) {
+			var result = [];
 			// the old way
 			if (typeof(key) == "string") {
 				var styles = this.cell.state.result[key].styles;
@@ -1189,12 +1244,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					});
 				}
 				else {
-					return [];
+					styles = [];
 				}
+				nabu.utils.arrays.merge(result, styles);
 			}
-			else {
-				
-			}
+			return result;
 		},
 		isCondition: function(condition, record) {
 			var state = {

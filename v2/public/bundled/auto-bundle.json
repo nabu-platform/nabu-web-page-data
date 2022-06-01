@@ -1,0 +1,88 @@
+{
+	"namespace": "page", 
+	"name": "data", 
+	"resources": {
+		"page": {
+			"data": {
+				"images": {
+					"card.svg": {
+						"url": "images/card.svg"
+					},
+					"table.svg": {
+						"url": "images/table.svg"
+					}
+				},
+				"mixins": {
+					"data": {
+						"data.js": {
+							"url": "mixins/data/data.js"
+						}, 
+						"data.tpl": {
+							"url": "mixins/data/data.tpl"
+						}
+					}
+				}, 
+				"services": {
+					"DataUtils.js": {
+						"url": "services/DataUtils.js"
+					}
+				}, 
+				"views": {
+					"table-list": {
+						"table-list.js": {
+							"url": "views/table-list/table-list.js"
+						}, 
+						"table-list.tpl": {
+							"url": "views/table-list/table-list.tpl"
+						}
+					}, 
+					"data": {
+						"combo-filter": {
+							"combo-filter.tpl": {
+								"url": "views/data/combo-filter/combo-filter.tpl"
+							}, 
+							"combo-filter.js": {
+								"url": "views/data/combo-filter/combo-filter.js"
+							}
+						}, 
+						"filter": {
+							"filter.tpl": {
+								"url": "views/data/filter/filter.tpl"
+							}, 
+							"filter.js": {
+								"url": "views/data/filter/filter.js"
+							}
+						}
+					}, 
+					"card": {
+						"card.tpl": {
+							"url": "views/card/card.tpl"
+						}, 
+						"card.js": {
+							"url": "views/card/card.js"
+						}
+					}, 
+					"table": {
+						"table.tpl": {
+							"url": "views/table/table.tpl"
+						}, 
+						"table.js": {
+							"url": "views/table/table.js"
+						}
+					}, 
+					"multi": {
+						"multi.tpl": {
+							"url": "views/multi/multi.tpl"
+						}, 
+						"multi.js": {
+							"url": "views/multi/multi.js"
+						}
+					}
+				}, 
+				"component.js": {
+					"url": "component.js"
+				}
+			}
+		}
+	}
+}

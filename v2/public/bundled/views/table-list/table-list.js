@@ -45,6 +45,35 @@ nabu.page.views.data.TableListGenerator = function(name) { return Vue.component(
 		}
 	},
 	methods: {
+		getChildComponents: function() {
+			var self = this;
+			var components = nabu.utils.arrays.merge([{
+				title: "Table", 
+				name: "data-table",
+				component: "table"
+			}, {
+				title: "Record Button Menu",
+				name: "table-button-container",
+				component: "menu"
+			}], this.getSharedChildComponents("table"));
+			if (this.cell.state.fields) {
+				this.cell.state.fields.forEach(function(x, index) {
+					components.push({
+						title: "Table Header - " + (x.label ? self.$services.page.translate(x.label) : index),
+						name: "data-table-header-" + index,
+						defaultVariant: "data-table-header",
+						component: "table-cell"
+					});
+					components.push({
+						title: "Table Cell - " + (x.label ? self.$services.page.translate(x.label) : index),
+						name: "data-table-cell-" + index,
+						defaultVariant: "data-table-cell",
+						component: "table-cell"
+					});
+				});
+			}
+			return components;
+		},
 		isAllowedField: function(field) {
 			return !field.condition || this.$services.page.isCondition(field.condition, {}, this);
 		},

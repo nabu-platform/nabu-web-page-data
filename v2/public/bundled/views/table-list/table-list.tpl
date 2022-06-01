@@ -125,7 +125,7 @@
 	</data-common-configure>
 </template>
 <template id="data-table-list">
-	<data-common-content :data="$self" class="data-cell data-table-list">
+	<data-common-content :data="$self" class="data-cell data-table-list" :child-components="childComponents">
 		<ul class="table-list classic data" cellspacing="0" cellpadding="0" :class="dataClass" v-if="!cell.state.useNativeTable && (edit || showEmpty || records.length)">
 			<li class="row title">
 				<span @click="sort(getSortKey(field))" v-for="field in cell.state.fields" :style="{'flex-grow': (field.width != null ? field.width : '1')}"
@@ -159,7 +159,7 @@
 				</div>
 			</li>
 		</ul>
-		<table class="classic data" cellspacing="0" cellpadding="0" :class="[dataClass, {'selectable': selectable}]" v-else-if="cell.state.useNativeTable && (edit || showEmpty || records.length)">
+		<table class="is-table" cellspacing="0" cellpadding="0" :class="[dataClass, {'is-selectable': selectable}, getChildComponentClasses('data-table')]" v-else-if="cell.state.useNativeTable && (edit || showEmpty || records.length)">
 			<thead>
 				<tr v-if="cell.state.useTopHeader && cell.state.topHeaders && cell.state.topHeaders.length" class="top-header">
 					<th v-if="cell.state.detailFields && cell.state.detailFields.length > 0"></th>
@@ -170,7 +170,9 @@
 				<tr>
 					<th v-if="cell.state.detailFields && cell.state.detailFields.length > 0"></th>
 					<th @click="sort(getSortKey(field))"
-							v-for="field in cell.state.fields"
+							class="is-table-cell"
+							:class="getChildComponentClasses('data-table-header-' + index)"
+							v-for="(field, index) in cell.state.fields"
 							v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field) && isAllowedField(field)">
 						<n-form-checkbox v-if="cell.state.batchSelectAll && cell.state.batchSelectionColumn != null && cell.state.fields.indexOf(field) == cell.state.batchSelectionColumn && isShowAnyBatchSelection()" 
 							:value="allSelected" @input="selectAll"/>
@@ -186,7 +188,7 @@
 				<template v-for="(record, recordIndex) in records">
 					<tr v-visible="lazyLoad.bind($self, record)" @click="cell.state.batchSelectionColumn == null ? select(record) : function() {}" :class="getRecordStyles(record)" :custom-style="cell.state.styles.length > 0" :key="record.id ? record.id : records.indexOf(record)">
 						<td v-if="cell.state.detailFields && cell.state.detailFields.length > 0"><span class="fa" :class="{'fa-chevron-down' : isOpen(record), 'fa-chevron-right': !isOpen(record)}" @click="toggleOpen(record)"></span></td>
-						<td :class="$services.page.getDynamicClasses(field.styles, {record:record}, $self)" v-for="field in cell.state.fields" v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field) && calculateRowspan(field, record) >= 0 && isAllowedField(field)" :rowspan="calculateRowspan(field, record)">
+						<td class="is-table-cell" :class="[$services.page.getDynamicClasses(field.styles, {record:record}, $self), getChildComponentClasses('data-table-cell-' + index)]" v-for="(field, index) in cell.state.fields" v-if="!(isAllFieldHidden(field) && cell.state.hideEmptyColumns) && isAllowedDevice(field) && calculateRowspan(field, record) >= 0 && isAllowedField(field)" :rowspan="calculateRowspan(field, record)">
 							<n-form-checkbox v-if="cell.state.batchSelectionColumn != null && cell.state.fields.indexOf(field) == cell.state.batchSelectionColumn && isShowBatchSelection(record)" 
 								:value="selected" :item="record" @add="selectBatch" @remove="unselectBatch"/>
 							<page-field :field="field" :data="record" 
@@ -196,15 +198,19 @@
 								@updated="update(record)"
 								@mouseover="actionHovering = fieldActions(field).length > 0" @mouseout="actionHovering = false"
 								:actions="fieldActions(field, record)"
+								:class="getChildComponentClasses('data-field-' + index)"
+								class="is-data-field"
 								:page="page"
 								:cell="cell"/>
 						</td>
 						<td class="actions" v-if="actions.length" @mouseover="actionHovering = true" @mouseout="actionHovering = false">
-							<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
-								v-for="action in recordActions" 
-								class="p-button"
-								@click="trigger(action, record, cell.state.batchSelectionColumn != null && actionHovering)"
-								:class="[action.class, {'has-icon': action.icon && action.label }, {'inline': !action.class }]"><span class="fa" v-if="action.icon" :class="action.icon"></span><label v-if="action.label">{{ $services.page.translate($services.page.interpret(action.label, record, $self)) }}</label></button>
+							<div class="is-row" :class="getChildComponentClasses('table-button-container')">
+								<button v-if="!action.condition || $services.page.isCondition(action.condition, {record:record}, $self)" 
+									v-for="action in recordActions" 
+									class="is-button"
+									@click="trigger(action, record, cell.state.batchSelectionColumn != null && actionHovering)"
+									:class="[action.class, {'has-icon': action.icon && action.label }, {'inline': !action.class }, getChildComponentClasses('data-table-button-' + cell.state.actions.indexOf(action))]"><icon v-if="action.icon" :name="action.icon"/><span class="is-text" v-if="action.label">{{ $services.page.translate($services.page.interpret(action.label, record, $self)) }}</span></button>
+							</div>
 						</td>
 					</tr>
 					<tr v-if="cell.state.detailFields && cell.state.detailFields.length > 0 && isOpen(record)" class="data-detail">
@@ -221,7 +227,9 @@
 				</template>
 			</tbody>
 		</table>
-		<n-paging :value="paging.current" :total="paging.total" :load="load" :initialize="false" v-if="!cell.state.loadLazy && !cell.state.loadMore"/>
+		<n-paging :value="paging.current" :total="paging.total" :load="load" :initialize="false" v-if="!cell.state.loadLazy && !cell.state.loadMore"
+				:class="getChildComponentClasses('paging-menu')"
+				:button-classes="getChildComponentClasses('paging-button')"/>
 		<div class="load-more" v-else-if="cell.state.loadMore && paging.current != null && paging.total != null && paging.current < paging.total - 1">
 			<button class="p-button load-more-button" @click="load(paging.current + 1, true)">%{Load More}</button>
 		</div>
