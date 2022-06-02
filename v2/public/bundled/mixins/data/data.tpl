@@ -54,6 +54,8 @@
 				
 				<n-form-ace v-model="cell.state.arrayFilter" v-if="cell.state.array" label="Array filter"/>
 				
+				<n-form-text v-model="cell.state.runtimeAlias" label="Component alias" after="By setting a component alias, you can access the data at runtime"/>
+				
 				<n-form-combo label="Update Operation" :value="cell.state.updateOperation"
 					v-if="updatable"
 					:filter="getFormOperations"

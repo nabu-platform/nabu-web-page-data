@@ -185,6 +185,12 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
 				pageInstance.emit(this.cell.state.recordsUpdatedEvent, this.records);
 			}
+		},
+		filters: {
+			deep: true,
+			handler: function() {
+				this.delayedLoad();
+			}
 		}
 	},
 	computed: {
@@ -428,10 +434,35 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}	
 	},
 	methods: {
+		getStateDefinition: function() {
+			var result = {};
+			result.filter = {properties:{}};
+			this.filtersToAdd(true).forEach(function(x) {
+				result.filter.properties[x] = {
+					type: "string"
+				}
+			});
+			return {properties:result};
+		},
+		getState: function() {
+			var self = this;
+			this.filtersToAdd(true).forEach(function(x) {
+				if (!self.filters.hasOwnProperty(x)) {
+					Vue.set(self.filters, x, null);
+				}
+			});
+			return {
+				filter: this.filters
+			}
+		},
+		getRuntimeAlias: function() {
+			return this.cell.state.runtimeAlias ? this.cell.state.runtimeAlias : null;
+		},
 		getSharedChildComponents: function(component) {
 			var components = [];
 			// we don't want to style fields atm
 			var self = this;
+			/*
 			if (this.cell.state.fields && false) {
 				this.cell.state.fields.forEach(function(x, index) {
 					components.push({
@@ -452,6 +483,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				name: "data-button-container",
 				component: "menu"
 			});
+			*/
 			components.push({
 				title: "Paging Menu",
 				name: "paging-menu",
@@ -462,6 +494,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				name: "paging-button",
 				component: "button"
 			});
+			/*
 			if (this.cell.state.actions) {
 				this.cell.state.actions.forEach(function(x, index) {
 					components.push({
@@ -472,6 +505,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					})
 				});
 			}
+			*/
 			return components;
 		},
 		// get all the events that apply to a certain section
@@ -994,7 +1028,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				clearTimeout(this.loadTimer);
 				this.loadTimer = null;
 			}
-			this.loadTimer = setTimeout(this.load, 100);
+			this.loadTimer = setTimeout(this.load, 600);
 		},
 		setComboFilter: function(value, label) {
 			this.setFilter(this.cell.state.filters.filter(function(x) { return x.label == label })[0], value);
@@ -1600,7 +1634,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				if (this.cell.state.filters) {
 					var self = this;
 					var pageInstance = self.$services.page.getPageInstance(self.page, self);
-					this.cell.state.filters.map(function(filter) {
+					this.cell.state.filters.forEach(function(filter) {
 						if (self.cell.bindings[filter.name]) {
 							state[filter.name] = self.$services.page.getBindingValue(pageInstance, self.cell.bindings[filter.name], self);
 						}
@@ -1658,6 +1692,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					if (value != null && typeof(value) != "undefined") {
 						parameters[name] = value;
 					}
+				}
+			});
+			this.filtersToAdd(true).forEach(function(x) {
+				if (self.filters[x] != null) {
+					parameters[x] = self.filters[x];
 				}
 			});
 			this.cell.state.filters.map(function(filter) {

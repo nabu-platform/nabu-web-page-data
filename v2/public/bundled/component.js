@@ -6,88 +6,79 @@ window.addEventListener("load", function() {
 				return $services.dataUtils.getDataOperations().map(function(x) { return x.id }).indexOf(value) >= 0;
 			}
 		};
-		var initialize = function(type, value, component, cell, row, page) {
+		var initialize = function(type, value, component, cell, row, page, rowGenerator, cellGenerator) {
 			component.updateOperation(value);
 			var name = $services.page.guessNameFromOperation(value);
-			if (name != null) {
-				cell.state.title = $services.page.prettify(name);
+			if (rowGenerator) {
+				// generate a new cell to hold everything
+				var newCell = cellGenerator(row);
+				newCell.name = name ? name : "Cell wrapper";
+				var index = row.cells.indexOf(newCell);
+				row.cells.splice(index, 1);
+				index = row.cells.indexOf(cell);
+				row.cells.splice(index, 1, newCell);
+				
+				// create a new row
+				var row = rowGenerator(newCell);
+				row.name = "Row rapper";
+
+				// make sure we rotate the row				
+				if ($services.page.useAris) {
+					$services.page.normalizeAris(page, row, "row");
+					row.aris.components["page-row"].options.push("direction_vertical");
+				}
+				
+				var titleCell = cellGenerator(row);
+				titleCell.name = "Title"
+				titleCell.alias = "typography-h1";
+				if (name) {
+					titleCell.state.content = $services.page.prettify(name);
+				}
+				row.cells.push(cell);
+				cell.state.filterType = "data-default-filter";
+				cell.state.comboFilter = {
+					useTags: true
+				};
+				
+				var actionsCell = cellGenerator(row);
+				actionsCell.alias = "page-actions";
+				actionsCell.name = "Global actions";
+				
+				return cell;
 			}
-			cell.state.filterType = "data-combo-filter";
-			cell.state.comboFilter = {
-				useTags: true
+			else {
+				// we no longer use the inline title?
+				//if (name != null) {
+					//cell.state.title = $services.page.prettify(name);
+				//}
+				cell.state.filterType = "data-combo-filter";
+				cell.state.comboFilter = {
+					useTags: true
+				}
+				
+				return cell;
 			}
 		};
-		
+
 		$services.router.register({
 			alias: "data-table",
+			icon: "page/data/images/table.svg",
+			description: "A tabular view of data",
+			name: "Table",
+			category: "data",
+			accept: accept,
+			initialize: function(type, value, component, cell, row, page, rowGenerator, cellGenerator) {
+				// do general initialize
+				var contentCell = initialize(type, value, component, cell, row, page, rowGenerator, cellGenerator);	
+				// use native table by default, it deals better with lots of data (which is the default usecase often)
+				contentCell.state.useNativeTable = true;
+			},
 			enter: function(parameters) {
 				return new nabu.page.views.data.Table({propsData:parameters});
 			},
 			slow: true
 		});
 		
-		$services.router.register({
-			alias: "data-table-list",
-			icon: "page/data/images/table.svg",
-			description: "A tabular view of data",
-			name: "Table",
-			category: "data",
-			accept: accept,
-			initialize: function(type, value, component, cell, row, page) {
-				// do general initialize
-				initialize(type, value, component, cell, row, page);	
-				// use native table by default, it deals better with lots of data (which is the default usecase often)
-				cell.state.useNativeTable = true;
-			},
-			enter: function(parameters) {
-				return new nabu.page.views.data.TableList({propsData:parameters});
-			},
-			slow: true
-		});
-		
-		// should be possible but no immediate usecase for it
-		// it is exposed as a list handler for forms, that should be enough for now
-		/*$services.router.register({
-			alias: "data-multi-select",
-			enter: function(parameters) {
-				return new nabu.page.views.data.MultiSelect({propsData:parameters});
-			}
-		});*/
-		
-		/*
-		// removed from the core, available as separate bundle
-		$services.router.register({
-			alias: "data-donut",
-			enter: function(parameters) {
-				return new nabu.page.views.data.Donut({propsData:parameters});
-			},
-			slow: true
-		});
-		
-		$services.router.register({
-			alias: "data-gauge",
-			enter: function(parameters) {
-				return new nabu.page.views.data.Gauge({propsData:parameters});
-			},
-			slow: true
-		});
-		
-		$services.router.register({
-			alias: "data-bar",
-			enter: function(parameters) {
-				return new nabu.page.views.data.Bar({propsData:parameters});
-			},
-			slow: true
-		});
-		
-		$services.router.register({
-			alias: "data-line",
-			enter: function(parameters) {
-				return new nabu.page.views.data.Line({propsData:parameters});
-			},
-			slow: true
-		});
-		*/
 		
 		$services.router.register({
 			alias: "data-card",
@@ -96,8 +87,8 @@ window.addEventListener("load", function() {
 			category: "data",
 			name: "Card",
 			accept: accept,
-			initialize: function(type, value, component, cell, row, page) {
-				initialize(type, value, component, cell, row, page);
+			initialize: function(type, value, component, cell, row, page, rowGenerator, cellGenerator) {
+				initialize(type, value, component, cell, row, page, rowGenerator, cellGenerator);
 				// default show labels
 				cell.state.showLabels = true;
 				// default we want row view, note that this may no be available in all themes
