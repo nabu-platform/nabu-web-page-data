@@ -159,7 +159,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// keep track when the update is working
 			updating: false,
 			// if we get a call back after destroy, we don't want to start reloading etc
-			destroyed: false
+			destroyed: false,
+			// a component name we can use for the extension
+			componentName: null
 		}
 	},
 	ready: function() {
@@ -458,7 +460,17 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		getRuntimeAlias: function() {
 			return this.cell.state.runtimeAlias ? this.cell.state.runtimeAlias : null;
 		},
+		getActionComponents: function(action) {
+			var components = [{
+				title: 'Button', 
+				name: 'action-entry-button', 
+				component: "button",
+				defaultVariant: this.componentName ? "data-action-" + this.componentName : "data-action-generic"
+			}];
+			return components;
+		},
 		getSharedChildComponents: function(component) {
+			this.componentName = component;
 			var components = [];
 			// we don't want to style fields atm
 			var self = this;
@@ -934,7 +946,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			return new component();
 		},
 		getRefreshEvents: function(value) {
-			return this.$services.page.getPageInstance(this.page, this).getAvailableEvents();
+			return this.$services.page.getPageInstance(this.page, this).getAvailableEvents(value);
 		},
 		getRecordStyles: function(record) {
 			var styles = [{"is-selected": this.selected.indexOf(record) >= 0}];

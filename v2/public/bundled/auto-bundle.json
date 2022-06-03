@@ -28,14 +28,6 @@
 					}
 				}, 
 				"views": {
-					"table-list": {
-						"table-list.js": {
-							"url": "views/table-list/table-list.js"
-						}, 
-						"table-list.tpl": {
-							"url": "views/table-list/table-list.tpl"
-						}
-					}, 
 					"data": {
 						"combo-filter": {
 							"combo-filter.tpl": {
@@ -54,20 +46,20 @@
 							}
 						}
 					}, 
-					"card": {
-						"card.tpl": {
-							"url": "views/card/card.tpl"
-						}, 
-						"card.js": {
-							"url": "views/card/card.js"
-						}
-					}, 
 					"table": {
 						"table.tpl": {
 							"url": "views/table/table.tpl"
 						}, 
 						"table.js": {
 							"url": "views/table/table.js"
+						}
+					},
+					"card": {
+						"card.tpl": {
+							"url": "views/card/card.tpl"
+						}, 
+						"card.js": {
+							"url": "views/card/card.js"
 						}
 					}, 
 					"multi": {

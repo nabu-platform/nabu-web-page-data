@@ -27,4 +27,4 @@ nabu.page.views.data.CardGenerator = function(name) {
 };
 
 nabu.page.views.data.Card = nabu.page.views.data.CardGenerator("data-card");
-nabu.page.views.data.TableListGenerator("data-card-configure");
+nabu.page.views.data.TableGenerator("data-card-configure");

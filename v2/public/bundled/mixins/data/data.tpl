@@ -450,6 +450,7 @@
 							<button @click="downAction(action)"><span class="fa fa-chevron-circle-down"></span></button>
 							<button @click="removeAction(action)"><span class="fa fa-trash"></span></button>
 						</div>
+						<aris-editor v-if="$services.page.useAris && $services.page.normalizeAris(page, action, 'action', getActionComponents(action))" :child-components="getActionComponents(action)" :container="action.aris"/>			
 					</n-collapsible>
 				</n-collapsible>
 				<page-form-configure title="Filters" v-if="cell.state.filters.length || filtersToAdd().length"
