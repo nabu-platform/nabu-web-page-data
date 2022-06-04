@@ -1,4 +1,4 @@
-<template id="data-table-list-configure">
+<template id="data-table-configure">
 	<data-common-configure :page="page" :parameters="parameters" :cell="cell"
 			:edit="edit"
 			:records="records"
@@ -124,8 +124,8 @@
 		</div>
 	</data-common-configure>
 </template>
-<template id="data-table-list">
-	<data-common-content :data="$self" class="data-cell data-table-list" :child-components="childComponents">
+<template id="data-table">
+	<data-common-content :data="$self" class="data-cell data-table" :child-components="childComponents">
 		<ul class="table-list classic data" cellspacing="0" cellpadding="0" :class="dataClass" v-if="!cell.state.useNativeTable && (edit || showEmpty || records.length)">
 			<li class="row title">
 				<span @click="sort(getSortKey(field))" v-for="field in cell.state.fields" :style="{'flex-grow': (field.width != null ? field.width : '1')}"

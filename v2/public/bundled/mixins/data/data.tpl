@@ -270,6 +270,7 @@
 		<div class="data-common-header">
 			<h2 class="is-h2" :class="getChildComponentClasses('data-title')" v-if="data.cell.state.title">{{$services.page.translate($services.page.interpret(data.cell.state.title, data))}}</h2>
 			<data-common-filter
+				v-if="data.cell.state.filterType" 
 				:filters="data.getLiveFilters()"
 				:orderable="data.orderable"
 				:state="data.getFilterState()"
@@ -525,6 +526,7 @@
 		<h2 v-if="cell.state.title">{{$services.page.translate($services.page.interpret(cell.state.title, $self))}}</h2>
 
 		<data-common-filter
+			v-if="cell.state.filterType" 
 			:filters="getLiveFilters()"
 			:orderable="orderable"
 			:state="getFilterState()"

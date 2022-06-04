@@ -321,7 +321,7 @@ nabu.page.views.data.TableGenerator = function(name) { return Vue.component(name
 			this.configuring = true;
 		},
 		configurator: function() {
-			return "data-table-list-configure";
+			return "data-table-configure";
 		},
 		addTopHeaderField: function() {
 			if (!this.cell.state.topHeaders) {
@@ -404,5 +404,5 @@ nabu.page.views.data.TableGenerator = function(name) { return Vue.component(name
 	}
 });}
 
-nabu.page.views.data.Table = nabu.page.views.data.TableGenerator("data-table-list");
-nabu.page.views.data.TableGenerator("data-table-list-configure");
+nabu.page.views.data.Table = nabu.page.views.data.TableGenerator("data-table");
+nabu.page.views.data.TableGenerator("data-table-configure");
