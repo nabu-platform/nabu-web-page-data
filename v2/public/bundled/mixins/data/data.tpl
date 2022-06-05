@@ -269,20 +269,6 @@
 	<div>
 		<div class="data-common-header">
 			<h2 class="is-h2" :class="getChildComponentClasses('data-title')" v-if="data.cell.state.title">{{$services.page.translate($services.page.interpret(data.cell.state.title, data))}}</h2>
-			<data-common-filter
-				v-if="data.cell.state.filterType" 
-				:filters="data.getLiveFilters()"
-				:orderable="data.orderable"
-				:state="data.getFilterState()"
-				:page="data.page"
-				:cell="data.cell"
-				:edit="data.edit"
-				@updatedEvents="data.$emit('updatedEvents')"
-				@refresh="data.refresh"
-				@clear="data.clearFilters"
-				@filter="data.setFilter"
-				@sort="data.sort"
-				@close="data.$emit('close')"/>
 			<div class="page-startup-wizard" v-if="data.edit && !data.cell.state.operation && !data.cell.state.array && !data.cell.state.dynamicArrayType && (!data.cell.state.fields || !data.cell.state.fields.length)">
 				<div class="step" v-if="wizard == 'step1'">
 					<h2 class="title">Choose a data source</h2>
@@ -558,7 +544,7 @@
 </template>
 
 <template id="data-common-filter">
-	<component v-if="cell.state.filterType" 
+	<component
 		:is="cell.state.filterType.component ? cell.state.filterType.component : cell.state.filterType" 
 		class="cell-actions"
 		:page="page"
