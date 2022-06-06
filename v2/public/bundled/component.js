@@ -65,7 +65,7 @@ window.addEventListener("load", function() {
 			icon: "page/data/images/table.svg",
 			description: "A tabular view of data",
 			name: "Table",
-			category: "data",
+			category: "Data",
 			accept: accept,
 			initialize: function(type, value, component, cell, row, page, rowGenerator, cellGenerator) {
 				// do general initialize
@@ -84,7 +84,7 @@ window.addEventListener("load", function() {
 			alias: "data-card",
 			icon: "page/data/images/card.svg",
 			description: "Display a list of data records as separate cards",
-			category: "data",
+			category: "Data",
 			name: "Card",
 			accept: accept,
 			initialize: function(type, value, component, cell, row, page, rowGenerator, cellGenerator) {
