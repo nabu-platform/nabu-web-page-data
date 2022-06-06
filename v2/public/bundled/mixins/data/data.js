@@ -459,7 +459,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 			});
 			return {
-				filter: this.filters
+				filter: this.filters,
+				paging: this.paging
 			}
 		},
 		getRuntimeAlias: function() {
