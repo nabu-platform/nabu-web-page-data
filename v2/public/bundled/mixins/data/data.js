@@ -92,11 +92,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			required: false,
 			default: false
 		},
-		paging: {
-			type: Object,
-			required: false,
-			default: function() { return {} }
-		},
 		filters: {
 			type: Object,
 			required: false,
@@ -136,6 +131,14 @@ nabu.page.views.data.DataCommon = Vue.extend({
 	},
 	data: function() {
 		return {
+			// if we don't define the fields AND we don't use Vue.set to update them, they are not reactive!
+			paging: {
+				current: 0,
+				total: 0,
+				pageSize: 0,
+				rowOffset: 0,
+				totalCount: 0
+			},
 			filterState: null,
 			actionHovering: false,
 			last: null,
@@ -436,7 +439,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		}	
 	},
 	methods: {
-		getStateDefinition: function() {
+		// get the state definition
+		getState: function() {
 			var result = {};
 			result.filter = {properties:{}};
 			this.filtersToAdd(true).forEach(function(x) {
@@ -446,7 +450,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			});
 			return {properties:result};
 		},
-		getState: function() {
+		// get the actual state at runtime
+		getRuntimeState: function() {
 			var self = this;
 			this.filtersToAdd(true).forEach(function(x) {
 				if (!self.filters.hasOwnProperty(x)) {
@@ -459,6 +464,118 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		},
 		getRuntimeAlias: function() {
 			return this.cell.state.runtimeAlias ? this.cell.state.runtimeAlias : null;
+		},
+		getActions: function() {
+			return [];
+		},
+		// the specifications that it is compatible with (hard to deduce from only the names of the actions)
+		getSpecifications: function() {
+			return ["pageable", "browseable"];
+		},
+		runAction: function(name, properties) {
+			if (name == "jump-page") {
+				return this.load(properties.page);
+			}
+			else if (name == "get-paging") {
+				return this.$services.q.resolve(this.paging);
+			}
+			else if (name == "next-page") {
+				var promise = this.$services.q.defer();
+				var self = this;
+				this.loadNext(properties.append).then(function() {
+					promise.resolve({
+						hasMore: self.records.length > 0
+					})
+				}, promise);
+				return promise;
+			}
+			else if (name == "previous-page") {
+				var promise = this.$services.q.defer();
+				var self = this;
+				this.loadPrevious().then(function() {
+					promise.resolve({
+						hasMore: self.paging.current > 0
+					});
+				}, promise);
+				return promise;
+			}
+			else {
+				return this.$services.q.reject("Not supported");
+			}
+		},
+		// definition of the events that are emitted
+		getEvents: function() {
+			var self = this;
+			var result = {};
+			if (this.operation) {
+				if (this.operation.responses && this.operation.responses["200"]) {
+					var schema = this.operation.responses["200"].schema;
+					
+					// the return is always a singular object
+					var definition = this.$services.swagger.resolve(schema).properties;
+					var found = false;
+					// we are interested in the (complex) array within this object
+					Object.keys(definition).map(function(key) {
+						if (!found && definition[key].type == "array" && definition[key].items.properties) {
+							definition = definition[key].items;
+							found = true;
+						}
+					});
+					if (!found) {
+						definition = null;
+					}
+					this.cell.state.actions.forEach(function(action) {
+						if (!action.section) {
+							result[action.name] = action.global && (!action.useSelection && !action.useAll)
+								//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
+								? (self.cell.on ? self.cell.on : {})
+								: definition;
+						}
+					});
+				}
+			}
+			else {
+				this.cell.state.actions.forEach(function(action) {
+					if (!action.section) {
+						result[action.name] = action.global && (!action.useSelection && !action.useAll) 
+							? (self.cell.on ? self.cell.on : {})
+							: {properties:self.definition};
+					}
+				});
+			}
+			this.cell.state.actions.forEach(function(action) {
+				if (action.section) {
+					result[action.name] = {properties:self.getSectionDefinition ? self.getSectionDefinition(action.section) : {}};
+				}
+			});
+			// add the event!
+			if (this.cell.state.inlineUpdateEvent) {
+				result[this.cell.state.inlineUpdateEvent] = {properties:self.definition};
+			}
+			if (this.cell.state.recordsUpdatedEvent) {
+				result[this.cell.state.recordsUpdatedEvent] = {type: "array", items: {properties: this.definition, type: "object"}};
+			}
+			if (this.getCustomEvents) {
+				var custom = this.getCustomEvents();
+				if (custom) {
+					Object.keys(custom).forEach(function(key) {
+						result[key] = custom[key];	
+					});
+				}
+			}
+			if (this.cell.state.enableDrop && this.cell.state.dropEventName) {
+				var draggables = this.$services.page.getDraggables();
+				var dropName = this.cell.state.dropName ? this.cell.state.dropName : "default"; 
+				if (draggables[dropName]) {
+					result[this.cell.state.dropEventName] = {
+						properties: {
+							"source": { type: "object", properties: draggables[dropName] },
+							"target": { type: "object", properties: this.getDropDefinition ? this.getDropDefinition() : {} }	// this.definition
+						}
+					};
+				}
+			}
+			return result;
 		},
 		getActionComponents: function(action) {
 			var components = [{
@@ -842,79 +959,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 			}
 			return null;
-		},
-		getEvents: function() {
-			var self = this;
-			var result = {};
-			if (this.operation) {
-				if (this.operation.responses && this.operation.responses["200"]) {
-					var schema = this.operation.responses["200"].schema;
-					
-					// the return is always a singular object
-					var definition = this.$services.swagger.resolve(schema).properties;
-					var found = false;
-					// we are interested in the (complex) array within this object
-					Object.keys(definition).map(function(key) {
-						if (!found && definition[key].type == "array" && definition[key].items.properties) {
-							definition = definition[key].items;
-							found = true;
-						}
-					});
-					if (!found) {
-						definition = null;
-					}
-					this.cell.state.actions.forEach(function(action) {
-						if (!action.section) {
-							result[action.name] = action.global && (!action.useSelection && !action.useAll)
-								//? (self.cell.on ? self.$services.page.instances[self.page.name].getEvents()[self.cell.on] : [])
-								? (self.cell.on ? self.cell.on : {})
-								: definition;
-						}
-					});
-				}
-			}
-			else {
-				this.cell.state.actions.forEach(function(action) {
-					if (!action.section) {
-						result[action.name] = action.global && (!action.useSelection && !action.useAll) 
-							? (self.cell.on ? self.cell.on : {})
-							: {properties:self.definition};
-					}
-				});
-			}
-			this.cell.state.actions.forEach(function(action) {
-				if (action.section) {
-					result[action.name] = {properties:self.getSectionDefinition ? self.getSectionDefinition(action.section) : {}};
-				}
-			});
-			// add the event!
-			if (this.cell.state.inlineUpdateEvent) {
-				result[this.cell.state.inlineUpdateEvent] = {properties:self.definition};
-			}
-			if (this.cell.state.recordsUpdatedEvent) {
-				result[this.cell.state.recordsUpdatedEvent] = {type: "array", items: {properties: this.definition, type: "object"}};
-			}
-			if (this.getCustomEvents) {
-				var custom = this.getCustomEvents();
-				if (custom) {
-					Object.keys(custom).forEach(function(key) {
-						result[key] = custom[key];	
-					});
-				}
-			}
-			if (this.cell.state.enableDrop && this.cell.state.dropEventName) {
-				var draggables = this.$services.page.getDraggables();
-				var dropName = this.cell.state.dropName ? this.cell.state.dropName : "default"; 
-				if (draggables[dropName]) {
-					result[this.cell.state.dropEventName] = {
-						properties: {
-							"source": { type: "object", properties: draggables[dropName] },
-							"target": { type: "object", properties: this.getDropDefinition ? this.getDropDefinition() : {} }	// this.definition
-						}
-					};
-				}
-			}
-			return result;
 		},
 		buildSimpleToolTip: function(field) {
 			var self = this;
@@ -1740,11 +1784,11 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 			}
 		},
-		loadNext: function() {
-			this.load(this.paging.current != null ? this.paging.current + 1 : 0);
+		loadNext: function(append) {
+			return this.load(this.paging.current != null ? this.paging.current + 1 : 0, append);
 		},
 		loadPrevious: function() {
-			this.load(this.paging.current != null ? this.paging.current - 1 : 0);
+			return this.load(this.paging.current != null ? this.paging.current - 1 : 0);
 		},
 		reload: function(page) {
 			var self = this;
@@ -2023,14 +2067,14 @@ nabu.page.views.data.DataCommon = Vue.extend({
 						if (self.cell.state.autoRefresh) {
 							self.reload(page);
 						}
-						promise.resolve();
+						promise.resolve(self.paging);
 					}, function(error) {
-						promise.resolve(error);
+						promise.reject(error);
 					});
 				}
 				catch(error) {
 					console.error("Could not run", this.cell.state.operation, error);
-					promise.resolve(error);
+					promise.reject(error);
 				}
 			}
 			else if (this.cell.state.array || this.cell.state.dynamicArrayType) {
