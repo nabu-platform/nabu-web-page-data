@@ -164,7 +164,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			// if we get a call back after destroy, we don't want to start reloading etc
 			destroyed: false,
 			// a component name we can use for the extension
-			componentName: null
+			componentName: null,
+			loading: false
 		}
 	},
 	ready: function() {
@@ -194,7 +195,8 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		filters: {
 			deep: true,
 			handler: function() {
-				this.delayedLoad();
+				// delay but only short enough to allow for multiple filters to be set semi-simultaneously
+				this.delayedLoad(1);
 			}
 		}
 	},
@@ -603,28 +605,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					})
 				});
 			}
-			components.push({
-				title: "Title",
-				name: "data-title",
-				component: "h2"
-			});
-			components.push({
-				title: "Global Button Menu",
-				name: "data-button-container",
-				component: "menu"
-			});
 			*/
-			components.push({
-				title: "Paging Menu",
-				name: "paging-menu",
-				component: "menu"
-			});
-			components.push({
-				title: "Paging Button",
-				name: "paging-button",
-				component: "button"
-			});
-			/*
 			if (this.cell.state.actions) {
 				this.cell.state.actions.forEach(function(x, index) {
 					components.push({
@@ -635,7 +616,6 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					})
 				});
 			}
-			*/
 			return components;
 		},
 		// get all the events that apply to a certain section
@@ -841,6 +821,10 @@ nabu.page.views.data.DataCommon = Vue.extend({
 			nabu.utils.arrays.merge(this.orderBy, this.cell.state.orderBy);
 		},
 		activate: function(done) {
+			// to prevent redrawing (and configuration flickering)
+			if (this.edit) {
+				done();
+			}
 			if (!this.inactive) {
 				var self = this;
 				var pageInstance = self.$services.page.getPageInstance(self.page, self);
@@ -1080,12 +1064,16 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				self.setFilter(filter, null);
 			});
 		},
-		delayedLoad: function() {
+		delayedLoad: function(timeout) {
+			// if no timeout is given, we do the default
+			if (timeout == null) {
+				timeout = 600;
+			}
 			if (this.loadTimer) {
 				clearTimeout(this.loadTimer);
 				this.loadTimer = null;
 			}
-			this.loadTimer = setTimeout(this.load, 600);
+			this.loadTimer = setTimeout(this.load, timeout);
 		},
 		setComboFilter: function(value, label) {
 			this.setFilter(this.cell.state.filters.filter(function(x) { return x.label == label })[0], value);
@@ -2016,6 +2004,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					}
 				}
 				try {
+					this.loading = true;
 					this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
 						if (!append) {
 							self.records.splice(0, self.records.length);
@@ -2069,8 +2058,10 @@ nabu.page.views.data.DataCommon = Vue.extend({
 							self.reload(page);
 						}
 						promise.resolve(self.paging);
+						self.loading = false;
 					}, function(error) {
 						promise.reject(error);
+						self.loading = false;
 					});
 				}
 				catch(error) {

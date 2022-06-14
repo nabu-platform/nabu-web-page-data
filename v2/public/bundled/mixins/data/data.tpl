@@ -45,6 +45,7 @@
 				<h2>Additional<span class="subscript">Configure some additional data properties.</span></h2>
 				<n-form-text v-model="cell.state.title" label="Title" info="The title for this data component"/>
 				<n-form-text v-model="cell.state.emptyPlaceholder" label="Empty Place Holder"/>
+				<n-form-text v-model="cell.state.loadingPlaceholder" label="Loading Place Holder"/>
 				<n-form-switch v-if="multiselect" v-model="cell.state.multiselect" label="Allow Multiselect"/>
 				
 				<n-form-text v-model="cell.state.inlineUpdateEvent" label="Successful Inline Record Update Event" @input="$updateEvents()" :timeout="600"/>
@@ -167,7 +168,7 @@
 				<n-collapsible class="list-item" :title="action.name ? action.name : 'Unnamed'" v-for="action in cell.state.actions">
 					<n-form-text v-model="action.name" label="Name" @input="$updateEvents()" :timeout="600"/>
 					<n-form-combo v-model="action.class" :filter="$services.page.getSimpleClasses" label="Class"/>
-					<n-form-switch v-model="action.global" label="Global" v-if="!action.field && !action.section" />
+					<n-form-switch v-model="action.global" label="Global" v-if="false && !action.field && !action.section" />
 					<n-form-combo v-model="action.section" :items="getSections()" v-if="!action.global && !action.field && getSections && getSections().length > 0" label="Section"/>
 					<n-form-switch v-model="action.useSelection" v-if="action.global && !action.useAll" label="Use Selection" />
 					<n-form-switch v-model="action.useAll" v-if="action.global && !action.useSelection" label="Use All" />
@@ -347,6 +348,7 @@
 					<h2>Additional<span class="subscript">Configure some additional data properties.</span></h2>
 					<n-form-text v-model="cell.state.title" label="Title" info="The title for this data component"/>
 					<n-form-text v-model="cell.state.emptyPlaceholder" label="Empty Place Holder"/>
+					<n-form-text v-model="cell.state.loadingPlaceholder" label="Loading Place Holder"/>
 					<n-form-switch v-if="multiselect" v-model="cell.state.multiselect" label="Allow Multiselect"/>
 					<n-form-combo label="Filter Type" :filter="function(value) { return $window.nabu.page.providers('data-filter') }" v-model="cell.state.filterType"
 						:formatter="function(x) { return x.name }"/>

@@ -14,6 +14,12 @@ nabu.page.views.data.TableGenerator = function(name) { return Vue.component(name
 		}
 	},
 	activate: function(done) {
+		// we now always immediately start rendering
+		// this is interesting for edit mode because the delay in rendering causes flickering in config
+		// but also at runtime, currently we always rendered a "loading icon", but we want the components themselves to be able to render more specifically
+		// currently we do it from the components, in the future we might push this into data as a whole
+		done();
+		
 		var self = this;
 		var event = null;
 		// we capture the value of the event before any watchers can trigger and clear it...
