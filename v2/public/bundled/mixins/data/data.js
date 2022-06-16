@@ -195,8 +195,10 @@ nabu.page.views.data.DataCommon = Vue.extend({
 		filters: {
 			deep: true,
 			handler: function() {
-				// delay but only short enough to allow for multiple filters to be set semi-simultaneously
-				this.delayedLoad(1);
+				if (this.ready) {
+					// delay but only short enough to allow for multiple filters to be set semi-simultaneously
+					this.delayedLoad(1);
+				}
 			}
 		}
 	},
