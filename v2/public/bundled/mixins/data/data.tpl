@@ -39,13 +39,13 @@
 				<n-form-switch v-if="!cell.state.loadMore && !cell.state.loadPrevNext && hasLimit" v-model="cell.state.loadLazy" label="Lazy Loading"/> 
 				<n-form-switch v-if="!cell.state.loadLazy && !cell.state.loadPrevNext && hasLimit" v-model="cell.state.loadMore" label="Load more button"/>
 				<n-form-switch v-if="!cell.state.loadMore && !cell.state.loadLazy && hasLimit" v-model="cell.state.loadPrevNext" label="Load next/prev"/> 
-				<n-form-text v-model="cell.state.prevButtonLabel" label="Label previous button" v-if="cell.state.loadPrevNext"/>
-				<n-form-text v-model="cell.state.nextButtonLabel" label="Label next button" v-if="cell.state.loadPrevNext"/>
+				<n-form-text v-model="cell.state.prevButtonLabel" :timeout="600" label="Label previous button" v-if="cell.state.loadPrevNext"/>
+				<n-form-text v-model="cell.state.nextButtonLabel" :timeout="600" label="Label next button" v-if="cell.state.loadPrevNext"/>
 				<slot name="main-settings"></slot>
 				<h2>Additional<span class="subscript">Configure some additional data properties.</span></h2>
-				<n-form-text v-model="cell.state.title" label="Title" info="The title for this data component"/>
-				<n-form-text v-model="cell.state.emptyPlaceholder" label="Empty Place Holder"/>
-				<n-form-text v-model="cell.state.loadingPlaceholder" label="Loading Place Holder"/>
+				<n-form-text v-model="cell.state.title" label="Title" info="The title for this data component" :timeout="600"/>
+				<n-form-text v-model="cell.state.emptyPlaceholder" label="Empty Place Holder" :timeout="600"/>
+				<n-form-text v-model="cell.state.loadingPlaceholder" label="Loading Place Holder" :timeout="600"/>
 				<n-form-switch v-if="multiselect" v-model="cell.state.multiselect" label="Allow Multiselect"/>
 				
 				<n-form-text v-model="cell.state.inlineUpdateEvent" label="Successful Inline Record Update Event" @input="$updateEvents()" :timeout="600"/>
@@ -80,7 +80,7 @@
 					<n-form-text v-model="cell.state.dragName" label="Drag source name" v-if="cell.state.enableDrag" placeholder="default"/>
 					<n-form-switch v-model="cell.state.enableDrop" label="Enable dropping"/>
 					<n-form-combo v-model="cell.state.dropName" label="Accepted drag source" v-if="cell.state.enableDrop" :filter="$services.page.getDraggableKeys"/>
-					<n-form-text v-model="cell.state.dropEventName" label="Drop Event Name" v-if="cell.state.enableDrop" />
+					<n-form-text v-model="cell.state.dropEventName" label="Drop Event Name" :timeout="600" v-if="cell.state.enableDrop" @input="$updateEvents()" />
 				</div>
 			</n-collapsible>
 			<n-collapsible title="Mapping" class="mapping padded" v-if="Object.keys(inputParameters.properties).length">
