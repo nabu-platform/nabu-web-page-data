@@ -2007,6 +2007,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 				}
 				try {
 					this.loading = true;
+					if (!append) {
+						self.records.splice(0, self.records.length);
+					}
 					this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
 						if (!append) {
 							self.records.splice(0, self.records.length);

@@ -66,7 +66,10 @@ window.addEventListener("load", function() {
 			description: "A tabular view of data",
 			name: "Table",
 			category: "Data",
-			accept: accept,
+			//accept: accept,
+			accept: function() {
+				return false;
+			},
 			initialize: function(type, value, component, cell, row, page, rowGenerator, cellGenerator) {
 				// do general initialize
 				var contentCell = initialize(type, value, component, cell, row, page, rowGenerator, cellGenerator);	
