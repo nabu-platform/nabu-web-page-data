@@ -754,12 +754,14 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					var definition = this.$services.swagger.resolve(schema).properties;
 					var found = false;
 					// we are interested in the (complex) array within this object
-					Object.keys(definition).map(function(key) {
-						if (!found && definition[key].type == "array" && definition[key].items.properties) {
-							definition = definition[key].items;
-							found = true;
-						}
-					});
+					if (definition) {
+						Object.keys(definition).map(function(key) {
+							if (!found && definition[key].type == "array" && definition[key].items.properties) {
+								definition = definition[key].items;
+								found = true;
+							}
+						});
+					}
 					if (!found) {
 						definition = null;
 					}
