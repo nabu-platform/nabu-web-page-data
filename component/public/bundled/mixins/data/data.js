@@ -1868,7 +1868,7 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					}
 				}
 				try {
-					this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
+					var operationPromise = this.$services.swagger.execute(this.cell.state.operation, parameters).then(function(list) {
 						if (!append) {
 							self.records.splice(0, self.records.length);
 						}
@@ -1924,6 +1924,9 @@ nabu.page.views.data.DataCommon = Vue.extend({
 					}, function(error) {
 						promise.resolve(error);
 					});
+					if (this.cell.state.slowOperation) {
+						this.$wait({promise: operationPromise});
+					}
 				}
 				catch(error) {
 					console.error("Could not run", this.cell.state.operation, error);
